@@ -12,8 +12,8 @@ import * as crypto from 'crypto';
  */
 export function readStdin(): Promise<string> {
   return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    process.stdin.on('data', (chunk) => chunks.push(chunk));
+    const chunks: Buffer<ArrayBufferLike>[] = [];
+    process.stdin.on('data', (chunk: Buffer<ArrayBufferLike>) => chunks.push(chunk));
     process.stdin.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
     process.stdin.on('error', reject);
   });
@@ -155,7 +155,7 @@ export function waitForResponseFile(filePath: string, timeoutMs: number): Promis
 
     // Set up fs.watch
     try {
-      watcher = watch(dir, (eventType, filename) => {
+      watcher = watch(dir, (eventType: string, filename: string | null) => {
         if (filename === fileName || !filename) {
           checkFile();
         }

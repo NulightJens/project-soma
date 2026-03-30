@@ -46,7 +46,7 @@ export const statusCommand = new Command('status')
         const hbPath = join(stateDir, agent, 'heartbeat.json');
         try {
           const hb: Heartbeat = JSON.parse(readFileSync(hbPath, 'utf-8'));
-          const ts = hb.last_heartbeat || hb.timestamp;
+          const ts = hb.last_heartbeat || hb.timestamp || new Date().toISOString();
           const age = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
           const ageStr = age < 60 ? `${age}s ago` : age < 3600 ? `${Math.floor(age / 60)}m ago` : `${Math.floor(age / 3600)}h ago`;
           rows.push({
