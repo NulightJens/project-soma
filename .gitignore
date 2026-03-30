@@ -1,6 +1,9 @@
 node_modules/
 .claude/
 !.claude/orchestration-cortextos-node/
+# Include template .claude dirs (needed for agent settings.json)
+!templates/**/.claude/
+!templates/**/.claude/**
 dist/
 
 # Secrets
