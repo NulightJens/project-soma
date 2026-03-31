@@ -75,6 +75,37 @@ if [[ -z "${AGENT_DIR}" || ! -d "${AGENT_DIR}" ]]; then
     exit 1
 fi
 
+# Preflight: .env must exist with BOT_TOKEN and CHAT_ID set
+AGENT_ENV="${AGENT_DIR}/.env"
+if [[ ! -f "${AGENT_ENV}" ]]; then
+    echo "ERROR: ${AGENT}/.env not found."
+    echo ""
+    echo "Create it before enabling the agent:"
+    echo "  cat > ${AGENT_ENV} << EOF"
+    echo "  BOT_TOKEN=<your_telegram_bot_token>"
+    echo "  CHAT_ID=<your_telegram_chat_id>"
+    echo "  ALLOWED_USER=<your_telegram_username>"
+    echo "  EOF"
+    echo ""
+    echo "Without .env, the agent would inherit the parent bot token and send"
+    echo "messages to the wrong Telegram chat."
+    exit 1
+fi
+
+_BOT_TOKEN_VAL=$(grep '^BOT_TOKEN=' "${AGENT_ENV}" | cut -d= -f2- | tr -d '"' | tr -d "'")
+_CHAT_ID_VAL=$(grep '^CHAT_ID=' "${AGENT_ENV}" | cut -d= -f2- | tr -d '"' | tr -d "'")
+
+if [[ -z "${_BOT_TOKEN_VAL:-}" ]]; then
+    echo "ERROR: BOT_TOKEN is not set in ${AGENT_ENV}"
+    echo "Add: BOT_TOKEN=<your_telegram_bot_token>"
+    exit 1
+fi
+if [[ -z "${_CHAT_ID_VAL:-}" ]]; then
+    echo "ERROR: CHAT_ID is not set in ${AGENT_ENV}"
+    echo "Add: CHAT_ID=<your_telegram_chat_id>"
+    exit 1
+fi
+
 # Build plist name (includes org if present)
 if [[ -n "${CTX_ORG}" ]]; then
     PLIST_NAME="cortextos.${CTX_INSTANCE_ID}.${CTX_ORG}.${AGENT}"
