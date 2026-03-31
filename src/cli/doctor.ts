@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 
@@ -101,6 +101,76 @@ export const doctorCommand = new Command('doctor')
         status: 'warn',
         message: 'Not authenticated',
         fix: 'Run: claude login',
+      });
+    }
+
+    // ── Tunnel checks (macOS only) ──────────────────────────────────────
+    if (process.platform === 'darwin') {
+      // cloudflared installed?
+      try {
+        const cfVer = execSync('cloudflared --version', { encoding: 'utf-8', stdio: 'pipe', timeout: 5000 }).trim();
+        checks.push({ name: 'cloudflared', status: 'pass', message: cfVer });
+      } catch {
+        checks.push({
+          name: 'cloudflared',
+          status: 'warn',
+          message: 'Not installed',
+          fix: 'Install with: brew install cloudflared',
+        });
+      }
+
+      // Cloudflare auth cert
+      const cfCert = join(homedir(), '.cloudflared', 'cert.pem');
+      checks.push({
+        name: 'Cloudflare auth',
+        status: existsSync(cfCert) ? 'pass' : 'warn',
+        message: existsSync(cfCert) ? 'Authenticated (cert.pem found)' : 'Not authenticated',
+        fix: !existsSync(cfCert) ? 'Run: cloudflared login' : undefined,
+      });
+
+      // Tunnel exists?
+      let tunnelExists = false;
+      try {
+        const listOut = execSync('cloudflared tunnel list --output json', {
+          encoding: 'utf-8',
+          stdio: 'pipe',
+          timeout: 10000,
+        });
+        const tunnels: Array<{ name: string }> = JSON.parse(listOut);
+        tunnelExists = tunnels.some((t) => t.name === 'cortextos');
+      } catch { /* not authenticated or cloudflared not installed */ }
+      checks.push({
+        name: "Tunnel 'cortextos'",
+        status: tunnelExists ? 'pass' : 'warn',
+        message: tunnelExists ? 'Exists' : 'Not created',
+        fix: !tunnelExists ? 'Run: cortextos tunnel start' : undefined,
+      });
+
+      // launchd service running?
+      let serviceRunning = false;
+      try {
+        const launchctlOut = execSync('launchctl list', { encoding: 'utf-8', stdio: 'pipe' });
+        serviceRunning = launchctlOut.includes('com.cortextos.tunnel');
+      } catch { /* launchctl not available */ }
+      checks.push({
+        name: 'Tunnel service (launchd)',
+        status: serviceRunning ? 'pass' : 'warn',
+        message: serviceRunning ? 'Running' : 'Not running',
+        fix: !serviceRunning ? 'Run: cortextos tunnel start' : undefined,
+      });
+
+      // Tunnel URL saved?
+      const tunnelConfigPath = join(homedir(), '.cortextos', options.instance, 'tunnel.json');
+      let tunnelUrl: string | undefined;
+      try {
+        const tc = JSON.parse(readFileSync(tunnelConfigPath, 'utf-8'));
+        tunnelUrl = tc.tunnelUrl;
+      } catch { /* no config yet */ }
+      checks.push({
+        name: 'Tunnel URL',
+        status: tunnelUrl ? 'pass' : 'warn',
+        message: tunnelUrl ?? 'Not set',
+        fix: !tunnelUrl ? 'Run: cortextos tunnel start' : undefined,
       });
     }
 

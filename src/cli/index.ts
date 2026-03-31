@@ -17,6 +17,7 @@ import { enableAgentCommand, disableAgentCommand } from './enable-agent.js';
 import { ecosystemCommand } from './ecosystem.js';
 import { uninstallCommand } from './uninstall.js';
 import { dashboardCommand } from './dashboard.js';
+import { tunnelCommand } from './tunnel.js';
 
 const program = new Command();
 
@@ -41,6 +42,7 @@ program.addCommand(disableAgentCommand);
 program.addCommand(ecosystemCommand);
 program.addCommand(uninstallCommand);
 program.addCommand(dashboardCommand);
+program.addCommand(tunnelCommand);
 
 // crash-alert: SessionEnd hook — cross-platform replacement for crash-alert.sh
 const crashAlertCommand = new Command('crash-alert')

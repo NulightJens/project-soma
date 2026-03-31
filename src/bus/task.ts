@@ -216,9 +216,10 @@ export function checkStaleTasks(paths: BusPaths): StaleTaskReport {
       report.stale_pending.push(task);
     }
 
-    // Human tasks: assigned to "human" or "user" with age > 24h
+    // Human tasks: assigned to "human", "user", or "james", or in human-tasks project
     if (
-      (task.assigned_to === 'human' || task.assigned_to === 'user') &&
+      (['human', 'user', 'james'].includes(task.assigned_to ?? '') ||
+        task.project === 'human-tasks') &&
       createdAge > STALE_HUMAN
     ) {
       report.stale_human.push(task);
