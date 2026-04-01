@@ -37,8 +37,11 @@ describe('Sprint 1: Template Completeness', () => {
       expect(settings.hooks.SessionEnd).toBeDefined();
     });
 
-    it('has all 6 skills', () => {
-      const expectedSkills = ['autoresearch', 'comms', 'cron-management', 'google-workspace', 'tasks', 'onboarding'];
+    it('has core skills', () => {
+      const expectedSkills = [
+        'autoresearch', 'comms', 'cron-management', 'tasks', 'onboarding',
+        'heartbeat', 'memory', 'human-tasks',
+      ];
       for (const skill of expectedSkills) {
         const skillPath = join(agentDir, '.claude', 'skills', skill, 'SKILL.md');
         expect(existsSync(skillPath), `Missing skill: ${skill}`).toBe(true);
@@ -141,11 +144,12 @@ describe('Sprint 1: Template Completeness', () => {
       expect(cronNames).toContain('evening-review');
     });
 
-    it('has 12 skills including orchestrator-specific ones', () => {
+    it('has orchestrator-specific skills', () => {
       const expectedSkills = [
-        'autoresearch', 'comms', 'cron-management', 'google-workspace', 'tasks',
+        'autoresearch', 'comms', 'cron-management', 'tasks',
         'evening-review', 'goal-management', 'morning-review',
         'nighttime-mode', 'theta-wave', 'weekly-review', 'onboarding',
+        'heartbeat', 'memory', 'human-tasks',
       ];
       for (const skill of expectedSkills) {
         const skillPath = join(orchDir, '.claude', 'skills', skill, 'SKILL.md');
@@ -210,11 +214,12 @@ describe('Sprint 1: Template Completeness', () => {
       expect(config.ecosystem.local_version_control).toBeDefined();
     });
 
-    it('has 11 skills including analyst-specific ones', () => {
+    it('has analyst-specific skills', () => {
       const expectedSkills = [
-        'autoresearch', 'comms', 'cron-management', 'google-workspace', 'tasks',
+        'autoresearch', 'comms', 'cron-management', 'tasks',
         'catalog-browse', 'community-publish', 'local-version-control',
         'theta-wave', 'upstream-sync', 'onboarding',
+        'heartbeat', 'memory', 'human-tasks',
       ];
       for (const skill of expectedSkills) {
         const skillPath = join(analystDir, '.claude', 'skills', skill, 'SKILL.md');

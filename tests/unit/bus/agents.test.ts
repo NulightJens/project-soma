@@ -96,14 +96,14 @@ describe('Agent Discovery', () => {
         JSON.stringify({ worker: { org: 'testorg', enabled: true } }),
       );
 
-      // Write heartbeat to the path listAgents actually reads: state/<agent>/heartbeat.json
+      // Write heartbeat to state dir (path: state/{agent}/heartbeat.json)
       const hbDir = join(ctxRoot, 'state', 'worker');
       mkdirSync(hbDir, { recursive: true });
       writeFileSync(
         join(hbDir, 'heartbeat.json'),
         JSON.stringify({
           agent: 'worker',
-          last_heartbeat: new Date().toISOString(),
+          timestamp: new Date().toISOString(),
           status: 'idle',
         }),
       );
