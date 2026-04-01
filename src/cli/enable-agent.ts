@@ -4,6 +4,23 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { IPCClient } from '../daemon/ipc-server.js';
 
+function parseEnvFile(path: string): Record<string, string> {
+  const vars: Record<string, string> = {};
+  try {
+    const lines = readFileSync(path, 'utf-8').split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx < 0) continue;
+      const key = trimmed.slice(0, eqIdx).trim();
+      const val = trimmed.slice(eqIdx + 1).trim();
+      vars[key] = val;
+    }
+  } catch { /* unreadable */ }
+  return vars;
+}
+
 function getEnabledAgentsPath(instanceId: string): string {
   return join(homedir(), '.cortextos', instanceId, 'config', 'enabled-agents.json');
 }
@@ -30,6 +47,36 @@ export const enableAgentCommand = new Command('enable')
   .option('--org <org>', 'Organization name')
   .description('Enable an agent (register and start)')
   .action(async (agent: string, options: { instance: string; org?: string }) => {
+    // Becky bug preflight: verify .env has BOT_TOKEN and CHAT_ID before registering.
+    // Without this, the agent starts, inherits parent-process credentials silently,
+    // appears alive on the dashboard but cannot receive any Telegram messages.
+    const projectRoot = process.env.CTX_FRAMEWORK_ROOT || process.env.CTX_PROJECT_ROOT || process.cwd();
+    const orgDir = options.org ? join(projectRoot, 'orgs', options.org) : null;
+
+    // Locate agent dir — try org-scoped path first, then flat agents/ fallback
+    let agentEnvPath: string | null = null;
+    if (orgDir) {
+      const candidate = join(orgDir, 'agents', agent, '.env');
+      if (existsSync(candidate)) agentEnvPath = candidate;
+    }
+    if (!agentEnvPath) {
+      const candidate = join(projectRoot, 'agents', agent, '.env');
+      if (existsSync(candidate)) agentEnvPath = candidate;
+    }
+
+    if (!agentEnvPath) {
+      console.error(`Error: No .env found for agent "${agent}". Create one with BOT_TOKEN and CHAT_ID before enabling.`);
+      process.exit(1);
+    }
+
+    const env = parseEnvFile(agentEnvPath);
+    const missing = (['BOT_TOKEN', 'CHAT_ID'] as const).filter(k => !env[k]);
+    if (missing.length > 0) {
+      console.error(`Error: .env for agent "${agent}" is missing required values: ${missing.join(', ')}`);
+      console.error(`Edit ${agentEnvPath} and set BOT_TOKEN and CHAT_ID before enabling.`);
+      process.exit(1);
+    }
+
     const agents = readEnabledAgents(options.instance);
     agents[agent] = {
       enabled: true,
@@ -44,6 +91,7 @@ export const enableAgentCommand = new Command('enable')
       join(ctxRoot, 'inbox', agent),
       join(ctxRoot, 'inflight', agent),
       join(ctxRoot, 'processed', agent),
+      join(ctxRoot, 'outbox', agent),
       join(ctxRoot, 'logs', agent),
       join(ctxRoot, 'state', agent),
     ];

@@ -63,6 +63,7 @@ export const addAgentCommand = new Command('add-agent')
     const configPath = join(agentDir, 'config.json');
     if (!existsSync(configPath)) {
       writeFileSync(configPath, JSON.stringify({
+        agent_name: name,
         startup_delay: 0,
         max_session_seconds: 255600,
         enabled: true,
@@ -84,6 +85,43 @@ export const addAgentCommand = new Command('add-agent')
         'CHAT_ID=',
         '',
       ].join('\n'), 'utf-8');
+    }
+
+    // Generate SYSTEM.md from context.json (static org context only).
+    // This overwrites whatever the template wrote — context.json is the source of truth.
+    // Dynamic data (agent roster, health) is discovered live via list-agents + read-all-heartbeats.
+    const contextPath = join(projectRoot, 'orgs', org, 'context.json');
+    if (existsSync(contextPath)) {
+      try {
+        const ctx = JSON.parse(readFileSync(contextPath, 'utf-8'));
+        const orgName = ctx.name || org;
+        const timezone = ctx.timezone || 'UTC';
+        const orchestrator = ctx.orchestrator || '(not set)';
+        const dashboardUrl = ctx.dashboard_url || '(not configured)';
+        const systemMd = [
+          '# System Context',
+          '',
+          `**Organization:** ${orgName}`,
+          `**Timezone:** ${timezone}`,
+          `**Orchestrator:** ${orchestrator}`,
+          `**Dashboard:** ${dashboardUrl}`,
+          '**Framework:** cortextOS Node.js',
+          '',
+          '---',
+          '',
+          'This file contains static org context only. For the live agent roster, run:',
+          '```bash',
+          'cortextos list-agents',
+          '```',
+          '',
+          'For agent health (last heartbeat per agent), run:',
+          '```bash',
+          'cortextos bus read-all-heartbeats',
+          '```',
+          '',
+        ].join('\n');
+        writeFileSync(join(agentDir, 'SYSTEM.md'), systemMd, 'utf-8');
+      } catch { /* leave template SYSTEM.md in place if context.json is unreadable */ }
     }
 
     // Update org context.json if this is the orchestrator

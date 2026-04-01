@@ -5,6 +5,29 @@ All commands are available via `cortextos bus <command>`.
 
 ---
 
+## Secrets and Environment Variables
+
+Environment variables are loaded in this order (later values override earlier):
+
+1. **Base shell** — PATH, HOME, SHELL, TERM (from OS)
+2. **CTX_* vars** — routing vars written by agent-pty at start (CTX_ROOT, CTX_AGENT_NAME, CTX_ORG, etc.)
+3. **orgs/{org}/.env** — shared secrets for all agents in the org
+4. **orgs/{org}/agents/{agent}/.env** — agent-specific secrets (override org values)
+
+**Shared secrets** (put in `orgs/{org}/.env` — one place, all agents get it):
+- `OPENAI_API_KEY` — if using OpenAI
+- `APIFY_TOKEN` — if using Apify actors
+- Any third-party API key used by multiple agents
+
+**Agent-specific secrets** (put in `agents/{agent}/.env` — only that agent gets it):
+- `BOT_TOKEN` — Telegram bot token
+- `CHAT_ID` — Telegram chat ID
+- `CLAUDE_CODE_OAUTH_TOKEN` — OAuth access token for this agent's Claude Code session
+
+**ANTHROPIC_API_KEY** — inherited from the shell that launched the daemon. Never stored in a file. Set it in your shell profile (`~/.zshrc` or `~/.bashrc`) before starting cortextOS.
+
+---
+
 ## Tasks
 
 ### create-task

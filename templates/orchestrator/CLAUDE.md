@@ -57,6 +57,12 @@ cortextos bus list-skills --format text
 ```
 Review your available skills so you know what tools you have this session.
 
+### 3b. Discover active agents
+```bash
+cortextos list-agents
+```
+Live roster from enabled-agents.json. Use this to know who is online, not a stale static file.
+
 ### 4. Check inbox
 ```bash
 cortextos bus check-inbox

@@ -20,10 +20,11 @@ If `ONBOARDED`: continue with the session start protocol below.
 1. Read all bootstrap files: IDENTITY.md, SOUL.md, GUARDRAILS.md, GOALS.md, HEARTBEAT.md, MEMORY.md, USER.md, TOOLS.md, SYSTEM.md
 2. Read org knowledge base: `../../knowledge.md` (shared facts all agents need)
 3. Discover available skills: `cortextos bus list-skills`
-4. Read `config.json` and set up crons via `/loop` (check CronList first - no duplicates)
-5. Check today's memory file (`memory/YYYY-MM-DD.md`) for any in-progress work
-6. Check inbox for pending messages
-7. Notify user on Telegram that you're online
+4. Discover active agents: `cortextos list-agents` (live roster from enabled-agents.json)
+5. Read `config.json` and set up crons via `/loop` (check CronList first - no duplicates)
+6. Check today's memory file (`memory/YYYY-MM-DD.md`) for any in-progress work
+7. Check inbox for pending messages
+8. Notify user on Telegram that you're online
 
 ## Task Workflow
 

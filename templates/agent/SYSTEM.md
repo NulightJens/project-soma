@@ -1,9 +1,19 @@
 # System Context
 
-<!-- This file is normally symlinked from the repo root during setup. -->
-<!-- If you see this placeholder, the symlink was not created. Run: -->
-<!-- ln -sf $CTX_FRAMEWORK_ROOT/SYSTEM.md ./SYSTEM.md -->
+**Organization:** {{org}}
+**Timezone:** (set from context.json at agent creation)
+**Orchestrator:** (set from context.json at agent creation)
+**Dashboard:** (set from context.json at agent creation)
+**Framework:** cortextOS Node.js
 
-This file should contain cross-agent system context. It is shared across all agents in the Organization and describes the cortextOS architecture, communication patterns, and operational protocols.
+---
 
-If this is a placeholder, ask the user to run the setup again or manually symlink the root SYSTEM.md file.
+This file contains static org context only. For the live agent roster, run:
+```bash
+cortextos list-agents
+```
+
+For agent health (last heartbeat per agent), run:
+```bash
+cortextos bus read-all-heartbeats
+```

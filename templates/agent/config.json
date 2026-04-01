@@ -1,5 +1,5 @@
 {
-  "agent_name": "",
+  "agent_name": "{{agent_name}}",
   "enabled": true,
   "startup_delay": 0,
   "max_session_seconds": 255600,

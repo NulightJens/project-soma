@@ -1,6 +1,6 @@
 import { platform } from 'os';
 import { join } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import type { AgentConfig, CtxEnv } from '../types/index.js';
 import { OutputBuffer } from './output-buffer.js';
 import { ensureDir } from '../utils/atomic.js';
@@ -78,10 +78,28 @@ export class AgentPTY {
       CRM_TEMPLATE_ROOT: this.env.frameworkRoot,
     };
 
-    // Source agent .env file
+    // Source org-level shared secrets first (orgs/{org}/.env).
+    // These are shared across all agents in the org: OPENAI_KEY, APIFY_TOKEN, etc.
+    // Agent .env is loaded after and overrides org values — agent-specific keys win.
+    if (this.env.org && this.env.projectRoot) {
+      const orgEnvFile = join(this.env.projectRoot, 'orgs', this.env.org, '.env');
+      if (existsSync(orgEnvFile)) {
+        const content = readFileSync(orgEnvFile, 'utf-8');
+        for (const line of content.split('\n')) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#')) continue;
+          const eqIdx = trimmed.indexOf('=');
+          if (eqIdx > 0) {
+            ptyEnv[trimmed.slice(0, eqIdx).trim()] = trimmed.slice(eqIdx + 1).trim();
+          }
+        }
+      }
+    }
+
+    // Source agent .env file (overrides org .env for same key names).
+    // Contains agent-specific secrets: BOT_TOKEN, CHAT_ID, CLAUDE_CODE_OAUTH_TOKEN.
     const agentEnvFile = join(this.env.agentDir, '.env');
     if (existsSync(agentEnvFile)) {
-      const { readFileSync } = require('fs');
       const content = readFileSync(agentEnvFile, 'utf-8');
       for (const line of content.split('\n')) {
         const trimmed = line.trim();
