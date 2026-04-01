@@ -1,7 +1,7 @@
 ---
 name: env-management
-description: "Manage environment variables and secrets for agents and the org. Use when: adding a new API key, updating an existing key, checking what secrets are configured, onboarding a new tool that needs credentials, or diagnosing why an agent can't access a service."
-triggers: ["add key", "api key", "env file", ".env", "secret", "credential", "token", "environment variable", "configure key", "set key", "missing key", "can't find key", "key not set"]
+description: "You need to add a new API key to the system, update an existing credential, check what secrets are configured for the org or a specific agent, onboard a new third-party tool that needs credentials, or diagnose why an agent cannot access a service because a key appears missing. You need to know where to put the key, how the load order works so it actually gets picked up, and what rules to follow to avoid leaking credentials."
+triggers: ["add key", "api key", "env file", ".env", "secret", "credential", "token", "environment variable", "configure key", "set key", "missing key", "can"t find key", "key not set", "where do I put", "shared secret", "org secret", "agent secret", "key not loading", "credential setup", "configure credentials", "new api key", "add to env"]
 ---
 
 # Environment Variable Management

@@ -1,7 +1,7 @@
 ---
 name: approvals
-description: "Request and handle human approval before taking a high-stakes action. Use when: about to send an email, deploy code, post on social media, make a financial commitment, delete data, or take any action that affects the outside world or cannot be undone."
-triggers: ["need approval", "create approval", "request approval", "approval needed", "needs sign-off", "needs permission", "deploy", "send email", "delete data", "external action", "post to", "financial", "irreversible"]
+description: "You are about to take an action that affects the outside world, cannot be undone, or involves real people — and you have not yet received explicit permission. This includes: sending any email or message to a real person, deploying code to production, posting on social media, making a purchase or financial commitment, deleting files or data, merging a PR to main, or publishing anything publicly. Stop, create an approval, block your task, and notify the user. Do not proceed until you receive the approval decision in your inbox."
+triggers: ["need approval", "create approval", "request approval", "approval needed", "needs sign-off", "needs permission", "before deploying", "before sending email", "before deleting", "before posting", "external action", "irreversible action", "financial commitment", "purchase", "deploy to production", "merge to main", "send to real person", "publish", "approval workflow", "pending approval", "waiting for approval", "check approvals", "list approvals"]
 ---
 
 # Approvals

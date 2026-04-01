@@ -1,7 +1,7 @@
 ---
 name: activity-channel
-description: "Post announcements and status updates to the org-wide Telegram activity channel. Use when: broadcasting a status update to the whole org, announcing a major completion, or sharing coordination news that all agents and the user should see."
-triggers: ["post activity", "activity channel", "broadcast", "announce", "org announcement", "post to channel", "notify everyone", "team update", "org update"]
+description: "You have completed something significant and want the whole org — all agents and the user — to know about it. Or you are the orchestrator and need to broadcast a status update, a briefing summary, or a coordination announcement that is not directed at one specific agent. Use this skill any time the audience is the entire org rather than a single person or agent."
+triggers: ["post activity", "activity channel", "broadcast", "announce to everyone", "org announcement", "post to channel", "notify all agents", "team update", "org-wide update", "let everyone know", "status broadcast", "announce completion", "briefing summary", "coordination update", "fleet announcement"]
 ---
 
 # Activity Channel

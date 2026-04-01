@@ -1,7 +1,7 @@
 ---
 name: secrets-rotation
-description: "Rotate a compromised, expired, or updated secret across the system. Use when: an API key is compromised or rotated by a provider, a bot token needs to be replaced, OAuth tokens expire, or a credential is being cycled for security."
-triggers: ["rotate key", "rotate token", "key compromised", "token expired", "update api key", "new bot token", "revoke key", "credential rotation", "security rotation", "key rotation", "secret rotation"]
+description: "An API key has been compromised, a provider has forced a rotation, a token has expired, or you are doing a scheduled security rotation. You need to update the key in the right file (org .env or agent .env depending on scope), identify which agents are affected, restart them in sequence so they pick up the new value, and confirm the rotation is complete. A key update without an agent restart does nothing — the old value stays in the PTY environment."
+triggers: ["rotate key", "rotate token", "key compromised", "token expired", "update api key", "new bot token", "revoke key", "credential rotation", "security rotation", "key rotation", "secret rotation", "key was leaked", "compromised credential", "force rotation", "provider rotated", "expired key", "rotate credentials", "update secret", "cycle credentials"]
 ---
 
 # Secrets Rotation

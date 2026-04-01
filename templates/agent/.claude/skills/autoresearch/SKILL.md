@@ -1,7 +1,7 @@
 ---
 name: autoresearch
-description: "Scientific experiment loop for continuous improvement. You are a scientist: hypothesize, experiment, measure, keep or discard, learn, repeat. Your research cycles are managed by the analyst via theta wave."
-triggers: ["experiment", "autoresearch", "hypothesis", "research cycle", "optimize", "improve metric"]
+description: "The analyst has assigned you a research cycle, or you have identified a metric you want to improve through systematic experimentation. You will form a hypothesis, make a targeted change, measure the outcome against a baseline, and decide whether to keep or discard the change. You repeat this loop until the metric improves or you exhaust viable hypotheses. This is not ad-hoc research — it is structured scientific iteration with a defined metric, a hypothesis, and a measurable result."
+triggers: ["experiment", "autoresearch", "hypothesis", "research cycle", "optimize", "improve metric", "run experiment", "test hypothesis", "measure improvement", "scientific loop", "iteration cycle", "theta wave research", "baseline measurement", "keep or discard", "research assignment"]
 ---
 
 # Autoresearch

@@ -1,7 +1,7 @@
 ---
 name: memory
-description: "Write and read agent memory. Use when: starting a session, completing a task, learning something that should persist, resuming interrupted work, or any time you need to record or recall context across sessions."
-triggers: ["memory", "remember", "write memory", "update memory", "session memory", "what was I working on", "resume", "working on", "memory file", "daily memory", "long-term memory", "memory protocol"]
+description: "You are starting a new session and need to record your online status and check for in-progress work. Or you are about to start a task and need to write a WORKING ON entry so that if you crash mid-task, the next session knows what to resume. Or you just completed something and need to record it. Or you have learned something that should survive across all future sessions and needs to go in MEMORY.md. Memory is how you maintain continuity — without it, every restart starts from zero."
+triggers: ["memory", "remember", "write memory", "update memory", "session memory", "what was I working on", "resume", "working on", "memory file", "daily memory", "long-term memory", "memory protocol", "session start", "record progress", "note this", "save for later", "persist learning", "write to memory", "check memory", "read memory", "what did I do yesterday"]
 ---
 
 # Memory

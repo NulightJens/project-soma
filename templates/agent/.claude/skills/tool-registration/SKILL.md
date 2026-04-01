@@ -1,7 +1,7 @@
 ---
 name: tool-registration
-description: "Register a new tool or CLI binary so all agents know it exists and how to use it. Use when: a new tool has been installed, a new bus script was created, a new CLI is available, or TOOLS.md is out of sync with what's actually available."
-triggers: ["new tool", "register tool", "add tool", "document tool", "tools.md", "missing from tools", "tool not documented", "new script", "new command", "new binary", "new capability"]
+description: "A new tool, CLI binary, or bus script has been added to the system and is not yet documented — agents do not know it exists or how to use it. You need to add it to TOOLS.md with its command, purpose, key flags, and usage examples. Or you have discovered that TOOLS.md is out of sync with what is actually available. This keeps the tool reference current so every agent can discover and use new capabilities."
+triggers: ["new tool", "register tool", "add tool", "document tool", "tools.md", "missing from tools", "tool not documented", "new script", "new command", "new binary", "new capability", "update tools.md", "add to tools", "tool not in docs", "undocumented tool", "new bus script", "new cli", "tool reference out of date"]
 ---
 
 # Tool Registration
