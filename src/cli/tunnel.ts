@@ -65,7 +65,6 @@ function checkAuth(): void {
 }
 
 function getCloudflaredPath(): string {
-<<<<<<< HEAD
   // Check Homebrew locations first (Apple Silicon vs Intel) before falling back to PATH
   const candidates = [
     '/opt/homebrew/bin/cloudflared', // Apple Silicon
@@ -74,8 +73,6 @@ function getCloudflaredPath(): string {
   for (const p of candidates) {
     if (existsSync(p)) return p;
   }
-=======
->>>>>>> 376d5fe (feat(cli): add cortextos tunnel command for persistent dashboard URL)
   try {
     return execSync('which cloudflared', { encoding: 'utf-8', stdio: 'pipe' }).trim();
   } catch {
@@ -104,15 +101,12 @@ function detectCloudflaredPath(): string {
 interface CloudflaredTunnel {
   id: string;
   name: string;
-<<<<<<< HEAD
   deleted_at?: string;
 }
 
 interface CloudflaredCreateOutput {
   id: string;
   name: string;
-=======
->>>>>>> 376d5fe (feat(cli): add cortextos tunnel command for persistent dashboard URL)
 }
 
 function findExistingTunnel(): CloudflaredTunnel | null {
@@ -123,19 +117,14 @@ function findExistingTunnel(): CloudflaredTunnel | null {
       timeout: 10000,
     });
     const tunnels: CloudflaredTunnel[] = JSON.parse(output);
-<<<<<<< HEAD
     // Filter out deleted tunnels — reuse only active ones
     return tunnels.find((t) => t.name === TUNNEL_NAME && !t.deleted_at) ?? null;
-=======
-    return tunnels.find((t) => t.name === TUNNEL_NAME) ?? null;
->>>>>>> 376d5fe (feat(cli): add cortextos tunnel command for persistent dashboard URL)
   } catch {
     return null;
   }
 }
 
 function createTunnel(): CloudflaredTunnel {
-<<<<<<< HEAD
   let output = '';
   try {
     output = execSync(`cloudflared tunnel create --output json ${TUNNEL_NAME}`, {
@@ -143,15 +132,10 @@ function createTunnel(): CloudflaredTunnel {
       stdio: 'pipe',
       timeout: 30000,
     });
-=======
-  try {
-    execSync(`cloudflared tunnel create ${TUNNEL_NAME}`, { stdio: 'inherit', timeout: 30000 });
->>>>>>> 376d5fe (feat(cli): add cortextos tunnel command for persistent dashboard URL)
   } catch (err) {
     console.error('  Failed to create tunnel:', err);
     process.exit(1);
   }
-<<<<<<< HEAD
   try {
     const created: CloudflaredCreateOutput = JSON.parse(output);
     return { id: created.id, name: created.name };
@@ -164,14 +148,6 @@ function createTunnel(): CloudflaredTunnel {
     }
     return tunnel;
   }
-=======
-  const tunnel = findExistingTunnel();
-  if (!tunnel) {
-    console.error('  Tunnel was created but could not be found in list. Try running again.');
-    process.exit(1);
-  }
-  return tunnel;
->>>>>>> 376d5fe (feat(cli): add cortextos tunnel command for persistent dashboard URL)
 }
 
 function writeCloudflaredConfig(tunnelId: string, port: number): void {
@@ -216,10 +192,7 @@ function writePlist(instance: string, port: number): void {
     <array>
         <string>${cfPath}</string>
         <string>tunnel</string>
-<<<<<<< HEAD
         <string>--no-autoupdate</string>
-=======
->>>>>>> 376d5fe (feat(cli): add cortextos tunnel command for persistent dashboard URL)
         <string>run</string>
         <string>${TUNNEL_NAME}</string>
     </array>
@@ -231,11 +204,7 @@ function writePlist(instance: string, port: number): void {
     <true/>
 
     <key>ThrottleInterval</key>
-<<<<<<< HEAD
     <integer>30</integer>
-=======
-    <integer>10</integer>
->>>>>>> 376d5fe (feat(cli): add cortextos tunnel command for persistent dashboard URL)
 
     <key>StandardOutPath</key>
     <string>${logDir}/stdout.log</string>
@@ -258,7 +227,6 @@ function writePlist(instance: string, port: number): void {
 
   mkdirSync(join(homedir(), 'Library', 'LaunchAgents'), { recursive: true });
   writeFileSync(PLIST_PATH, plist, 'utf-8');
-<<<<<<< HEAD
   chmodSync(PLIST_PATH, 0o644);
 }
 
@@ -273,24 +241,10 @@ function getUid(): string {
     return execSync('id -u', { encoding: 'utf-8', stdio: 'pipe' }).trim();
   } catch {
     return String(process.getuid ? process.getuid() : 501);
-=======
-}
-
-function isServiceLoaded(): boolean {
-  try {
-    const out = execSync(`launchctl list | grep ${PLIST_LABEL}`, {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-    });
-    return out.trim().length > 0;
-  } catch {
-    return false;
->>>>>>> 376d5fe (feat(cli): add cortextos tunnel command for persistent dashboard URL)
   }
 }
 
 function loadService(): void {
-<<<<<<< HEAD
   // Bootout first in case of stale registration, then bootstrap fresh
   const uid = getUid();
   spawnSync('launchctl', ['bootout', `gui/${uid}/${PLIST_LABEL}`], { stdio: 'pipe' });
@@ -327,19 +281,6 @@ function unloadService(): void {
     // Fallback to legacy unload
     spawnSync('launchctl', ['unload', '-w', PLIST_PATH], { stdio: 'pipe' });
   }
-=======
-  // Unload first in case of stale entry, then load fresh
-  try {
-    execSync(`launchctl unload "${PLIST_PATH}"`, { stdio: 'pipe' });
-  } catch {
-    // ignore — not loaded yet
-  }
-  execSync(`launchctl load "${PLIST_PATH}"`, { stdio: 'inherit' });
-}
-
-function unloadService(): void {
-  execSync(`launchctl unload "${PLIST_PATH}"`, { stdio: 'inherit' });
->>>>>>> 376d5fe (feat(cli): add cortextos tunnel command for persistent dashboard URL)
 }
 
 // ─── Sub-commands ─────────────────────────────────────────────────────────────
@@ -389,7 +330,6 @@ const startCommand = new Command('start')
     loadService();
     console.log(`  Service: loaded (auto-starts on login)`);
 
-<<<<<<< HEAD
     // 7. Wait briefly for tunnel to connect, then health-check
     console.log(`  Waiting for tunnel to connect...`);
     let connected = false;
@@ -414,9 +354,6 @@ const startCommand = new Command('start')
     }
 
     // 8. Persist tunnel config
-=======
-    // 7. Persist tunnel config
->>>>>>> 376d5fe (feat(cli): add cortextos tunnel command for persistent dashboard URL)
     writeTunnelConfig(options.instance, {
       tunnelId: tunnel.id,
       tunnelName: tunnel.name,
