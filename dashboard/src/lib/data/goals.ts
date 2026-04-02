@@ -45,6 +45,8 @@ export function getGoals(org: string): GoalsData {
     return {
       bottleneck: data.bottleneck ?? '',
       goals,
+      daily_focus: data.daily_focus ?? undefined,
+      daily_focus_set_at: data.daily_focus_set_at ?? undefined,
     };
   } catch {
     return { ...DEFAULT_GOALS, goals: [] };

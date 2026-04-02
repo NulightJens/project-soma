@@ -144,6 +144,8 @@ export interface Goal {
 export interface GoalsFile {
   bottleneck: string;
   goals: Goal[];
+  daily_focus?: string;       // Today's top priority, set by Orchestrator each morning
+  daily_focus_set_at?: string; // ISO timestamp when daily_focus was last updated
 }
 
 // -- Cost Types --
