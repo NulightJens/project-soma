@@ -1,9 +1,7 @@
-import { platform } from 'os';
 import { join } from 'path';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import type { AgentConfig, CtxEnv } from '../types/index.js';
 import { OutputBuffer } from './output-buffer.js';
-import { ensureDir } from '../utils/atomic.js';
 
 // node-pty types
 interface IPty {
@@ -31,6 +29,7 @@ type SpawnFn = (file: string, args: string[], options: IPtySpawnOptions) => IPty
  */
 export class AgentPTY {
   private pty: IPty | null = null;
+  private _alive = false;
   private outputBuffer: OutputBuffer;
   private env: CtxEnv;
   private config: AgentConfig;
@@ -60,7 +59,6 @@ export class AgentPTY {
       this.spawnFn = nodePty.spawn;
     }
 
-    const shell = this.getDefaultShell();
     const cwd = this.config.working_directory || this.env.agentDir || process.cwd();
 
     // Build environment variables for the PTY process
@@ -111,13 +109,19 @@ export class AgentPTY {
       }
     }
 
-    this.pty = this.spawnFn!(shell, [], {
+    // Spawn claude directly (no shell wrapper) — cross-platform, no shell escaping needed.
+    // env is passed natively via node-pty options; no bash export commands required.
+    const claudeArgs = this.buildClaudeArgs(mode, prompt);
+
+    this.pty = this.spawnFn!('claude', claudeArgs, {
       name: 'xterm-256color',
       cols: 200,
       rows: 50,
       cwd,
       env: ptyEnv,
     });
+
+    this._alive = true;
 
     // Set up output capture
     this.pty.onData((data: string) => {
@@ -126,66 +130,49 @@ export class AgentPTY {
 
     // Set up exit handler
     this.pty.onExit(({ exitCode, signal }) => {
+      this._alive = false;
       this.pty = null;
       if (this.onExitHandler) {
         this.onExitHandler(exitCode, signal);
       }
     });
 
-    // Build and send the Claude command
-    const claudeCmd = this.buildClaudeCommand(mode, prompt);
-    // Export env vars in shell first, then run claude
-    const exportCmd = Object.entries(ptyEnv)
-      .filter(([k]) => k.startsWith('CTX_') || k.startsWith('CRM_'))
-      .map(([k, v]) => `export ${k}='${v.replace(/'/g, "'\\''")}'`)
-      .join(' && ');
-
-    if (exportCmd) {
-      this.pty.write(exportCmd + '\r');
-    }
-
-    // Small delay for env to take effect, then launch claude
+    // Claude Code shows a "trust this folder?" prompt on first run in a new directory.
+    // Auto-accept by sending Enter after the prompt appears.
+    // The prompt takes ~3-5s to render; we send Enter at 5s and 8s for reliability.
     setTimeout(() => {
       if (this.pty) {
-        this.pty.write(claudeCmd + '\r');
-
-        // Claude Code shows a "trust this folder?" prompt on first run in a new directory.
-        // Auto-accept by sending Enter after the prompt appears.
-        // The prompt takes ~3-5s to render; we send Enter at 5s and 8s for reliability.
-        setTimeout(() => {
-          if (this.pty) {
-            const recent = this.outputBuffer.getRecent();
-            if (recent.includes('trust') || recent.includes('Yes')) {
-              this.pty.write('\r');
-            }
-          }
-        }, 5000);
-        setTimeout(() => {
-          if (this.pty) {
-            const recent = this.outputBuffer.getRecent();
-            if (recent.includes('trust') || recent.includes('Yes')) {
-              this.pty.write('\r');
-            }
-          }
-        }, 8000);
+        const recent = this.outputBuffer.getRecent();
+        if (recent.includes('trust') || recent.includes('Yes')) {
+          this.pty.write('\r');
+        }
       }
-    }, 500);
+    }, 5000);
+    setTimeout(() => {
+      if (this.pty) {
+        const recent = this.outputBuffer.getRecent();
+        if (recent.includes('trust') || recent.includes('Yes')) {
+          this.pty.write('\r');
+        }
+      }
+    }, 8000);
   }
 
   /**
-   * Build the claude CLI command string.
+   * Build the claude CLI argument array.
+   * Returns args suitable for passing directly to node-pty spawn (no shell escaping needed).
    */
-  private buildClaudeCommand(mode: 'fresh' | 'continue', prompt: string): string {
-    const parts = ['claude'];
+  private buildClaudeArgs(mode: 'fresh' | 'continue', prompt: string): string[] {
+    const args: string[] = [];
 
     if (mode === 'continue') {
-      parts.push('--continue');
+      args.push('--continue');
     }
 
-    parts.push('--dangerously-skip-permissions');
+    args.push('--dangerously-skip-permissions');
 
     if (this.config.model) {
-      parts.push('--model', this.config.model);
+      args.push('--model', this.config.model);
     }
 
     // Local override pattern (feat #20): concatenate {agentDir}/local/*.md files
@@ -204,18 +191,16 @@ export class AgentPTY {
             const localContent = mdFiles
               .map(f => readFileSync(f, 'utf-8'))
               .join('\n\n');
-            const escaped = localContent.replace(/'/g, "'\\''");
-            parts.push('--append-system-prompt', `'${escaped}'`);
+            args.push('--append-system-prompt', localContent);
           }
         } catch { /* ignore read errors */ }
       }
     }
 
-    // Escape single quotes in prompt for shell
-    const escapedPrompt = prompt.replace(/'/g, "'\\''");
-    parts.push(`'${escapedPrompt}'`);
+    // Pass prompt as a plain string — no shell escaping needed when using node-pty directly
+    args.push(prompt);
 
-    return parts.join(' ');
+    return args;
   }
 
   /**
@@ -233,6 +218,7 @@ export class AgentPTY {
    */
   kill(): void {
     if (this.pty) {
+      this._alive = false;
       this.pty.kill();
       this.pty = null;
     }
@@ -240,15 +226,11 @@ export class AgentPTY {
 
   /**
    * Check if the PTY process is alive.
+   * Uses an internal flag set by the onExit handler — cross-platform safe.
+   * (process.kill(pid, 0) is unreliable on Windows.)
    */
   isAlive(): boolean {
-    if (!this.pty) return false;
-    try {
-      process.kill(this.pty.pid, 0);
-      return true;
-    } catch {
-      return false;
-    }
+    return this._alive && this.pty !== null;
   }
 
   /**
@@ -270,16 +252,6 @@ export class AgentPTY {
    */
   getOutputBuffer(): OutputBuffer {
     return this.outputBuffer;
-  }
-
-  /**
-   * Get the platform-appropriate default shell.
-   */
-  private getDefaultShell(): string {
-    if (platform() === 'win32') {
-      return process.env.COMSPEC || 'cmd.exe';
-    }
-    return process.env.SHELL || '/bin/bash';
   }
 
   /**
