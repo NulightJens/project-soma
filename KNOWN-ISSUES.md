@@ -140,13 +140,9 @@ Doctor only checks cloudflared installation, Cloudflare auth, tunnel existence, 
 
 ---
 
-### 2.3 `generate-launchd.sh` script is macOS-only
+### 2.3 ~~`generate-launchd.sh` script is macOS-only~~ — RESOLVED
 
-The bash helper `scripts/generate-launchd.sh` generates and loads a launchd `.plist` — macOS-only service management. It is still present from the bash era (pre-Node.js migration), runs `launchctl load`, and has no Linux/Windows equivalent.
-
-The Node.js daemon uses PM2 for process management instead, but `generate-launchd.sh` is still referenced in legacy documentation and templates.
-
-**File references:** `scripts/generate-launchd.sh`
+`scripts/generate-launchd.sh`, `enable-agent.sh`, `disable-agent.sh`, and `scripts/agent-wrapper.sh` have been deleted. These were bash-era, launchd-based process management scripts with no Linux/Windows equivalent. The Node.js daemon uses PM2 (`cortextos ecosystem` + `pm2 start`) for cross-platform process management. Use `cortextos start <agent>` and `cortextos stop <agent>` for agent lifecycle management.
 
 ---
 

@@ -22,7 +22,7 @@ Complete TypeScript/Node.js implementation of the cortextOS agent framework. Ful
 
 ## What is cortextOS
 
-cortextOS is a persistent 24/7 multi-agent framework built on Claude Code. Agents run in tmux, communicate over a file-based message bus, manage tasks, log analytics events, and are controlled via Telegram. This Node.js package ships the entire framework as a single `npm install` with a unified `cortextos` CLI.
+cortextOS is a persistent 24/7 multi-agent framework built on Claude Code. Agents run as PM2-managed PTY processes, communicate over a file-based message bus, manage tasks, log analytics events, and are controlled via Telegram. This Node.js package ships the entire framework as a single `npm install` with a unified `cortextos` CLI.
 
 ---
 
@@ -144,8 +144,8 @@ Structured hypothesis-test-evaluate loop for autonomous agent experimentation.
 | `cortextos init` | Initialize a new cortextOS instance |
 | `cortextos add-agent <name> --template <type>` | Create a new agent from template |
 | `cortextos enable <name>` | Enable an agent (adds to enabled-agents.json) |
-| `cortextos start <name>` | Start an agent's launchd service |
-| `cortextos stop <name>` | Stop an agent's launchd service |
+| `cortextos start <name>` | Start an agent (via PM2) |
+| `cortextos stop <name>` | Stop an agent (via PM2) |
 | `cortextos status` | Show all agents' status, heartbeat age, current task |
 | `cortextos list-agents [--org <org>]` | List agents with heartbeat/role info |
 | `cortextos list-skills` | List available skills |
@@ -473,7 +473,7 @@ Tasks page priority filter showed "Critical" but task data uses `urgent`. Filter
 ### Agent Management Scripts
 
 **B11 — Missing lifecycle shell scripts** _(High)_
-`scripts/generate-launchd.sh`, `enable-agent.sh`, `disable-agent.sh` absent from Node.js repo. `cortextos start/stop/enable` commands failed. Also `--org` flag bug in agent create API (was passing wrong path). Fixed: copied scripts from main cortextos repo; fixed agent create API to pass `agentDir`.
+`enable-agent.sh`, `disable-agent.sh` were absent from Node.js repo. `cortextos start/stop/enable` commands failed. Also `--org` flag bug in agent create API (was passing wrong path). Fixed: agent lifecycle now handled by `cortextos start <agent>` / `cortextos stop <agent>` (TypeScript CLI); `scripts/generate-launchd.sh` and `scripts/agent-wrapper.sh` removed (replaced by PM2 + `src/daemon/agent-process.ts` + `src/pty/agent-pty.ts`); fixed agent create API to pass `agentDir`.
 
 ### Workflows Dashboard
 

@@ -7,7 +7,7 @@ import { ensureDir } from '../utils/atomic.js';
 
 /**
  * cortextOS Daemon - single process managing all agents.
- * Managed by PM2 for process persistence and auto-restart.
+ * Run via `pm2 start ecosystem.config.js` or `cortextos ecosystem && pm2 start`.
  */
 class Daemon {
   private agentManager: AgentManager | null = null;

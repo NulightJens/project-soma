@@ -12,11 +12,11 @@ Messages are delivered in real time by the fast-checker daemon running alongside
 ```
 === TELEGRAM from <name> (chat_id:<id>) ===
 <message text>
-Reply using: bash $CTX_FRAMEWORK_ROOT/bus/send-telegram.sh <chat_id> "<your reply>"
+Reply using: cortextos bus send-telegram <chat_id> "<your reply>"
 
 === AGENT MESSAGE from <agent> [msg_id: <id>] ===
 <message text>
-Reply using: bash $CTX_FRAMEWORK_ROOT/bus/send-message.sh <agent> normal '<your reply>' <msg_id>
+Reply using: cortextos bus send-message <agent> normal '<your reply>' <msg_id>
 ```
 
 ## What To Do

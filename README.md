@@ -1,4 +1,4 @@
-![npm version](https://img.shields.io/npm/v/cortextos) ![License](https://img.shields.io/badge/license-UNLICENSED-red) ![Node](https://img.shields.io/badge/node-20%2B-brightgreen) ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
+![npm version](https://img.shields.io/npm/v/cortextos) ![License](https://img.shields.io/badge/license-UNLICENSED-red) ![Node](https://img.shields.io/badge/node-20%2B-brightgreen) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)
 
 # cortextOS
 
@@ -53,7 +53,7 @@ flowchart TD
 
 ## Quick Start
 
-**Requirements:** Node.js 20+, macOS, Claude API key, PM2, Telegram bot token from @BotFather.
+**Requirements:** Node.js 20+, Claude API key, PM2, Telegram bot token from @BotFather.
 
 ```bash
 # 1. Install PM2 globally if you don't have it
@@ -96,7 +96,7 @@ pm2 start ecosystem.config.js && pm2 save && pm2 startup
 | Dependency | Notes |
 |---|---|
 | Node.js 20+ | [nodejs.org](https://nodejs.org) |
-| macOS | Linux support coming soon |
+| macOS or Linux | Windows: not yet supported |
 | Claude Code | `npm install -g @anthropic-ai/claude-code` + `claude login` |
 | PM2 | `npm install -g pm2` |
 | Telegram bot token | Create via @BotFather |

@@ -16,25 +16,25 @@ Every significant piece of work must have a corresponding task. Tasks enable coo
 
 ### 1. Create (BEFORE starting work)
 ```bash
-bash $CTX_FRAMEWORK_ROOT/bus/create-task.sh \
+cortextos bus create-task \
   "<title>" "<description>" [assignee] [priority] [project]
 ```
 
 ### 2. Mark in progress
 ```bash
-bash $CTX_FRAMEWORK_ROOT/bus/update-task.sh <task_id> in_progress
+cortextos bus update-task <task_id> in_progress
 ```
 
 ### 3. Execute the work
 
 ### 4. Complete
 ```bash
-bash $CTX_FRAMEWORK_ROOT/bus/complete-task.sh <task_id> "[output summary]"
+cortextos bus complete-task <task_id> "[output summary]"
 ```
 
 ### 5. Log KPI (if measurable)
 ```bash
-bash $CTX_FRAMEWORK_ROOT/bus/log-event.sh action task_completed info \
+cortextos bus log-event action task_completed info \
   '{"task_id":"ID","kpi_key":"metric_name","value":1}'
 ```
 
@@ -49,11 +49,11 @@ Tasks with `needs_approval: true` create an approval item that must be reviewed 
 
 | Action | Command |
 |--------|---------|
-| Create | `bash $CTX_FRAMEWORK_ROOT/bus/create-task.sh "<title>" "<desc>" [assignee] [priority] [project]` |
-| List | `bash $CTX_FRAMEWORK_ROOT/bus/list-tasks.sh [--status S] [--agent A] [--priority P]` |
-| Update | `bash $CTX_FRAMEWORK_ROOT/bus/update-task.sh <id> <status> [note]` |
-| Complete | `bash $CTX_FRAMEWORK_ROOT/bus/complete-task.sh <id> "[summary]"` |
-| Log event | `bash $CTX_FRAMEWORK_ROOT/bus/log-event.sh <category> <event> <severity> '[json]'` |
+| Create | `cortextos bus create-task "<title>" "<desc>" [assignee] [priority] [project]` |
+| List | `cortextos bus list-tasks [--status S] [--agent A] [--priority P]` |
+| Update | `cortextos bus update-task <id> <status> [note]` |
+| Complete | `cortextos bus complete-task <id> "[summary]"` |
+| Log event | `cortextos bus log-event <category> <event> <severity> '[json]'` |
 
 **Statuses:** pending, in_progress, blocked, completed
 
