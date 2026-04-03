@@ -274,16 +274,16 @@ After token paste:
 
 7. "Now send any message to your new bot on Telegram (just 'hi' is fine). This lets me detect your chat ID so that only you can message your agent. You can configure other chat IDs later so other members of your team can you cortextOS as well."
 
-Wait for confirmation, then auto-detect:
+Wait for confirmation, then auto-detect. Use long polling (timeout=30) so Telegram holds the connection open until a message arrives instead of returning empty immediately. This is critical for newly created bots where there's propagation delay:
 
 ```bash
 ORCH_BOT_TOKEN="<pasted token>"
 for i in 1 2 3; do
-    CHAT_INFO=$(curl -s "https://api.telegram.org/bot${ORCH_BOT_TOKEN}/getUpdates")
+    CHAT_INFO=$(curl -s "https://api.telegram.org/bot${ORCH_BOT_TOKEN}/getUpdates?timeout=30")
     ORCH_CHAT_ID=$(echo "$CHAT_INFO" | jq -r '.result[0].message.chat.id // empty')
     ORCH_USER_ID=$(echo "$CHAT_INFO" | jq -r '.result[0].message.from.id // empty')
     [[ -n "$ORCH_CHAT_ID" ]] && break
-    sleep 3
+    sleep 5
 done
 ```
 
