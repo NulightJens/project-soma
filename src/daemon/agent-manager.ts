@@ -50,6 +50,17 @@ export class AgentManager {
       return;
     }
 
+    // Auto-discover agent directory if not provided (e.g. when started via IPC)
+    if (!agentDir || !existsSync(agentDir)) {
+      const discovered = join(this.frameworkRoot, 'orgs', this.org, 'agents', name);
+      if (existsSync(discovered)) {
+        agentDir = discovered;
+      } else {
+        console.error(`[agent-manager] Agent directory not found for ${name}: tried ${discovered}`);
+        return;
+      }
+    }
+
     if (!config) {
       config = this.loadAgentConfig(agentDir);
     }
@@ -85,6 +96,12 @@ export class AgentManager {
       botToken = botTokenMatch?.[1]?.trim();
       chatId = chatIdMatch?.[1]?.trim();
       allowedUserId = allowedUserMatch?.[1]?.trim() || undefined;
+
+      // ALLOWED_USER must be a numeric Telegram user ID, not a username
+      if (allowedUserId && !/^\d+$/.test(allowedUserId)) {
+        log(`WARNING: ALLOWED_USER="${allowedUserId}" is not a numeric ID. Telegram user IDs are numbers (e.g. 7940429114). Messages will be blocked. Fix the .env file.`);
+        allowedUserId = undefined; // Disable the gate rather than silently block all messages
+      }
 
       if (botToken && chatId) {
         telegramApi = new TelegramAPI(botToken);
