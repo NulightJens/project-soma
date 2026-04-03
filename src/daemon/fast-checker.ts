@@ -191,6 +191,95 @@ ${lastSentCtx}Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
   }
 
   /**
+   * Format a Telegram photo message for injection.
+   * Matches bash fast-checker.sh format.
+   */
+  static formatTelegramPhotoMessage(
+    from: string,
+    chatId: string | number,
+    caption: string,
+    imagePath: string,
+  ): string {
+    return `=== TELEGRAM PHOTO from ${from} (chat_id:${chatId}) ===
+caption:
+\`\`\`
+${caption}
+\`\`\`
+local_file: ${imagePath}
+Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
+
+`;
+  }
+
+  /**
+   * Format a Telegram document message for injection.
+   * Matches bash fast-checker.sh format.
+   */
+  static formatTelegramDocumentMessage(
+    from: string,
+    chatId: string | number,
+    caption: string,
+    filePath: string,
+    fileName: string,
+  ): string {
+    return `=== TELEGRAM DOCUMENT from ${from} (chat_id:${chatId}) ===
+caption:
+\`\`\`
+${caption}
+\`\`\`
+local_file: ${filePath}
+file_name: ${fileName}
+Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
+
+`;
+  }
+
+  /**
+   * Format a Telegram voice/audio message for injection.
+   * Matches bash fast-checker.sh format.
+   */
+  static formatTelegramVoiceMessage(
+    from: string,
+    chatId: string | number,
+    filePath: string,
+    duration: number | undefined,
+  ): string {
+    const dur = duration !== undefined ? duration : 'unknown';
+    return `=== TELEGRAM VOICE from ${from} (chat_id:${chatId}) ===
+duration: ${dur}s
+local_file: ${filePath}
+Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
+
+`;
+  }
+
+  /**
+   * Format a Telegram video/video_note message for injection.
+   * Matches bash fast-checker.sh format.
+   */
+  static formatTelegramVideoMessage(
+    from: string,
+    chatId: string | number,
+    caption: string,
+    filePath: string,
+    fileName: string,
+    duration: number | undefined,
+  ): string {
+    const dur = duration !== undefined ? duration : 'unknown';
+    return `=== TELEGRAM VIDEO from ${from} (chat_id:${chatId}) ===
+caption:
+\`\`\`
+${caption}
+\`\`\`
+duration: ${dur}s
+local_file: ${filePath}
+file_name: ${fileName}
+Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
+
+`;
+  }
+
+  /**
    * Wait for the agent to finish bootstrapping.
    */
   private async waitForBootstrap(timeoutMs: number = 30000): Promise<void> {

@@ -10,6 +10,7 @@ import { resolveEnv } from '../utils/env.js';
 import { logInboundMessage, cacheLastSent, logOutboundMessage } from '../telegram/logging.js';
 import { collectTelegramCommands, registerTelegramCommands } from '../bus/metrics.js';
 import { stripControlChars } from '../utils/validate.js';
+import { processMediaMessage } from '../telegram/media.js';
 
 /**
  * Manages all agents in a cortextOS instance.
@@ -149,8 +150,8 @@ export class AgentManager {
         }
 
         const from = msg.from?.first_name || msg.from?.username || 'Unknown';
-        const text = stripControlChars(msg.text || msg.caption || '');
         const msgChatId = msg.chat?.id;
+        const effectiveChatId = msgChatId ?? chatId ?? '';
         const stateDir = join(this.ctxRoot, 'state', name);
 
         // Log inbound message to JSONL
@@ -159,22 +160,61 @@ export class AgentManager {
           from: msg.from?.id,
           from_name: from,
           chat_id: msgChatId,
-          text,
+          text: stripControlChars(msg.text || msg.caption || ''),
           timestamp: new Date().toISOString(),
         });
 
-        // Get last-sent context for conversation continuity
-        const lastSent = FastChecker.readLastSent(stateDir, msgChatId ?? chatId ?? '');
+        // Check for media messages (photo, document, voice, audio, video, video_note)
+        const isMedia = !!(msg.photo || msg.document || msg.voice || msg.audio || msg.video || msg.video_note);
 
-        // Get reply-to text if this is a reply
+        if (isMedia && telegramApi) {
+          const downloadDir = join(agentDir, 'telegram-images');
+          processMediaMessage(msg, telegramApi, downloadDir).then((media) => {
+            if (!media) {
+              log('Media processing returned null - falling back to text format');
+              const text = stripControlChars(msg.caption || '');
+              const formatted = FastChecker.formatTelegramTextMessage(from, effectiveChatId, text, this.frameworkRoot);
+              if (!checker.isDuplicate(formatted)) checker.queueTelegramMessage(formatted);
+              return;
+            }
+
+            let formatted: string;
+            if (media.type === 'photo') {
+              formatted = FastChecker.formatTelegramPhotoMessage(from, effectiveChatId, media.text, media.image_path!);
+            } else if (media.type === 'document') {
+              formatted = FastChecker.formatTelegramDocumentMessage(from, effectiveChatId, media.text, media.file_path!, media.file_name!);
+            } else if (media.type === 'voice' || media.type === 'audio') {
+              formatted = FastChecker.formatTelegramVoiceMessage(from, effectiveChatId, media.file_path!, media.duration);
+            } else {
+              // video or video_note
+              formatted = FastChecker.formatTelegramVideoMessage(from, effectiveChatId, media.text, media.file_path!, media.file_name || '', media.duration);
+            }
+
+            if (checker.isDuplicate(formatted)) {
+              log('Duplicate Telegram media message suppressed');
+              return;
+            }
+            log(`Media message received: type=${media.type}, path=${media.image_path || media.file_path}`);
+            checker.queueTelegramMessage(formatted);
+          }).catch((err) => {
+            log(`Media processing error: ${err} - falling back to text format`);
+            const text = stripControlChars(msg.caption || '');
+            const formatted = FastChecker.formatTelegramTextMessage(from, effectiveChatId, text, this.frameworkRoot);
+            if (!checker.isDuplicate(formatted)) checker.queueTelegramMessage(formatted);
+          });
+          return;
+        }
+
+        // Text message (non-media)
+        const text = stripControlChars(msg.text || '');
+        const lastSent = FastChecker.readLastSent(stateDir, effectiveChatId);
         const replyToText = msg.reply_to_message?.text
           ? stripControlChars(msg.reply_to_message.text)
           : undefined;
 
-        // Format using standard formatter with context
         const formatted = FastChecker.formatTelegramTextMessage(
           from,
-          msgChatId ?? chatId ?? '',
+          effectiveChatId,
           text,
           this.frameworkRoot,
           replyToText,
