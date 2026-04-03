@@ -797,7 +797,7 @@ busCommand
 // ---------------------------------------------------------------------------
 
 function runHook(hookName: string): void {
-  const hookPath = join(__dirname, `../hooks/${hookName}.js`);
+  const hookPath = join(__dirname, `hooks/${hookName}.js`);
   const result = spawnSync(process.execPath, [hookPath], { stdio: 'inherit' });
   process.exit(result.status ?? 0);
 }
