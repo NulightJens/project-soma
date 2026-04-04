@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, writeFileSync, copyFileSync, readFileSync, readd
 import { join } from 'path';
 import { homedir } from 'os';
 import { ensureDir } from '../utils/atomic.js';
+import type { OrgContext } from '../types/index.js';
 
 export const initCommand = new Command('init')
   .argument('<org-name>', 'Organization name')
@@ -121,6 +122,69 @@ export const initCommand = new Command('init')
     const knowledgePath = join(orgDir, 'knowledge.md');
     if (!existsSync(knowledgePath)) {
       writeFileSync(knowledgePath, `# ${orgName} - Shared Knowledge\n\nShared facts, metrics, and corrections for all agents.\n`, 'utf-8');
+    }
+
+    // Regenerate SYSTEM.md for all existing agents (handles cortextos init upgrades).
+    // Reads the now-current context.json and rewrites each agent's SYSTEM.md so that
+    // dashboard_url, orchestrator, timezone, etc. stay in sync after context changes.
+    if (existsSync(agentsDir)) {
+      let ctx: OrgContext | null = null;
+      try {
+        const contextPath = join(orgDir, 'context.json');
+        ctx = JSON.parse(readFileSync(contextPath, 'utf-8')) as OrgContext;
+      } catch { /* skip if unreadable */ }
+
+      if (ctx) {
+        let regenerated = 0;
+        for (const entry of readdirSync(agentsDir, { withFileTypes: true })) {
+          if (!entry.isDirectory()) continue;
+          const agentDir = join(agentsDir, entry.name);
+          const systemMdPath = join(agentDir, 'SYSTEM.md');
+          if (!existsSync(systemMdPath)) continue; // only update existing agents
+
+          try {
+            const systemMd = [
+              '# System Context',
+              '',
+              `**Organization:** ${ctx.name || orgName}`,
+              `**Description:** ${ctx.description || '(not set)'}`,
+              `**Timezone:** ${ctx.timezone || 'UTC'}`,
+              `**Orchestrator:** ${ctx.orchestrator || '(not set)'}`,
+              `**Dashboard:** ${ctx.dashboard_url || '(not configured)'}`,
+              `**Communication Style:** ${ctx.communication_style || 'casual'}`,
+              `**Day Mode:** ${ctx.day_mode_start || '08:00'} - ${ctx.day_mode_end || '00:00'}`,
+              '**Framework:** cortextOS Node.js',
+              '',
+              '---',
+              '',
+              '## Team Roster',
+              '',
+              '> This section is populated during onboarding. For the live roster:',
+              '```bash',
+              'cortextos list-agents',
+              '```',
+              '',
+              '## Agent Health',
+              '',
+              '```bash',
+              'cortextos bus read-all-heartbeats',
+              '```',
+              '',
+              '## Communication',
+              '',
+              '- Agent-to-agent: `cortextos bus send-message <agent> <priority> "<text>"`',
+              '- Telegram to user: `cortextos bus send-telegram <chat_id> "<text>"`',
+              '- Check inbox: `cortextos bus check-inbox`',
+              '',
+            ].join('\n');
+            writeFileSync(systemMdPath, systemMd, 'utf-8');
+            regenerated++;
+          } catch { /* skip agents we can't write to */ }
+        }
+        if (regenerated > 0) {
+          console.log(`  Regenerated SYSTEM.md for ${regenerated} agent(s)`);
+        }
+      }
     }
 
     console.log(`\n  Organization "${orgName}" initialized.`);
