@@ -1256,17 +1256,39 @@ busCommand
   .command('list-approvals')
   .description('List pending approval requests')
   .option('--format <fmt>', 'Output format: json|text', 'json')
-  .action((opts: { format?: string }) => {
+  .option('--all-orgs', 'Scan all orgs under CTX_ROOT (matches dashboard view)', false)
+  .action((opts: { format?: string; allOrgs?: boolean }) => {
     const { listPendingApprovals } = require('../bus/approval.js');
+    const { readdirSync, existsSync } = require('fs');
+    const { join, homedir: _homedir } = require('path');
+    const { homedir } = require('os');
     const env = resolveEnv();
-    const paths = resolvePaths(env.agentName, env.instanceId, env.org);
-    const approvals = listPendingApprovals(paths);
+
+    let approvals: unknown[] = [];
+
+    if (opts.allOrgs) {
+      // Scan every org directory under CTX_ROOT — mirrors dashboard syncAll() behaviour
+      const ctxRoot = join(homedir(), '.cortextos', env.instanceId);
+      const orgsDir = join(ctxRoot, 'orgs');
+      const orgs: string[] = existsSync(orgsDir)
+        ? readdirSync(orgsDir, { withFileTypes: true })
+            .filter((d: { isDirectory(): boolean }) => d.isDirectory())
+            .map((d: { name: string }) => d.name)
+        : [];
+      for (const org of orgs) {
+        const orgPaths = resolvePaths(env.agentName, env.instanceId, org);
+        approvals = approvals.concat(listPendingApprovals(orgPaths));
+      }
+    } else {
+      const paths = resolvePaths(env.agentName, env.instanceId, env.org);
+      approvals = listPendingApprovals(paths);
+    }
 
     if (opts.format === 'text') {
       if (approvals.length === 0) { console.log('No pending approvals'); return; }
-      for (const a of approvals) {
+      for (const a of approvals as Array<{ id: string; title: string; category: string; requesting_agent: string; created_at: string; description?: string; org?: string }>) {
         console.log(`[${a.id}] ${a.title}`);
-        console.log(`  Category: ${a.category} | Agent: ${a.requesting_agent} | Created: ${a.created_at}`);
+        console.log(`  Category: ${a.category} | Agent: ${a.requesting_agent} | Org: ${a.org ?? env.org} | Created: ${a.created_at}`);
         if (a.description) console.log(`  Context: ${a.description}`);
         console.log('');
       }

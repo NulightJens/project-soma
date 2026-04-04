@@ -52,8 +52,18 @@ export class IPCServer {
         });
       });
 
-      this.server.on('error', (err) => {
-        reject(err);
+      this.server.on('error', (err: NodeJS.ErrnoException) => {
+        if (err.code === 'EADDRINUSE') {
+          // Race: process was killed after unlink but before bind completed.
+          // Clean up the re-created socket and retry once.
+          try { unlinkSync(this.socketPath); } catch { /* ignore */ }
+          this.server!.listen(this.socketPath, () => {
+            console.log(`[ipc] Listening on ${this.socketPath} (recovered from stale socket)`);
+            resolve();
+          });
+        } else {
+          reject(err);
+        }
       });
 
       this.server.listen(this.socketPath, () => {
