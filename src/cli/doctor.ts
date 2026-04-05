@@ -82,7 +82,7 @@ export const doctorCommand = new Command('doctor')
       });
     }
 
-    // Fix spawn-helper permissions and test actual spawn capability (Unix only)
+    // Fix spawn-helper permissions (Unix only)
     if (process.platform !== 'win32') {
       const prebuildsDir = join(process.cwd(), 'node_modules', 'node-pty', 'prebuilds');
       const buildRelease = join(process.cwd(), 'node_modules', 'node-pty', 'build', 'Release');
@@ -115,33 +115,36 @@ export const doctorCommand = new Command('doctor')
           message: 'Permissions were missing - fixed automatically',
         });
       }
+    }
 
-      // Actual spawn test
-      try {
-        const pty = require('node-pty');
-        let output = '';
-        const p = pty.spawn('/bin/echo', ['pty-ok'], { name: 'xterm-256color', cols: 80, rows: 24 });
-        await new Promise<void>((resolve, reject) => {
-          p.onData((data: string) => { output += data; });
-          p.onExit(({ exitCode }: { exitCode: number }) => {
-            if (exitCode === 0 && output.includes('pty-ok')) resolve();
-            else reject(new Error(`exit ${exitCode}`));
-          });
-          setTimeout(() => reject(new Error('timed out')), 5000);
+    // Actual spawn test (cross-platform)
+    try {
+      const pty = require('node-pty');
+      let output = '';
+      const isWin = process.platform === 'win32';
+      const smokeCmd = isWin ? 'cmd.exe' : '/bin/echo';
+      const smokeArgs = isWin ? ['/c', 'echo', 'pty-ok'] : ['pty-ok'];
+      const p = pty.spawn(smokeCmd, smokeArgs, { name: 'xterm-256color', cols: 80, rows: 24 });
+      await new Promise<void>((resolve, reject) => {
+        p.onData((data: string) => { output += data; });
+        p.onExit(({ exitCode }: { exitCode: number }) => {
+          if (exitCode === 0 && output.includes('pty-ok')) resolve();
+          else reject(new Error(`exit ${exitCode}`));
         });
-        checks.push({
-          name: 'node-pty spawn test',
-          status: 'pass',
-          message: 'Can spawn processes',
-        });
-      } catch (err) {
-        checks.push({
-          name: 'node-pty spawn test',
-          status: 'fail',
-          message: `Cannot spawn processes: ${(err as Error).message}`,
-          fix: 'Try: npm rebuild node-pty',
-        });
-      }
+        setTimeout(() => reject(new Error('timed out')), 5000);
+      });
+      checks.push({
+        name: 'node-pty spawn test',
+        status: 'pass',
+        message: 'Can spawn processes',
+      });
+    } catch (err) {
+      checks.push({
+        name: 'node-pty spawn test',
+        status: 'fail',
+        message: `Cannot spawn processes: ${(err as Error).message}`,
+        fix: 'Try: npm rebuild node-pty',
+      });
     }
 
     // Check state directory

@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { execFileSync } from 'child_process';
+import { existsSync, readFileSync } from 'fs';
 import path from 'path';
+import os from 'os';
 import { getCTXRoot, getFrameworkRoot } from '@/lib/config';
 
 export const dynamic = 'force-dynamic';
@@ -20,15 +22,22 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const org = searchParams.get('org') || '';
 
-  if (!org) {
-    return Response.json({ error: 'org parameter required' }, { status: 400 });
+  if (!org || !/^[a-z0-9_-]+$/.test(org)) {
+    return Response.json({ error: 'org parameter required (lowercase alphanumeric, hyphens, underscores)' }, { status: 400 });
   }
 
   const frameworkRoot = getFrameworkRoot();
   const ctxRoot = getCTXRoot();
   const instanceId = path.basename(ctxRoot);
 
-  const scriptPath = path.join(frameworkRoot, 'bus', 'kb-collections.sh');
+  const kbRoot = path.join(os.homedir(), '.cortextos', instanceId, 'orgs', org, 'knowledge-base');
+  const chromaDir = path.join(kbRoot, 'chromadb');
+  const configPath = path.join(kbRoot, 'config.json');
+  const isWin = process.platform === 'win32';
+  const venvBin = isWin ? 'Scripts' : 'bin';
+  const pythonExe = isWin ? 'python.exe' : 'python3';
+  const pythonPath = path.join(frameworkRoot, 'knowledge-base', 'venv', venvBin, pythonExe);
+  const mmragPath = path.join(frameworkRoot, 'knowledge-base', 'scripts', 'mmrag.py');
 
   const env: Record<string, string> = {
     ...(process.env as Record<string, string>),
@@ -36,29 +45,42 @@ export async function GET(request: NextRequest) {
     CTX_INSTANCE_ID: instanceId,
     CTX_ORG: org,
     PATH: process.env.PATH ?? '',
+    MMRAG_DIR: kbRoot,
+    MMRAG_CHROMADB_DIR: chromaDir,
+    MMRAG_CONFIG: configPath,
   };
 
   // Load GEMINI_API_KEY from secrets if available
   const secretsPath = path.join(frameworkRoot, 'orgs', org, 'secrets.env');
   try {
-    const { readFileSync } = await import('fs');
     const secrets = readFileSync(secretsPath, 'utf-8');
     const match = secrets.match(/^GEMINI_API_KEY=(.+)$/m);
     if (match) env.GEMINI_API_KEY = match[1].trim();
   } catch {
     // No secrets file — GEMINI_API_KEY may be in process.env already
   }
+  if (!env.GEMINI_API_KEY && process.env.GEMINI_API_KEY) {
+    env.GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  }
+
+  // Pre-flight checks matching kb-collections.sh behavior
+  if (!existsSync(path.join(frameworkRoot, 'knowledge-base', 'venv'))) {
+    return Response.json({ collections: [], org });
+  }
+  if (!existsSync(chromaDir)) {
+    return Response.json({ collections: [], org });
+  }
 
   try {
-    const rawOut = execFileSync('bash', [scriptPath, '--org', org, '--instance', instanceId], {
+    const rawOut = execFileSync(pythonPath, [mmragPath, 'collections'], {
       timeout: 15000,
+      encoding: 'utf-8',
       env: env as NodeJS.ProcessEnv,
     });
-    const stdout = Buffer.isBuffer(rawOut) ? rawOut.toString('utf8') : String(rawOut);
 
     // Parse tabular output: "collection_name  N"
     const collections: Array<{ name: string; count: number }> = [];
-    for (const line of stdout.trim().split('\n')) {
+    for (const line of rawOut.trim().split('\n')) {
       if (!line || line.startsWith('Collection') || line.startsWith('---')) continue;
       const parts = line.trim().split(/\s+/);
       if (parts.length >= 2) {

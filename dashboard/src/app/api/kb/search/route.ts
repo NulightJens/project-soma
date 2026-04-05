@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { execFileSync } from 'child_process';
+import { existsSync, readFileSync } from 'fs';
 import path from 'path';
+import os from 'os';
 import { getCTXRoot, getFrameworkRoot } from '@/lib/config';
 
 
@@ -70,19 +72,23 @@ export async function GET(request: NextRequest) {
   // Derive instance ID from CTX_ROOT (e.g. ~/.cortextos/e2e-phase → "e2e-phase")
   const instanceId = path.basename(ctxRoot);
 
-  const scriptPath = path.join(frameworkRoot, 'bus', 'kb-query.sh');
+  const kbRoot = path.join(os.homedir(), '.cortextos', instanceId, 'orgs', org, 'knowledge-base');
+  const chromaDir = path.join(kbRoot, 'chromadb');
+  const configPath = path.join(kbRoot, 'config.json');
+  const isWin = process.platform === 'win32';
+  const venvBin = isWin ? 'Scripts' : 'bin';
+  const pythonExe = isWin ? 'python.exe' : 'python3';
+  const pythonPath = path.join(frameworkRoot, 'knowledge-base', 'venv', venvBin, pythonExe);
+  const mmragPath = path.join(frameworkRoot, 'knowledge-base', 'scripts', 'mmrag.py');
 
-  const args: string[] = [
-    q,
-    '--scope', scope,
-    '--top-k', String(limit),
-    '--threshold', String(threshold),
-    '--json',
-    '--instance', instanceId,
-  ];
-
-  if (org) args.push('--org', org);
-  if (agent) args.push('--agent', agent);
+  // Determine collection(s) from scope (matching kb-query.sh logic)
+  let collection = '';
+  if (scope === 'private') {
+    collection = `agent-${agent}`;
+  } else if (scope === 'shared') {
+    collection = `shared-${org}`;
+  }
+  // scope === 'all' → collection stays empty, we query both below
 
   // Load org secrets for GEMINI_API_KEY
   const secretsPath = org
@@ -94,6 +100,9 @@ export async function GET(request: NextRequest) {
     CTX_FRAMEWORK_ROOT: frameworkRoot,
     CTX_INSTANCE_ID: instanceId,
     PATH: process.env.PATH ?? '',
+    MMRAG_DIR: kbRoot,
+    MMRAG_CHROMADB_DIR: chromaDir,
+    MMRAG_CONFIG: configPath,
   };
 
   if (org) env.CTX_ORG = org;
@@ -102,13 +111,15 @@ export async function GET(request: NextRequest) {
   // Load GEMINI_API_KEY from secrets if available
   if (secretsPath) {
     try {
-      const { readFileSync } = await import('fs');
       const secrets = readFileSync(secretsPath, 'utf-8');
       const match = secrets.match(/^GEMINI_API_KEY=(.+)$/m);
       if (match) env.GEMINI_API_KEY = match[1].trim();
     } catch {
       // No secrets file — GEMINI_API_KEY may be in process.env already
     }
+  }
+  if (!env.GEMINI_API_KEY && process.env.GEMINI_API_KEY) {
+    env.GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   }
 
   if (!env.GEMINI_API_KEY) {
@@ -118,22 +129,67 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  try {
-    const rawOut = execFileSync('bash', [scriptPath, ...args], {
+  // Pre-flight: check venv exists
+  if (!existsSync(path.join(frameworkRoot, 'knowledge-base', 'venv'))) {
+    return Response.json({ results: [], total: 0, query: q, collection: `shared-${org}` });
+  }
+
+  /**
+   * Run a single mmrag.py query against one collection.
+   */
+  function runQuery(col: string): string {
+    const pyArgs = [
+      mmragPath, 'query', q,
+      '--collection', col,
+      '--top-k', String(limit),
+      '--threshold', String(threshold),
+      '--json',
+    ];
+    return execFileSync(pythonPath, pyArgs, {
       timeout: 30000,
+      encoding: 'utf-8',
       env: env as NodeJS.ProcessEnv,
     });
-    const stdout = Buffer.isBuffer(rawOut) ? rawOut.toString('utf8') : String(rawOut);
+  }
 
-    // mmrag.py --json outputs JSON (pretty-printed, multi-line).
-    // Extract the JSON block by finding the first { and parsing the full blob.
-    const trimmed = stdout.trim();
+  // Helper: parse mmrag.py JSON output from a single query
+  function parseQueryOutput(output: string): Array<{
+    content?: string; result?: string; similarity?: number;
+    source?: string; type?: string; filename?: string;
+  }> {
+    const trimmed = output.trim();
     const jsonStart = trimmed.indexOf('{');
-    if (jsonStart === -1) {
+    if (jsonStart === -1) return [];
+    try {
+      const parsed = JSON.parse(trimmed.slice(jsonStart));
+      return parsed.results || [];
+    } catch { return []; }
+  }
+
+  try {
+    let allResults: Array<{
+      content?: string; result?: string; similarity?: number;
+      source?: string; type?: string; filename?: string;
+    }> = [];
+
+    if (collection) {
+      // Single collection query
+      const stdout = runQuery(collection);
+      allResults = parseQueryOutput(stdout);
+    } else {
+      // "all" scope: query shared, then agent-private if agent set, merge results
+      try { allResults.push(...parseQueryOutput(runQuery(`shared-${org}`))); } catch { /* ignore */ }
+      if (agent) {
+        try { allResults.push(...parseQueryOutput(runQuery(`agent-${agent}`))); } catch { /* ignore */ }
+      }
+    }
+
+    if (allResults.length === 0) {
       return Response.json({ results: [], total: 0, query: q, collection: `shared-${org}` });
     }
 
-    const raw = JSON.parse(trimmed.slice(jsonStart)) as {
+    // Build a synthetic raw object for the existing mapping code below
+    const raw = { results: allResults } as {
       results?: Array<{
         content?: string;
         result?: string;

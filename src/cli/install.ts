@@ -149,11 +149,13 @@ export const installCommand = new Command('install')
     }
 
     // Smoke test: verify node-pty can actually spawn a process
-    if (!IS_WINDOWS) {
+    {
       try {
         const pty = require('node-pty');
         let output = '';
-        const p = pty.spawn('/bin/echo', ['pty-ok'], { name: 'xterm-256color', cols: 80, rows: 24 });
+        const smokeCmd = IS_WINDOWS ? 'cmd.exe' : '/bin/echo';
+        const smokeArgs = IS_WINDOWS ? ['/c', 'echo', 'pty-ok'] : ['pty-ok'];
+        const p = pty.spawn(smokeCmd, smokeArgs, { name: 'xterm-256color', cols: 80, rows: 24 });
         await new Promise<void>((resolve, reject) => {
           p.onData((data: string) => { output += data; });
           p.onExit(({ exitCode }: { exitCode: number }) => {

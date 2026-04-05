@@ -69,7 +69,9 @@ export class FastChecker {
         this.wakeResolve = null;
       }
     };
-    process.on('SIGUSR1', sigusr1Handler);
+    if (process.platform !== 'win32') {
+      process.on('SIGUSR1', sigusr1Handler);
+    }
 
     // Wait for bootstrap
     await this.waitForBootstrap();
@@ -86,7 +88,9 @@ export class FastChecker {
       await this.sleepInterruptible(this.pollInterval);
     }
 
-    process.removeListener('SIGUSR1', sigusr1Handler);
+    if (process.platform !== 'win32') {
+      process.removeListener('SIGUSR1', sigusr1Handler);
+    }
   }
 
   /**
@@ -94,6 +98,17 @@ export class FastChecker {
    */
   stop(): void {
     this.running = false;
+  }
+
+  /**
+   * Trigger immediate wake from sleep.
+   * Cross-platform alternative to SIGUSR1, called by IPC 'wake' command.
+   */
+  wake(): void {
+    if (this.wakeResolve) {
+      this.wakeResolve();
+      this.wakeResolve = null;
+    }
   }
 
   /**

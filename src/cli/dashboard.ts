@@ -13,7 +13,13 @@ function parseEnvFile(filePath: string): Record<string, string> {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('#')) continue;
       const idx = trimmed.indexOf('=');
-      if (idx > 0) result[trimmed.slice(0, idx)] = trimmed.slice(idx + 1);
+      if (idx > 0) {
+        let val = trimmed.slice(idx + 1);
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        result[trimmed.slice(0, idx)] = val;
+      }
     }
   } catch { /* ignore */ }
   return result;
@@ -161,9 +167,10 @@ export const dashboardCommand = new Command('dashboard')
       process.exit(code || 0);
     });
 
-    const cleanup = () => { child.kill('SIGTERM'); };
+    const cleanup = () => { try { child.kill('SIGTERM'); } catch { /* already dead */ } };
     process.on('SIGINT', cleanup);
     process.on('SIGTERM', cleanup);
+    process.on('exit', cleanup);
   });
 
 function findDashboardDir(): string | null {

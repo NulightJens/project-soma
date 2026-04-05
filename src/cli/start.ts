@@ -65,6 +65,7 @@ export const startCommand = new Command('start')
         child.on('exit', (code) => process.exit(code || 0));
         process.on('SIGINT', () => child.kill('SIGTERM'));
         process.on('SIGTERM', () => child.kill('SIGTERM'));
+        process.on('exit', () => { try { child.kill(); } catch { /* already dead */ } });
         return;
       }
 
@@ -77,6 +78,11 @@ export const startCommand = new Command('start')
             execSync('pm2 start ecosystem.config.js', { stdio: 'inherit', cwd: projectRoot });
             execSync('pm2 save', { stdio: 'inherit', cwd: projectRoot });
             console.log('\nDaemon started. Use `cortextos status` to check agents.');
+            if (IS_WINDOWS) {
+              console.log('\nFor auto-start on Windows boot:');
+              console.log('  npm install -g pm2-windows-startup');
+              console.log('  pm2-windows-startup install');
+            }
           } catch {
             console.error('PM2 start failed. Try: pm2 start ecosystem.config.js');
           }
@@ -91,6 +97,11 @@ export const startCommand = new Command('start')
             execSync('pm2 start ecosystem.config.js', { stdio: 'inherit', cwd: projectRoot });
             execSync('pm2 save', { stdio: 'inherit', cwd: projectRoot });
             console.log('\nDaemon started. Use `cortextos status` to check agents.');
+            if (IS_WINDOWS) {
+              console.log('\nFor auto-start on Windows boot:');
+              console.log('  npm install -g pm2-windows-startup');
+              console.log('  pm2-windows-startup install');
+            }
           } catch {
             console.error('Failed to generate ecosystem and start. Try manually:');
             console.error('  cortextos ecosystem && pm2 start ecosystem.config.js');
@@ -109,6 +120,7 @@ export const startCommand = new Command('start')
           stdio: ['ignore', 'ignore', 'ignore'],
           env: daemonEnv,
           cwd: projectRoot,
+          windowsHide: true,
         });
         child.unref();
 

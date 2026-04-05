@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { execFileSync } from 'child_process';
+import { join } from 'path';
 import { getTasks } from '@/lib/data/tasks';
 import { getFrameworkRoot, getCTXRoot, getOrgs } from '@/lib/config';
 import { syncAll } from '@/lib/sync';
@@ -101,19 +102,18 @@ export async function POST(request: NextRequest) {
     CTX_ORG: org,
   };
 
-  // Security (H4): Use execFileSync with argument array — no shell interpolation.
-  const scriptPath = `${frameworkRoot}/bus/create-task.sh`;
-  const args = [
-    title.trim(),
-    description ? String(description).slice(0, 2000) : '',
-    assignee ? String(assignee) : '',
-    priority || 'normal',
-    project ? String(project) : '',
-  ];
-  if (needsApproval) args.push('--needs-approval');
+  // Call the Node CLI directly instead of going through bash wrapper.
+  // create-task.sh just runs: node dist/cli.js bus create-task <title> [options]
+  const cliPath = join(frameworkRoot, 'dist', 'cli.js');
+  const args: string[] = ['bus', 'create-task', title.trim()];
+  if (description) { args.push('--desc', String(description).slice(0, 2000)); }
+  if (assignee) { args.push('--assignee', String(assignee)); }
+  if (priority) { args.push('--priority', priority); }
+  if (project) { args.push('--project', String(project)); }
+  if (needsApproval) { args.push('--needs-approval'); }
 
   try {
-    const result = execFileSync('bash', [scriptPath, ...args], {
+    const result = execFileSync(process.execPath, [cliPath, ...args], {
       encoding: 'utf-8',
       timeout: 10000,
       env,

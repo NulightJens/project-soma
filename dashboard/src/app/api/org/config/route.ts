@@ -73,7 +73,9 @@ export async function PATCH(request: NextRequest) {
     }
     writeFileSync(contextPath, JSON.stringify(ctx, null, 2) + '\n', 'utf-8');
 
-    // Trigger sync to all running agents — fire-and-forget so response is not blocked
+    // Trigger sync to all running agents — fire-and-forget so response is not blocked.
+    // Keep using bash script here: `bus sync-org-config` CLI subcommand does not exist yet.
+    // On Windows this will silently fail (no bash) — acceptable for a non-critical sync.
     const syncScript = join(frameworkRoot, 'bus', 'sync-org-config.sh');
     if (existsSync(syncScript)) {
       const childEnv: NodeJS.ProcessEnv = { ...process.env, CTX_FRAMEWORK_ROOT: frameworkRoot, CTX_ORG: org };

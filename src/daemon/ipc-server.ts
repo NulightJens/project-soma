@@ -152,6 +152,7 @@ export class IPCServer {
           if (request.agent) {
             const checker = this.agentManager.getFastChecker(request.agent);
             if (checker) {
+              checker.wake();
               response = { success: true, data: 'Woke fast checker' };
             } else {
               response = { success: false, error: `Agent ${request.agent} not found` };

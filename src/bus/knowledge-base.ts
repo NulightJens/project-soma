@@ -1,17 +1,76 @@
-import { execFileSync, execFile } from 'child_process';
-import { existsSync, mkdirSync } from 'fs';
+import { execFileSync } from 'child_process';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import type { BusPaths } from '../types/index.js';
 
 /**
- * Knowledge base integration — wraps the kb-*.sh scripts (which call mmrag.py)
- * as TypeScript functions for agent use.
+ * Knowledge base integration — calls mmrag.py directly (cross-platform,
+ * no bash dependency).  Previously wrapped kb-*.sh bash scripts.
  */
 
-// __dirname is dist/ in compiled bundle (tsup bundles to single cli.js)
-// So ../bus points to <project-root>/bus/
-const SCRIPT_DIR = join(__dirname, '../bus');
+/**
+ * Resolve the Python interpreter inside the knowledge-base venv,
+ * accounting for Windows vs Unix layout.
+ */
+function getVenvPython(frameworkRoot: string): string {
+  const isWin = process.platform === 'win32';
+  const venvBin = isWin ? 'Scripts' : 'bin';
+  const pythonExe = isWin ? 'python.exe' : 'python3';
+  return join(frameworkRoot, 'knowledge-base', 'venv', venvBin, pythonExe);
+}
+
+/**
+ * Load .env and secrets.env files the same way the bash scripts did
+ * (`set -o allexport && source …`).  Returns a flat key→value map.
+ */
+function loadSecretsEnv(frameworkRoot: string, org: string): Record<string, string> {
+  const secretsPath = join(frameworkRoot, 'orgs', org, 'secrets.env');
+  const dotenvPath = join(frameworkRoot, '.env');
+  const vars: Record<string, string> = {};
+  for (const p of [dotenvPath, secretsPath]) {
+    if (existsSync(p)) {
+      for (const line of readFileSync(p, 'utf-8').split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const idx = trimmed.indexOf('=');
+        if (idx > 0) {
+          let val = trimmed.slice(idx + 1);
+          // Strip surrounding quotes (single or double) that some .env files use
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          vars[trimmed.slice(0, idx)] = val;
+        }
+      }
+    }
+  }
+  return vars;
+}
+
+/**
+ * Build the full env object needed by mmrag.py calls.
+ */
+function buildKBEnv(
+  frameworkRoot: string,
+  org: string,
+  instanceId: string,
+  agent?: string,
+): Record<string, string> {
+  const kbRoot = join(homedir(), '.cortextos', instanceId, 'orgs', org, 'knowledge-base');
+  const secrets = loadSecretsEnv(frameworkRoot, org);
+  return {
+    ...process.env as Record<string, string>,
+    ...secrets,
+    CTX_ORG: org,
+    CTX_AGENT_NAME: agent || '',
+    CTX_INSTANCE_ID: instanceId,
+    CTX_FRAMEWORK_ROOT: frameworkRoot,
+    MMRAG_DIR: kbRoot,
+    MMRAG_CHROMADB_DIR: join(kbRoot, 'chromadb'),
+    MMRAG_CONFIG: join(kbRoot, 'config.json'),
+  };
+}
 
 export interface KBQueryResult {
   content: string;
@@ -48,51 +107,57 @@ export function queryKnowledgeBase(
 ): KBQueryResponse {
   const { org, agent, scope = 'all', topK = 5, threshold = 0.5, frameworkRoot, instanceId } = options;
 
-  const kbRoot = join(homedir(), '.cortextos', instanceId, 'orgs', org, 'knowledge-base');
-  const env: Record<string, string> = {
-    ...process.env as Record<string, string>,
-    CTX_ORG: org,
-    CTX_AGENT_NAME: agent || '',
-    CTX_INSTANCE_ID: instanceId,
-    CTX_FRAMEWORK_ROOT: frameworkRoot,
-    MMRAG_DIR: kbRoot,
-    MMRAG_CHROMADB_DIR: join(kbRoot, 'chromadb'),
-    MMRAG_CONFIG: join(kbRoot, 'config.json'),
-  };
+  const env = buildKBEnv(frameworkRoot, org, instanceId, agent);
+  const pythonPath = getVenvPython(frameworkRoot);
+  const mmragPath = join(frameworkRoot, 'knowledge-base', 'scripts', 'mmrag.py');
 
-  const args = [
-    join(SCRIPT_DIR, 'kb-query.sh'),
-    question,
-    '--org', org,
-    '--scope', scope,
-    '--top-k', String(topK),
-    '--threshold', String(threshold),
-    '--json',
-    '--instance', instanceId,
-  ];
-
-  if (agent) {
-    args.push('--agent', agent);
+  // Determine which collections to query based on scope
+  const collections: string[] = [];
+  switch (scope) {
+    case 'shared':
+      collections.push(`shared-${org}`);
+      break;
+    case 'private':
+      collections.push(agent ? `agent-${agent}` : `shared-${org}`);
+      break;
+    case 'all':
+      collections.push(`shared-${org}`);
+      if (agent) collections.push(`agent-${agent}`);
+      break;
   }
 
-  try {
-    const output = execFileSync('bash', args, {
-      encoding: 'utf-8',
-      timeout: 30000,
-      env,
-    });
+  const runQuery = (col: string): string | null => {
+    try {
+      return execFileSync(pythonPath, [
+        mmragPath, 'query', question,
+        '--collection', col,
+        '--top-k', String(topK),
+        '--threshold', String(threshold),
+        '--json',
+      ], {
+        encoding: 'utf-8',
+        timeout: 30000,
+        env,
+      });
+    } catch {
+      return null;
+    }
+  };
 
+  const parseOutput = (output: string | null): KBQueryResult[] => {
+    if (!output) return [];
     // mmrag.py --json outputs pretty-printed JSON; find and parse the JSON block
     const trimmed = output.trim();
     const jsonStart = trimmed.indexOf('{');
-    if (jsonStart !== -1) {
+    if (jsonStart === -1) return [];
+    try {
       const raw = JSON.parse(trimmed.slice(jsonStart)) as {
         results?: Array<{ content?: string; result?: string; similarity?: number; source?: string; type?: string }>;
         result_count?: number;
         query?: string;
         collection?: string;
       };
-      const results: KBQueryResult[] = (raw.results || []).map((r) => ({
+      return (raw.results || []).map((r) => ({
         content: r.content || r.result || '',
         source_file: r.source || '',
         org,
@@ -100,15 +165,30 @@ export function queryKnowledgeBase(
         score: r.similarity ?? 0,
         doc_type: r.type || 'markdown',
       }));
+    } catch {
+      return [];
+    }
+  };
+
+  try {
+    let allResults: KBQueryResult[] = [];
+    let lastCollection = `shared-${org}`;
+    for (const col of collections) {
+      const output = runQuery(col);
+      allResults = allResults.concat(parseOutput(output));
+      lastCollection = col;
+    }
+
+    if (allResults.length > 0) {
       return {
-        results,
-        total: raw.result_count ?? results.length,
+        results: allResults,
+        total: allResults.length,
         query: question,
-        collection: raw.collection || `shared-${org}`,
+        collection: collections.length === 1 ? lastCollection : `shared-${org}`,
       };
     }
   } catch {
-    // Script failed or not set up — return empty
+    // Failed — return empty
   }
 
   return { results: [], total: 0, query: question, collection: `shared-${org}` };
@@ -130,35 +210,42 @@ export function ingestKnowledgeBase(
 ): void {
   const { org, agent, scope = 'shared', force, frameworkRoot, instanceId } = options;
 
+  const env = buildKBEnv(frameworkRoot, org, instanceId, agent);
+  const pythonPath = getVenvPython(frameworkRoot);
+  const mmragPath = join(frameworkRoot, 'knowledge-base', 'scripts', 'mmrag.py');
+
+  // Determine collection name (same logic as kb-ingest.sh)
+  let collection: string;
+  if (scope === 'private') {
+    if (!agent) throw new Error('--agent or CTX_AGENT_NAME required for --scope private');
+    collection = `agent-${agent}`;
+  } else {
+    collection = `shared-${org}`;
+  }
+
+  // Ensure chromadb dir exists
   const kbRoot = join(homedir(), '.cortextos', instanceId, 'orgs', org, 'knowledge-base');
-  const env: Record<string, string> = {
-    ...process.env as Record<string, string>,
-    CTX_ORG: org,
-    CTX_AGENT_NAME: agent || '',
-    CTX_INSTANCE_ID: instanceId,
-    CTX_FRAMEWORK_ROOT: frameworkRoot,
-    MMRAG_DIR: kbRoot,
-    MMRAG_CHROMADB_DIR: join(kbRoot, 'chromadb'),
-    MMRAG_CONFIG: join(kbRoot, 'config.json'),
-  };
+  const chromaDir = join(kbRoot, 'chromadb');
+  if (!existsSync(chromaDir)) {
+    mkdirSync(chromaDir, { recursive: true });
+  }
 
-  const args = [
-    join(SCRIPT_DIR, 'kb-ingest.sh'),
-    ...paths,
-    '--org', org,
-    '--scope', scope,
-    '--instance', instanceId,
-  ];
+  console.log(`Ingesting into collection: ${collection}`);
+  for (const p of paths) {
+    console.log(`  Source: ${p}`);
+  }
 
-  if (agent) args.push('--agent', agent);
+  const args = [mmragPath, 'ingest', ...paths, '--collection', collection];
   if (force) args.push('--force');
 
-  execFileSync('bash', args, {
+  execFileSync(pythonPath, args, {
     encoding: 'utf-8',
     timeout: 120000,
     env,
     stdio: 'inherit',
   });
+
+  console.log(`\nIngest complete → collection: ${collection}`);
 }
 
 /**

@@ -81,6 +81,17 @@ class Daemon {
 
     process.on('SIGINT', handleSignal);
     process.on('SIGTERM', handleSignal);
+
+    // Fallback cleanup on exit (belt-and-suspenders for Windows)
+    process.on('exit', () => {
+      if (this.ipcServer) {
+        this.ipcServer.stop();
+      }
+      try {
+        const { unlinkSync } = require('fs');
+        unlinkSync(pidFile);
+      } catch { /* ignore */ }
+    });
   }
 }
 
