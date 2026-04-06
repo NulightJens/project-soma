@@ -452,7 +452,7 @@ export function collectTelegramCommands(scanDirs: string[]): { command: string; 
       if (!cmd || seen.has(cmd)) continue;
       seen.add(cmd);
 
-      const description = (parsed.description || `Skill: ${name}`).slice(0, 256);
+      const description = (parsed.description || `Skill: ${name}`).slice(0, 96);
       commands.push({ command: cmd, description });
     }
   }
@@ -478,11 +478,11 @@ export async function registerTelegramCommands(
       body: JSON.stringify({ commands }),
     });
 
-    const data = await response.json() as { ok: boolean };
+    const data = await response.json() as { ok: boolean; description?: string };
     if (data.ok) {
       return { status: 'ok', count: commands.length, commands };
     } else {
-      return { status: 'error', count: 0, commands, error: 'Failed to register commands with Telegram' };
+      return { status: 'error', count: 0, commands, error: data.description || 'Failed to register commands with Telegram' };
     }
   } catch (err) {
     return { status: 'error', count: 0, commands, error: String(err) };
