@@ -339,7 +339,7 @@ export class AgentProcess {
   private buildContinuePrompt(): string {
     const nowUtc = new Date().toISOString();
     const reminderBlock = this.buildReminderBlock();
-    return `SESSION CONTINUATION: Your CLI process was restarted with --continue to reload configs. Current UTC time: ${nowUtc}. Your full conversation history is preserved. Re-read AGENTS.md and ALL bootstrap files listed there. Restore your crons from config.json: recurring entries use /loop, once entries use CronCreate only if fire_at is still in the future (delete expired ones from config.json). Run CronList first — no duplicates.${reminderBlock} Check inbox. Resume normal operations.`;
+    return `SESSION CONTINUATION: Your CLI process was restarted with --continue to reload configs. Current UTC time: ${nowUtc}. Your full conversation history is preserved. Re-read AGENTS.md and ALL bootstrap files listed there. Restore your crons from config.json: recurring entries use /loop, once entries use CronCreate only if fire_at is still in the future (delete expired ones from config.json). Run CronList first — no duplicates.${reminderBlock} Check inbox. Resume normal operations. After restoring crons and checking inbox, send a Telegram message to the user saying you are back online.`;
   }
 
   /**

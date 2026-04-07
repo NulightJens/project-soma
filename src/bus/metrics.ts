@@ -452,7 +452,7 @@ export function collectTelegramCommands(scanDirs: string[]): { command: string; 
       if (!cmd || seen.has(cmd)) continue;
       seen.add(cmd);
 
-      const description = (parsed.description || `Skill: ${name}`).slice(0, 96);
+      const description = (parsed.description || `Skill: ${name}`).slice(0, 256);
       commands.push({ command: cmd, description });
     }
   }

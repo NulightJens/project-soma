@@ -123,6 +123,24 @@ export class AgentManager {
     const agentProcess = new AgentProcess(name, env, config, log);
     const checker = new FastChecker(agentProcess, paths, this.frameworkRoot, { log, telegramApi, chatId });
 
+    // Send Telegram notification on crashes and session refreshes
+    if (telegramApi && chatId) {
+      const tgApi = telegramApi;
+      const tgChatId = chatId;
+      let prevStatus: string | null = null;
+      agentProcess.onStatusChanged((status) => {
+        if (status.status === 'crashed') {
+          const crashNum = status.crashCount ?? '?';
+          tgApi.sendMessage(tgChatId, `Agent ${name} crashed (crash #${crashNum}) — auto-restarting`).catch(() => {});
+        } else if (status.status === 'halted') {
+          tgApi.sendMessage(tgChatId, `Agent ${name} HALTED — exceeded crash limit. Restart manually with: cortextos start ${name}`).catch(() => {});
+        } else if (status.status === 'running' && prevStatus === 'crashed') {
+          tgApi.sendMessage(tgChatId, `Agent ${name} recovered and is back online`).catch(() => {});
+        }
+        prevStatus = status.status;
+      });
+    }
+
     this.agents.set(name, { process: agentProcess, checker });
 
     // Start agent
@@ -189,9 +207,10 @@ export class AgentManager {
               return;
             }
 
+            log(`[DEBUG] media.type=${media.type} image_path=${JSON.stringify(media.image_path)} file_path=${JSON.stringify(media.file_path)}`);
             let formatted: string;
             if (media.type === 'photo') {
-              formatted = FastChecker.formatTelegramPhotoMessage(from, effectiveChatId, media.text, media.image_path!);
+              formatted = FastChecker.formatTelegramPhotoMessage(from, effectiveChatId, media.text, media.image_path ?? '');
             } else if (media.type === 'document') {
               formatted = FastChecker.formatTelegramDocumentMessage(from, effectiveChatId, media.text, media.file_path!, media.file_name!);
             } else if (media.type === 'voice' || media.type === 'audio') {

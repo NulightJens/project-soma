@@ -74,34 +74,22 @@ describe('FastChecker', () => {
   });
 
   describe('isAgentActive', () => {
-    it('returns true when log file grows', () => {
+    it('returns false before any message injection', () => {
       const agent = createMockAgent();
       const checker = new FastChecker(agent, paths, '/tmp/framework');
 
-      const logPath = join(paths.logDir, 'stdout.log');
-      writeFileSync(logPath, 'initial output\n');
-
-      // First call establishes baseline
-      checker.isAgentActive();
-
-      // Grow the log file
-      writeFileSync(logPath, 'initial output\nmore output\n');
-
-      expect(checker.isAgentActive()).toBe(true);
+      // No message has been injected yet
+      expect(checker.isAgentActive()).toBe(false);
     });
 
-    it('returns false when log file is static', () => {
+    it('returns true when message was recently injected and idle flag is absent', () => {
       const agent = createMockAgent();
+      // Use reflection to set private field for testing
       const checker = new FastChecker(agent, paths, '/tmp/framework');
+      (checker as any).lastMessageInjectedAt = Date.now();
 
-      const logPath = join(paths.logDir, 'stdout.log');
-      writeFileSync(logPath, 'initial output\n');
-
-      // First call establishes baseline
-      checker.isAgentActive();
-
-      // Second call with same size
-      expect(checker.isAgentActive()).toBe(false);
+      // No idle flag file exists, so agent is still active
+      expect(checker.isAgentActive()).toBe(true);
     });
 
     it('returns false when log file does not exist', () => {
