@@ -1,0 +1,60 @@
+{
+  "name": "cortextos",
+  "version": "0.1.1",
+  "description": "Persistent 24/7 Claude Code agents with multi-agent orchestration",
+  "main": "dist/daemon.js",
+  "bin": {
+    "cortextos": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test:playwright": "npx playwright test"
+  },
+  "keywords": [
+    "claude",
+    "agent",
+    "orchestration",
+    "ai",
+    "automation"
+  ],
+  "author": "Cortext LLC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grandamenium/cortextos.git"
+  },
+  "homepage": "https://github.com/grandamenium/cortextos",
+  "bugs": {
+    "url": "https://github.com/grandamenium/cortextos/issues"
+  },
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist/",
+    "templates/"
+  ],
+  "dependencies": {
+    "@inquirer/prompts": "^8.3.2",
+    "chalk": "^5.6.2",
+    "chokidar": "^5.0.0",
+    "commander": "^14.0.3",
+    "node-pty": "^1.1.0",
+    "ora": "^9.3.0",
+    "strip-ansi": "^7.2.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.5.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
+}

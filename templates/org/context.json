@@ -1,0 +1,18 @@
+{
+  "name": "",
+  "description": "",
+  "industry": "",
+  "icp": "",
+  "value_prop": "",
+  "timezone": "UTC",
+  "orchestrator": "",
+  "day_mode_start": "08:00",
+  "day_mode_end": "00:00",
+  "default_approval_categories": [
+    "external-comms",
+    "financial",
+    "deployment",
+    "data-deletion"
+  ],
+  "communication_style": "direct and casual"
+}

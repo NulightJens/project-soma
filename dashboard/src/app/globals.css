@@ -1,0 +1,269 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sora), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", monospace;
+  --font-heading: var(--font-sora), system-ui, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ============================================
+   Micro-interactions & Polish
+   ============================================ */
+
+/* Smooth page transitions */
+main {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Card hover lift effect */
+[data-slot="card"] {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+[data-slot="card"]:hover {
+  box-shadow: 0 4px 12px -2px rgba(0,0,0,0.08);
+}
+
+/* Sidebar nav item transitions */
+aside a {
+  transition: all 0.15s ease;
+}
+
+/* Badge pulse for urgent items */
+@keyframes badgePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.animate-badge-pulse {
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* Button press effect */
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Input focus glow */
+input:focus, textarea:focus {
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
+}
+
+/* Smooth accordion expand */
+[data-slot="accordion-content"] {
+  transition: height 0.2s ease-out;
+}
+
+/* Status dot pulse */
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; }
+  50% { box-shadow: 0 0 0 4px transparent; }
+}
+
+/* Sheet slide-in enhancement */
+[data-slot="sheet-content"] {
+  animation: sheetSlideIn 0.25s ease-out;
+}
+@keyframes sheetSlideIn {
+  from { transform: translateX(20px); opacity: 0.5; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Dialog scale-in */
+[role="dialog"] {
+  animation: dialogScaleIn 0.2s ease-out;
+}
+@keyframes dialogScaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Table row hover */
+tr:hover td {
+  background-color: rgba(0,0,0,0.02);
+}
+.dark tr:hover td {
+  background-color: rgba(255,255,255,0.02);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.25);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* ============================================
+   Mobile safe area for bottom nav bar
+   ============================================ */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ============================================
+   cortextOS Gold/Mustard Theme - Light Mode
+   ============================================ */
+:root {
+  --background: oklch(1 0 0);                    /* #FFFFFF */
+  --foreground: oklch(0.187 0 0);                /* #1A1A1A */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.187 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.187 0 0);
+  --primary: oklch(0.618 0.13 75);               /* #B8860B - dark goldenrod */
+  --primary-foreground: oklch(1 0 0);            /* white */
+  --secondary: oklch(0.975 0.005 80);            /* #F8F7F4 */
+  --secondary-foreground: oklch(0.187 0 0);
+  --muted: oklch(0.975 0.005 80);               /* #F8F7F4 */
+  --muted-foreground: oklch(0.478 0 0);          /* #666666 */
+  --accent: oklch(0.762 0.125 82);               /* #D4AF37 - gold accent */
+  --accent-foreground: oklch(0.187 0 0);
+  --destructive: oklch(0.577 0.245 27.325);      /* #DC2626 */
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.555 0.17 145);              /* #16A34A */
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.72 0.17 75);                /* #F59E0B */
+  --warning-foreground: oklch(0.187 0 0);
+  --border: oklch(0.905 0.01 70);                /* #E5E0D8 */
+  --input: oklch(0.905 0.01 70);
+  --ring: oklch(0.618 0.13 75);                  /* matches primary */
+  --chart-1: oklch(0.762 0.125 82);              /* gold */
+  --chart-2: oklch(0.546 0.2 262);               /* blue */
+  --chart-3: oklch(0.507 0.22 293);              /* purple */
+  --chart-4: oklch(0.543 0.22 340);              /* pink */
+  --chart-5: oklch(0.555 0.17 160);              /* green */
+  --radius: 0.5rem;
+  --sidebar: oklch(0.975 0.005 80);
+  --sidebar-foreground: oklch(0.187 0 0);
+  --sidebar-primary: oklch(0.618 0.13 75);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.762 0.125 82);
+  --sidebar-accent-foreground: oklch(0.187 0 0);
+  --sidebar-border: oklch(0.905 0.01 70);
+  --sidebar-ring: oklch(0.618 0.13 75);
+}
+
+/* ============================================
+   cortextOS Gold/Mustard Theme - Dark Mode
+   ============================================ */
+.dark {
+  --background: oklch(0.145 0 0);               /* #0F0F0F */
+  --foreground: oklch(0.975 0.005 80);           /* #F8F7F4 */
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.975 0.005 80);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.975 0.005 80);
+  --primary: oklch(0.762 0.125 82);              /* #D4AF37 - gold for dark mode */
+  --primary-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.187 0 0);                 /* #1A1A1A */
+  --secondary-foreground: oklch(0.975 0.005 80);
+  --muted: oklch(0.187 0 0);                    /* #1A1A1A */
+  --muted-foreground: oklch(0.6 0 0);
+  --accent: oklch(0.618 0.13 75);               /* #B8860B */
+  --accent-foreground: oklch(0.975 0.005 80);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.555 0.17 145);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.72 0.17 75);
+  --warning-foreground: oklch(0.187 0 0);
+  --border: oklch(0.25 0.015 60);               /* #2A2520 */
+  --input: oklch(0.25 0.015 60);
+  --ring: oklch(0.762 0.125 82);
+  --chart-1: oklch(0.762 0.125 82);
+  --chart-2: oklch(0.546 0.2 262);
+  --chart-3: oklch(0.507 0.22 293);
+  --chart-4: oklch(0.543 0.22 340);
+  --chart-5: oklch(0.555 0.17 160);
+  --sidebar: oklch(0.187 0 0);
+  --sidebar-foreground: oklch(0.975 0.005 80);
+  --sidebar-primary: oklch(0.762 0.125 82);
+  --sidebar-primary-foreground: oklch(0.975 0.005 80);
+  --sidebar-accent: oklch(0.25 0.015 60);
+  --sidebar-accent-foreground: oklch(0.975 0.005 80);
+  --sidebar-border: oklch(0.25 0.015 60);
+  --sidebar-ring: oklch(0.762 0.125 82);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sora), system-ui, sans-serif;
+  }
+  html {
+    @apply font-sans;
+  }
+}

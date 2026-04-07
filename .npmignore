@@ -1,0 +1,50 @@
+# Source - shipped via dist/
+src/
+tests/
+*.test.ts
+*.spec.ts
+
+# Configs
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+playwright.config.ts
+ecosystem.config.js
+
+# Dev/CI
+.github/
+.claude/
+.vscode/
+.idea/
+
+# Personal/runtime
+orgs/
+.cortextos-env
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.DS_Store
+*.swp
+*~
+
+# Dashboard - separate package, not part of CLI
+dashboard/
+
+# Knowledge base - large
+knowledge-base/
+
+# Internal docs
+CLAUDE.md
+CHANGELOG.md
+docs/
+KNOWN-ISSUES.md
+WINDOWS-IMPLEMENTATION-PLAN.md
+WINDOWS-SUPPORT-INVESTIGATION.md
+BRAINDUMP*.md
+AGENTS.md
+
+# Logs
+*.log
+test-results/

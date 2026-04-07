@@ -1,0 +1,51 @@
+node_modules/
+.claude/
+!.claude/commands/
+!.claude/commands/**
+!.claude/orchestration-cortextos-node/
+# Include template .claude dirs (needed for agent settings.json)
+!templates/**/.claude/
+!templates/**/.claude/**
+dist/
+ecosystem.config.js
+
+# User-created org data (not part of the framework)
+orgs/
+# But community subdirectories ARE part of the framework
+!community/
+!community/**
+
+# Secrets
+.env
+!.env.example
+templates/*/.env
+.cortextos-env
+
+# Agent runtime data
+orgs/*/agents/*/memory/
+agents/*/local/
+agents/*/telegram-images/
+agents/*/memory/
+
+# macOS metadata
+.DS_Store
+
+# Test artifacts
+test-results/
+*.log
+
+# Knowledge base
+knowledge-base/venv/
+knowledge-base/__pycache__/
+knowledge-base/scripts/__pycache__/
+tests/playwright/dashboard-ui.spec.ts
+
+# Local ops docs (personal, not for public repo)
+docs/
+
+# Internal developer/planning notes (not for public repo)
+KNOWN-ISSUES.md
+WINDOWS-IMPLEMENTATION-PLAN.md
+WINDOWS-SUPPORT-INVESTIGATION.md
+BRAINDUMP*.md
+AGENTS.md
