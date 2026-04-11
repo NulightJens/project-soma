@@ -236,3 +236,56 @@ describe('AgentProcess - cron auto-verification', () => {
     expect(promptArg).toContain('daily-report');
   });
 });
+
+describe('AgentProcess - BUG-048 fix (session timer re-reads config)', () => {
+  it('fires sessionRefresh when config on disk still matches original short duration', async () => {
+    const refreshSpy = vi.fn().mockResolvedValue(undefined);
+
+    vi.useFakeTimers();
+    try {
+      const ap = new AgentProcess('alice', mockEnv, { max_session_seconds: 1 });
+      vi.spyOn(ap, 'sessionRefresh').mockImplementation(refreshSpy);
+      await ap.start();
+      await vi.advanceTimersByTimeAsync(2000);
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(refreshSpy).toHaveBeenCalledOnce();
+  });
+
+  it('reschedules when config.json on disk has a longer max_session_seconds', async () => {
+    const fs = await import('fs');
+    const mockExistsSync = vi.mocked(fs.existsSync);
+    const mockReadFileSync = vi.mocked(fs.readFileSync);
+
+    const refreshSpy = vi.fn().mockResolvedValue(undefined);
+
+    // Config on disk says 1 hour — much longer than initial 1s
+    mockExistsSync.mockImplementation((p: unknown) =>
+      typeof p === 'string' && p.endsWith('config.json'),
+    );
+    mockReadFileSync.mockImplementation((p: unknown) => {
+      if (typeof p === 'string' && p.endsWith('config.json')) {
+        return JSON.stringify({ max_session_seconds: 3600 });
+      }
+      return '';
+    });
+
+    vi.useFakeTimers();
+    try {
+      const ap = new AgentProcess('alice', mockEnv, { max_session_seconds: 1 });
+      vi.spyOn(ap, 'sessionRefresh').mockImplementation(refreshSpy);
+      await ap.start();
+      // Advance past the initial 1s timer — should reschedule, not fire refresh
+      await vi.advanceTimersByTimeAsync(2000);
+    } finally {
+      vi.useRealTimers();
+      mockExistsSync.mockReturnValue(false);
+      mockReadFileSync.mockReset();
+    }
+
+    // sessionRefresh must NOT have been called — config said 1h, not 1s
+    expect(refreshSpy).not.toHaveBeenCalled();
+  });
+});
