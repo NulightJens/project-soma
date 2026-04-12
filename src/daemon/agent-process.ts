@@ -188,10 +188,17 @@ export class AgentProcess {
       } catch {
         // Ignore write errors during shutdown
       }
-      try {
-        pty.kill();
-      } catch {
-        // PTY may have already exited — ignore
+      // BUG-032 follow-up: only kill the PTY if the process is still alive.
+      // After /exit + 5s wait, the child has usually exited cleanly. Calling
+      // pty.kill() on an already-exited PTY tears down the file descriptor,
+      // which can send SIGHUP (exit code 129) to a process that was in the
+      // middle of flushing. Polling first eliminates the remaining SIGHUP risk.
+      if (pty.isAlive()) {
+        try {
+          pty.kill();
+        } catch {
+          // PTY may have exited between the check and the kill — ignore
+        }
       }
 
       // BUG-011 fix: AWAIT the exit handler before resolving stop().

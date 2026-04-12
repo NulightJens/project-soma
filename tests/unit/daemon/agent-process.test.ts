@@ -8,6 +8,7 @@ const mockPty = {
   kill: vi.fn(),
   write: vi.fn(),
   getPid: vi.fn().mockReturnValue(12345),
+  isAlive: vi.fn().mockReturnValue(true),
   onExit: vi.fn().mockImplementation((cb: (exitCode: number, signal?: number) => void) => {
     capturedOnExit = cb;
   }),
@@ -69,6 +70,8 @@ beforeEach(() => {
   mockPty.spawn.mockClear();
   mockPty.kill.mockClear();
   mockPty.write.mockClear();
+  mockPty.isAlive.mockClear();
+  mockPty.isAlive.mockReturnValue(true);
   mockPty.onExit.mockClear();
   mockInjectMessage.mockClear();
 });
