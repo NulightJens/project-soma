@@ -239,7 +239,7 @@ Reply using: cortextos bus send-message ${msg.from} normal '<your reply>' ${msg.
       : `\`\`\`\n${text}\n\`\`\``;
     return `=== TELEGRAM from [USER: ${from}] (chat_id:${chatId}) ===
 ${replyCx}${body}
-${lastSentCtx}Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
+${lastSentCtx}Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
 
 `;
   }
@@ -260,7 +260,7 @@ caption:
 ${caption}
 \`\`\`
 local_file: ${imagePath}
-Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
+Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
 
 `;
   }
@@ -283,7 +283,7 @@ ${caption}
 \`\`\`
 local_file: ${filePath}
 file_name: ${fileName}
-Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
+Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
 
 `;
   }
@@ -302,7 +302,7 @@ Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
     return `=== TELEGRAM VOICE from ${from} (chat_id:${chatId}) ===
 duration: ${dur}s
 local_file: ${filePath}
-Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
+Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
 
 `;
   }
@@ -328,7 +328,7 @@ ${caption}
 duration: ${dur}s
 local_file: ${filePath}
 file_name: ${fileName}
-Reply using: cortextos bus send-telegram ${chatId} "<your reply>"
+Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
 
 `;
   }
