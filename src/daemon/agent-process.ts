@@ -405,13 +405,15 @@ export class AgentProcess {
 
     const nowUtc = new Date().toISOString();
     const reminderBlock = this.buildReminderBlock();
-    return `You are starting a new session. Current UTC time: ${nowUtc}. Read AGENTS.md and all bootstrap files listed there. Then restore your crons from config.json: for each entry with type "recurring" (or no type field), call /loop {interval} {prompt}; for each entry with type "once", compare fire_at against the current UTC time above — if fire_at is still in the future recreate the CronCreate, if fire_at is in the past delete that entry from config.json. Run CronList first to avoid duplicates.${reminderBlock} After setting up crons, send a Telegram message to the user saying you are back online.${onboardingAppend}`;
+    const deliverablesBlock = this.buildDeliverablesBlock();
+    return `You are starting a new session. Current UTC time: ${nowUtc}. Read AGENTS.md and all bootstrap files listed there. Then restore your crons from config.json: for each entry with type "recurring" (or no type field), call /loop {interval} {prompt}; for each entry with type "once", compare fire_at against the current UTC time above — if fire_at is still in the future recreate the CronCreate, if fire_at is in the past delete that entry from config.json. Run CronList first to avoid duplicates.${reminderBlock}${deliverablesBlock} After setting up crons, send a Telegram message to the user saying you are back online.${onboardingAppend}`;
   }
 
   private buildContinuePrompt(): string {
     const nowUtc = new Date().toISOString();
     const reminderBlock = this.buildReminderBlock();
-    return `SESSION CONTINUATION: Your CLI process was restarted with --continue to reload configs. Current UTC time: ${nowUtc}. Your full conversation history is preserved. Re-read AGENTS.md and ALL bootstrap files listed there. Restore your crons from config.json: recurring entries use /loop, once entries use CronCreate only if fire_at is still in the future (delete expired ones from config.json). Run CronList first — no duplicates.${reminderBlock} Check inbox. Resume normal operations. After restoring crons and checking inbox, send a Telegram message to the user saying you are back online.`;
+    const deliverablesBlock = this.buildDeliverablesBlock();
+    return `SESSION CONTINUATION: Your CLI process was restarted with --continue to reload configs. Current UTC time: ${nowUtc}. Your full conversation history is preserved. Re-read AGENTS.md and ALL bootstrap files listed there. Restore your crons from config.json: recurring entries use /loop, once entries use CronCreate only if fire_at is still in the future (delete expired ones from config.json). Run CronList first — no duplicates.${reminderBlock}${deliverablesBlock} Check inbox. Resume normal operations. After restoring crons and checking inbox, send a Telegram message to the user saying you are back online.`;
   }
 
   /**
@@ -428,6 +430,26 @@ export class AgentProcess {
         `  - [${r.id}] (due ${r.fire_at}): ${r.prompt}`,
       ).join('\n');
       return ` You also have ${overdue.length} overdue persistent reminder(s) from before this restart — handle each one, then run: cortextos bus ack-reminder <id>\n${items}`;
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Build a deliverable-standard instruction block for the boot prompt.
+   * When require_deliverables is enabled in the org's context.json, agents
+   * are told that every task submitted for review must have at least one
+   * file attached via save-output. The instruction is injected dynamically
+   * so existing agents pick up the rule on their next boot with zero file
+   * changes, and toggling it off removes it from the next startup prompt.
+   */
+  private buildDeliverablesBlock(): string {
+    try {
+      const contextPath = join(this.env.frameworkRoot, 'orgs', this.env.org, 'context.json');
+      if (!existsSync(contextPath)) return '';
+      const ctx = JSON.parse(readFileSync(contextPath, 'utf-8'));
+      if (!ctx.require_deliverables) return '';
+      return ' DELIVERABLE STANDARD: Every task you submit for review MUST have at least one file deliverable attached via the save-output bus command. A task with zero file deliverables will be sent back. Attach files with: cortextos bus save-output <task-id> <file-path> --label "<descriptive label>". Labels must be human-readable at a glance: describe WHAT it is plus enough context to understand at a glance. Good: "Traffic Growth Plan — 10 channels, 30-day launch sequence". Bad: "traffic-growth-plan.md" or "output-1". Notes are for context only, never file paths or URLs.';
     } catch {
       return '';
     }

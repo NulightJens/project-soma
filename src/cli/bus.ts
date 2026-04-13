@@ -5,6 +5,7 @@ import { join } from 'path';
 import { sendMessage, checkInbox, ackInbox } from '../bus/message.js';
 import { validateAgentName } from '../utils/validate.js';
 import { createTask, updateTask, completeTask, listTasks, checkStaleTasks, archiveTasks, checkHumanTasks } from '../bus/task.js';
+import { saveOutput } from '../bus/save-output.js';
 import { logEvent } from '../bus/event.js';
 import { updateHeartbeat, readAllHeartbeats } from '../bus/heartbeat.js';
 import { selfRestart, hardRestart, autoCommit, checkGoalStaleness, postActivity } from '../bus/system.js';
@@ -20,7 +21,43 @@ import { resolveEnv } from '../utils/env.js';
 import { IPCClient } from '../daemon/ipc-server.js';
 import { TelegramAPI } from '../telegram/api.js';
 import { logOutboundMessage, cacheLastSent } from '../telegram/logging.js';
-import type { Priority, TaskStatus, EventCategory, EventSeverity, ApprovalCategory, ApprovalStatus } from '../types/index.js';
+import type { Priority, Task, TaskStatus, EventCategory, EventSeverity, ApprovalCategory, ApprovalStatus, OrgContext } from '../types/index.js';
+
+/**
+ * Check if the org requires deliverables and the task has none attached.
+ * Returns an error message if the transition should be blocked, or null if allowed.
+ */
+function checkDeliverableRequirement(taskId: string, frameworkRoot: string, org: string, taskDir: string): string | null {
+  // Read org context to check require_deliverables setting
+  const contextPath = join(frameworkRoot, 'orgs', org, 'context.json');
+  if (!existsSync(contextPath)) return null;
+
+  let ctx: OrgContext;
+  try {
+    ctx = JSON.parse(readFileSync(contextPath, 'utf-8'));
+  } catch {
+    return null; // cannot read config — allow the transition
+  }
+
+  if (!ctx.require_deliverables) return null;
+
+  // Check if the task has outputs
+  const taskFile = join(taskDir, `${taskId}.json`);
+  if (!existsSync(taskFile)) return null;
+
+  let task: Task;
+  try {
+    task = JSON.parse(readFileSync(taskFile, 'utf-8'));
+  } catch {
+    return null;
+  }
+
+  if (!task.outputs || task.outputs.length === 0) {
+    return `Cannot submit task ${taskId}: require_deliverables is enabled but this task has no file deliverables attached. Use "cortextos bus save-output ${taskId} <file>" to attach a deliverable first.`;
+  }
+
+  return null;
+}
 
 export const busCommand = new Command('bus')
   .description('Bus commands for agent messaging, tasks, and events');
@@ -128,6 +165,18 @@ busCommand
     }
     const env = resolveEnv();
     const paths = resolvePaths(env.agentName, env.instanceId, env.org);
+
+    // Guard: block review/completion when deliverables are required but missing.
+    // Checks both ready_for_review (approval workflow) and completed (vanilla upstream)
+    // so the validator works regardless of which status set is installed.
+    if ((status === 'ready_for_review' || status === 'completed') && env.org) {
+      const err = checkDeliverableRequirement(id, env.frameworkRoot, env.org, paths.taskDir);
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+    }
+
     updateTask(paths, id, status as TaskStatus);
     console.log(`Updated ${id} -> ${status}`);
   });
@@ -142,8 +191,48 @@ busCommand
     const effectiveResult = opts.result ?? resultArg;
     const env = resolveEnv();
     const paths = resolvePaths(env.agentName, env.instanceId, env.org);
+
+    // Guard: block completion when deliverables are required but missing
+    if (env.org) {
+      const err = checkDeliverableRequirement(id, env.frameworkRoot, env.org, paths.taskDir);
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+    }
+
     completeTask(paths, id, effectiveResult);
     console.log(`Completed ${id}`);
+  });
+
+busCommand
+  .command('save-output')
+  .description('Copy a file into the per-task deliverables tree and link it to the task as a file output')
+  .argument('<task-id>', 'Target task ID')
+  .argument('<source>', 'Source file to save (absolute or relative to cwd)')
+  .option('--label <label>', 'Human-readable label for the linked output (defaults to filename)')
+  .option('--move', 'Delete the source file after a successful copy')
+  .option('--no-link', 'Save file without linking to task.outputs[]')
+  .action((taskId: string, source: string, opts: { label?: string; move?: boolean; link?: boolean }) => {
+    const noLink = opts.link === false;
+    const env = resolveEnv();
+    const paths = resolvePaths(env.agentName, env.instanceId, env.org);
+    try {
+      const result = saveOutput(paths, {
+        taskId,
+        sourcePath: source,
+        label: opts.label,
+        move: opts.move ?? false,
+        noLink,
+      });
+      console.log(result.targetPath);
+      if (result.linked) {
+        console.log(`Linked to ${taskId} as [snapshot] ${opts.label ?? result.storedPath}`);
+      }
+    } catch (err) {
+      console.error((err as Error).message);
+      process.exit(1);
+    }
   });
 
 busCommand

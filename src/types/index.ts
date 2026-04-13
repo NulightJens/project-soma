@@ -29,6 +29,15 @@ export interface InboxMessage {
 
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'blocked' | 'cancelled';
 
+export interface TaskOutput {
+  /** Output kind. "file" links to a saved deliverable; other shapes reserved. */
+  type: 'file';
+  /** For type:"file", the path to the file relative to CTX_ROOT (forward-slash separated). */
+  value: string;
+  /** Optional human-readable label shown in dashboard task detail. */
+  label?: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -48,6 +57,8 @@ export interface Task {
   due_date: string | null;
   archived: boolean;
   result?: string;
+  /** Linked deliverables (files saved via `cortextos bus save-output`). */
+  outputs?: TaskOutput[];
 }
 
 // Event Types
@@ -179,6 +190,11 @@ export interface OrgContext {
   default_approval_categories?: string[];
   communication_style?: string;
   dashboard_url?: string;
+  /** When true, agents are instructed at startup that every task submitted
+   *  for review must have at least one file deliverable attached via
+   *  save-output. The instruction is injected into the boot prompt
+   *  dynamically — no agent markdown files are modified. */
+  require_deliverables?: boolean;
 }
 
 // Telegram Types
@@ -298,6 +314,12 @@ export interface BusPaths {
   taskDir: string;
   approvalDir: string;
   analyticsDir: string;
+  /**
+   * Per-org deliverables root: {ctxRoot}/orgs/{org}/deliverables/.
+   * Files saved here are servable by the dashboard's /api/media route because
+   * they live under CTX_ROOT.
+   */
+  deliverablesDir: string;
 }
 
 // IPC Types
