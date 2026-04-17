@@ -212,6 +212,34 @@ export interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
   callback_query?: TelegramCallbackQuery;
+  message_reaction?: TelegramMessageReaction;
+}
+
+/**
+ * One item in a Telegram message's reaction list. Telegram supports
+ * `type: 'emoji'` (standard emoji, the only shape we handle today) and
+ * `type: 'custom_emoji'` (premium custom emoji, carrying a `custom_emoji_id`
+ * instead of an `emoji` character). Shaped as a tagged union so call sites
+ * can narrow safely.
+ */
+export type TelegramReactionType =
+  | { type: 'emoji'; emoji: string }
+  | { type: 'custom_emoji'; custom_emoji_id: string };
+
+/**
+ * A `message_reaction` update fires when a user adds or removes an
+ * emoji reaction on a chat message the bot can see. `old_reaction` and
+ * `new_reaction` are the reaction state before/after — empty means "no
+ * reaction", so the diff is (new) minus (old). Requires
+ * `allowed_updates: ['message_reaction']` in the getUpdates call.
+ */
+export interface TelegramMessageReaction {
+  chat: TelegramChat;
+  user?: TelegramUser;
+  message_id: number;
+  date: number;
+  old_reaction: TelegramReactionType[];
+  new_reaction: TelegramReactionType[];
 }
 
 export interface TelegramMessage {
