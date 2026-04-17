@@ -1997,6 +1997,80 @@ busCommand
     }
   });
 
+// --- fix-agent-settings ---
+
+program
+  .command('fix-agent-settings')
+  .description('Patch all agent settings.json files to include the full recommended permissions allow list')
+  .option('--dry-run', 'Show what would be changed without writing')
+  .action((opts: { dryRun?: boolean }) => {
+    const env = resolveEnv();
+    const frameworkRoot = env.frameworkRoot || process.cwd();
+    const orgsDir = join(frameworkRoot, 'orgs');
+
+    const REQUIRED_ALLOW = [
+      'Bash', 'Read', 'Edit', 'Write',
+      'Glob', 'Grep',
+      'WebFetch', 'WebSearch',
+      'ToolSearch', 'CronCreate', 'CronList', 'CronDelete',
+      'Skill', 'Agent',
+    ];
+
+    if (!existsSync(orgsDir)) {
+      console.error('orgs/ directory not found at', orgsDir);
+      process.exit(1);
+    }
+
+    let patched = 0;
+    let skipped = 0;
+
+    for (const org of readdirSync(orgsDir)) {
+      const agentsDir = join(orgsDir, org, 'agents');
+      if (!existsSync(agentsDir)) continue;
+      for (const agent of readdirSync(agentsDir)) {
+        const settingsPath = join(agentsDir, agent, '.claude', 'settings.json');
+        if (!existsSync(settingsPath)) continue;
+
+        let settings: any;
+        try {
+          settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+        } catch {
+          console.warn(`  SKIP ${agent}: could not parse settings.json`);
+          skipped++;
+          continue;
+        }
+
+        const current: string[] = settings?.permissions?.allow ?? [];
+        const missing = REQUIRED_ALLOW.filter(t => !current.includes(t));
+
+        if (missing.length === 0) {
+          console.log(`  OK   ${agent}: allowlist already complete`);
+          skipped++;
+          continue;
+        }
+
+        const updated = [...current, ...missing];
+        settings.permissions = settings.permissions ?? {};
+        settings.permissions.allow = updated;
+
+        if (opts.dryRun) {
+          console.log(`  DRY  ${agent}: would add [${missing.join(', ')}]`);
+        } else {
+          writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
+          console.log(`  FIX  ${agent}: added [${missing.join(', ')}]`);
+          patched++;
+        }
+      }
+    }
+
+    const verb = opts.dryRun ? 'Would patch' : 'Patched';
+    console.log(`\n${verb} ${patched} agent(s). ${skipped} already up to date or skipped.`);
+    if (!opts.dryRun && patched > 0) {
+      console.log('\nRestart affected agents to apply the new allowlist:');
+      console.log('  cortextos restart <agent-name>');
+    }
+  });
+
 function sleepMs(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }

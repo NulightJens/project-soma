@@ -5,8 +5,16 @@
       "Read",
       "Edit",
       "Write",
+      "Glob",
+      "Grep",
       "WebFetch",
-      "WebSearch"
+      "WebSearch",
+      "ToolSearch",
+      "CronCreate",
+      "CronList",
+      "CronDelete",
+      "Skill",
+      "Agent"
     ]
   },
   "hooks": {
