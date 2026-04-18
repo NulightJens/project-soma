@@ -304,20 +304,6 @@ export class AgentProcess {
     return this.pty?.getOutputBuffer();
   }
 
-  /**
-   * Get the agent directory (where config.json and .env live).
-   */
-  getAgentDir(): string {
-    return this.env.agentDir;
-  }
-
-  /**
-   * Get the current agent config (live reference — fields may be updated in-place).
-   */
-  getConfig(): AgentConfig {
-    return this.config;
-  }
-
   // --- Private methods ---
 
   private handleExit(exitCode: number): void {
@@ -450,15 +436,14 @@ export class AgentProcess {
     const nowUtc = new Date().toISOString();
     const reminderBlock = this.buildReminderBlock();
     const deliverablesBlock = this.buildDeliverablesBlock();
-    const handoffBlock = this.consumeHandoffBlock();
-    return `You are starting a new session. Current UTC time: ${nowUtc}. Read AGENTS.md and all bootstrap files listed there. Then restore your crons from config.json: for each entry with type "recurring" (or no type field), call /loop {interval} {prompt}; for each entry with type "once", compare fire_at against the current UTC time above — if fire_at is still in the future recreate the CronCreate, if fire_at is in the past delete that entry from config.json. CRITICAL DEDUP: Always call CronList BEFORE creating any cron. For each config.json entry, search the CronList output for its prompt text — if the prompt already appears, SKIP that cron entirely. Only call /loop or CronCreate for entries whose prompt text is NOT already listed. This prevents rapid --continue restarts from accumulating duplicate schedules.${reminderBlock}${deliverablesBlock}${handoffBlock} After setting up crons, send a Telegram message to the user saying you are back online.${onboardingAppend}`;
+    return `You are starting a new session. Current UTC time: ${nowUtc}. Read AGENTS.md and all bootstrap files listed there. Then restore your crons from config.json: for each entry with type "recurring" (or no type field), call /loop {interval} {prompt}; for each entry with type "once", compare fire_at against the current UTC time above — if fire_at is still in the future recreate the CronCreate, if fire_at is in the past delete that entry from config.json. Run CronList first to avoid duplicates.${reminderBlock}${deliverablesBlock} After setting up crons, send a Telegram message to the user saying you are back online.${onboardingAppend}`;
   }
 
   private buildContinuePrompt(): string {
     const nowUtc = new Date().toISOString();
     const reminderBlock = this.buildReminderBlock();
     const deliverablesBlock = this.buildDeliverablesBlock();
-    return `SESSION CONTINUATION: Your CLI process was restarted with --continue to reload configs. Current UTC time: ${nowUtc}. Your full conversation history is preserved. Re-read AGENTS.md and ALL bootstrap files listed there. Restore your crons from config.json ONLY if missing. CRITICAL DEDUP: Call CronList FIRST. For each config.json entry, search the CronList output for its prompt text — if the prompt already appears, SKIP that cron. Only call /loop (recurring) or CronCreate (once, if fire_at is in the future) for entries whose prompt text is NOT already listed. Rapid --continue restarts must not accumulate duplicates.${reminderBlock}${deliverablesBlock} Check inbox. Resume normal operations. After restoring crons and checking inbox, send a Telegram message to the user saying you are back online.`;
+    return `SESSION CONTINUATION: Your CLI process was restarted with --continue to reload configs. Current UTC time: ${nowUtc}. Your full conversation history is preserved. Re-read AGENTS.md and ALL bootstrap files listed there. Restore your crons from config.json: recurring entries use /loop, once entries use CronCreate only if fire_at is still in the future (delete expired ones from config.json). Run CronList first — no duplicates.${reminderBlock}${deliverablesBlock} Check inbox. Resume normal operations. After restoring crons and checking inbox, send a Telegram message to the user saying you are back online.`;
   }
 
   /**
@@ -495,27 +480,6 @@ export class AgentProcess {
       const ctx = JSON.parse(readFileSync(contextPath, 'utf-8'));
       if (!ctx.require_deliverables) return '';
       return ' DELIVERABLE STANDARD: Every task you submit for review MUST have at least one file deliverable attached via the save-output bus command. A task with zero file deliverables will be sent back. Attach files with: cortextos bus save-output <task-id> <file-path> --label "<descriptive label>". Labels must be human-readable at a glance: describe WHAT it is plus enough context to understand at a glance. Good: "Traffic Growth Plan — 10 channels, 30-day launch sequence". Bad: "traffic-growth-plan.md" or "output-1". Notes are for context only, never file paths or URLs.';
-    } catch {
-      return '';
-    }
-  }
-
-  /**
-   * Consume the .handoff-doc-path marker (written by the context watchdog or the
-   * agent itself via `cortextos bus hard-restart --handoff-doc <path>`).
-   * Returns a boot-prompt fragment pointing the new session at the handoff doc,
-   * or an empty string if no marker exists.
-   * The marker is unlinked after reading so it fires only once per restart.
-   */
-  private consumeHandoffBlock(): string {
-    const markerPath = join(this.env.ctxRoot, 'state', this.name, '.handoff-doc-path');
-    if (!existsSync(markerPath)) return '';
-    try {
-      const { unlinkSync } = require('fs');
-      const docPath = readFileSync(markerPath, 'utf-8').trim();
-      unlinkSync(markerPath);
-      if (!docPath || !existsSync(docPath)) return '';
-      return ` CONTEXT HANDOFF: Before restoring crons or checking inbox, read the handoff document at ${docPath} to resume your prior session state.`;
     } catch {
       return '';
     }
