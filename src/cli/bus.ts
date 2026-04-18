@@ -627,10 +627,16 @@ busCommand
   .command('hard-restart')
   .description('Plan a hard restart (fresh session, no --continue)')
   .option('--reason <why>', 'Reason for restart')
-  .action((opts: { reason?: string }) => {
+  .option('--handoff-doc <path>', 'Path to handoff document to inject into next session boot prompt')
+  .action((opts: { reason?: string; handoffDoc?: string }) => {
+    const { writeFileSync: fsWrite, existsSync: fsExists, mkdirSync: fsMkdir } = require('fs');
     const env = resolveEnv();
     const paths = resolvePaths(env.agentName, env.instanceId, env.org);
     hardRestart(paths, env.agentName, opts.reason);
+    if (opts.handoffDoc && fsExists(opts.handoffDoc)) {
+      fsMkdir(paths.stateDir, { recursive: true });
+      fsWrite(join(paths.stateDir, '.handoff-doc-path'), opts.handoffDoc + '\n', 'utf-8');
+    }
     console.log('Hard restart planned');
   });
 
@@ -1770,6 +1776,11 @@ busCommand
   });
 
 busCommand
+  .command('hook-context-status')
+  .description('StatusLine hook: writes context window % to state/context_status.json')
+  .action(() => runHook('hook-context-status'));
+
+busCommand
   .command('hook-ask-telegram')
   .description('PreToolUse hook: forward AskUserQuestion to Telegram (cross-platform)')
   .action(() => runHook('hook-ask-telegram'));
@@ -2021,6 +2032,89 @@ busCommand
       }
 
       await sleepMs(pollMs);
+    }
+  });
+
+// --- fix-agent-settings ---
+
+busCommand
+  .command('fix-agent-settings')
+  .description('Patch all agent settings.json files: add missing allowlist tools and statusLine hook')
+  .option('--dry-run', 'Show what would be changed without writing')
+  .action((opts: { dryRun?: boolean }) => {
+    const { existsSync: fsExists, readdirSync: fsReaddir, readFileSync: fsRead, writeFileSync: fsWrite } = require('fs');
+    const env = resolveEnv();
+    const frameworkRoot = env.frameworkRoot || process.cwd();
+    const orgsDir = join(frameworkRoot, 'orgs');
+
+    const REQUIRED_ALLOW = [
+      'Bash', 'Read', 'Edit', 'Write',
+      'Glob', 'Grep',
+      'WebFetch', 'WebSearch',
+      'ToolSearch', 'CronCreate', 'CronList', 'CronDelete',
+      'Skill', 'Agent',
+    ];
+    const STATUS_LINE = {
+      type: 'command',
+      command: 'cortextos bus hook-context-status',
+      refreshInterval: 5,
+      timeout: 2,
+    };
+
+    if (!fsExists(orgsDir)) {
+      console.error('orgs/ directory not found at', orgsDir);
+      process.exit(1);
+    }
+
+    let patched = 0;
+    let skipped = 0;
+
+    for (const org of fsReaddir(orgsDir)) {
+      const agentsDir = join(orgsDir, org, 'agents');
+      if (!fsExists(agentsDir)) continue;
+      for (const agent of fsReaddir(agentsDir)) {
+        const settingsPath = join(agentsDir, agent, '.claude', 'settings.json');
+        if (!fsExists(settingsPath)) continue;
+
+        let settings: any;
+        try { settings = JSON.parse(fsRead(settingsPath, 'utf-8')); }
+        catch { console.warn(`  SKIP ${agent}: could not parse settings.json`); skipped++; continue; }
+
+        const changes: string[] = [];
+
+        // Check allow list
+        const current: string[] = settings?.permissions?.allow ?? [];
+        const missing = REQUIRED_ALLOW.filter(t => !current.includes(t));
+        if (missing.length > 0) changes.push(`allow: +[${missing.join(', ')}]`);
+
+        // Check statusLine
+        if (!settings.statusLine) changes.push('statusLine: add hook-context-status');
+
+        if (changes.length === 0) {
+          console.log(`  OK   ${agent}: already up to date`);
+          skipped++;
+          continue;
+        }
+
+        if (opts.dryRun) {
+          console.log(`  DRY  ${agent}: would apply [${changes.join('; ')}]`);
+          patched++;
+        } else {
+          settings.permissions = settings.permissions ?? {};
+          settings.permissions.allow = [...current, ...missing];
+          settings.statusLine = STATUS_LINE;
+          fsWrite(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
+          console.log(`  FIX  ${agent}: applied [${changes.join('; ')}]`);
+          patched++;
+        }
+      }
+    }
+
+    const verb = opts.dryRun ? 'Would patch' : 'Patched';
+    console.log(`\n${verb} ${patched} agent(s). ${skipped} already up to date or skipped.`);
+    if (!opts.dryRun && patched > 0) {
+      console.log('\nRestart affected agents to apply the new settings:');
+      console.log('  cortextos restart <agent-name>');
     }
   });
 

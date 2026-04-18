@@ -68,7 +68,7 @@ export async function PATCH(
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const allowed = ['timezone', 'day_mode_start', 'day_mode_end', 'communication_style', 'approval_rules', 'max_session_seconds', 'max_crashes_per_day', 'startup_delay', 'model'];
+  const allowed = ['timezone', 'day_mode_start', 'day_mode_end', 'communication_style', 'approval_rules', 'max_session_seconds', 'max_crashes_per_day', 'startup_delay', 'model', 'ctx_warning_threshold', 'ctx_handoff_threshold'];
   const timeRegex = /^\d{2}:\d{2}$/;
   if (body.day_mode_start && !timeRegex.test(body.day_mode_start as string)) {
     return Response.json({ error: 'day_mode_start must be HH:MM' }, { status: 400 });
@@ -89,6 +89,21 @@ export async function PATCH(
         { error: 'approval_rules must have shape { always_ask: string[], never_ask: string[] } with non-empty string elements' },
         { status: 400 },
       );
+    }
+  }
+
+  // Validate context threshold fields: must be numbers between 50 and 95
+  for (const pctField of ['ctx_warning_threshold', 'ctx_handoff_threshold'] as const) {
+    if (body[pctField] !== undefined) {
+      const val = body[pctField];
+      if (typeof val !== 'number' || val < 50 || val > 95) {
+        return Response.json({ error: `${pctField} must be a number between 50 and 95` }, { status: 400 });
+      }
+    }
+  }
+  if (body.ctx_warning_threshold !== undefined && body.ctx_handoff_threshold !== undefined) {
+    if ((body.ctx_warning_threshold as number) >= (body.ctx_handoff_threshold as number)) {
+      return Response.json({ error: 'ctx_warning_threshold must be less than ctx_handoff_threshold' }, { status: 400 });
     }
   }
 
