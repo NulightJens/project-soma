@@ -270,6 +270,52 @@ export async function getChurnFunnel(): Promise<ChurnFunnelRow[]> {
   return (data ?? []) as ChurnFunnelRow[];
 }
 
+// Retention cohort grouped by acquisition source (which channel produces
+// members who stick). Derived from mart_acquisition_ltv so the math matches
+// what /skool-analytics already shows in the acquisition table, but framed
+// as a cohort-retention heatmap row per source.
+export interface SourceCohortRow {
+  source: string;
+  cohort_size: number;      // total members ever from this source
+  still_paying: number;     // active + cancelling (not yet churned)
+  retention_pct: number | null;
+  active: number;
+  cancelling: number;
+  churned: number;
+  avg_days_to_churn: number | null;
+  estimated_ltv_usd: number | null;
+}
+
+export async function getSourceCohortRetention(minCohort = 3): Promise<SourceCohortRow[]> {
+  const sb = getSkoolSupabase();
+  const { data, error } = await sb
+    .from('mart_acquisition_ltv')
+    .select('source, total_members, active, cancelling, churned, churn_pct, avg_days_to_churn, estimated_ltv_usd')
+    .order('estimated_ltv_usd', { ascending: false, nullsFirst: false });
+  if (error) throw new Error(`source cohort: ${error.message}`);
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+  return rows
+    .filter((r) => Number(r.total_members ?? 0) >= minCohort)
+    .map((r) => {
+      const active = Number(r.active ?? 0);
+      const cancelling = Number(r.cancelling ?? 0);
+      const churned = Number(r.churned ?? 0);
+      const total = Number(r.total_members ?? 0);
+      const stillPaying = active + cancelling;
+      return {
+        source: r.source as string,
+        cohort_size: total,
+        still_paying: stillPaying,
+        retention_pct: total > 0 ? Math.round((stillPaying / total) * 1000) / 10 : null,
+        active,
+        cancelling,
+        churned,
+        avg_days_to_churn: r.avg_days_to_churn !== null && r.avg_days_to_churn !== undefined ? Number(r.avg_days_to_churn) : null,
+        estimated_ltv_usd: r.estimated_ltv_usd !== null && r.estimated_ltv_usd !== undefined ? Number(r.estimated_ltv_usd) : null,
+      };
+    });
+}
+
 export async function getCohortRetention(limit = 12): Promise<CohortRetentionRow[]> {
   const sb = getSkoolSupabase();
   const { data, error } = await sb
@@ -313,6 +359,162 @@ export async function getTierDistribution(): Promise<TierDistributionRow[]> {
   return Array.from(map.values()).sort((a, b) => b.count - a.count);
 }
 
+// ---------- Full members directory ----------
+export interface DirectoryMember {
+  handle: string;
+  name: string | null;
+  level: number | null;
+  tab: 'active' | 'cancelling' | 'churned' | 'banned' | string;
+  subscription_price: number | null;
+  subscription_period: string | null;
+  join_date: string | null;
+  acquisition_source: string | null;
+  activity_status: string | null;
+  days_in_community: number | null;
+  cancelled_churns_in_days: number | null;
+  open_outreach: number;
+  intervention?: InterventionAction;
+}
+
+export interface DirectoryFilters {
+  tab?: 'active' | 'cancelling' | 'churned' | 'banned' | 'all';
+  priceTier?: string;   // e.g., '97'
+  source?: string;      // e.g., 'Instagram'
+  hasOpenOutreach?: 'yes' | 'no' | 'all';
+  sort?: 'tenure_desc' | 'tenure_asc' | 'days_to_churn_asc' | 'priority' | 'level_desc';
+  search?: string;
+  limit?: number;
+}
+
+export async function getMembersDirectory(f: DirectoryFilters = {}): Promise<DirectoryMember[]> {
+  const sb = getSkoolSupabase();
+
+  // If the caller wants only members with open outreach, resolve that set first
+  // so we never miss them because of a row-limit cut-off on current_members.
+  let outreachHandles: string[] | null = null;
+  if (f.hasOpenOutreach === 'yes') {
+    const { data: out } = await sb
+      .from('crm_outreach')
+      .select('member_handle')
+      .in('status', ['scheduled', 'ready', 'sent']);
+    outreachHandles = Array.from(new Set((out ?? []).map((o) => o.member_handle as string)));
+    if (outreachHandles.length === 0) return [];
+  }
+
+  let q = sb
+    .from('current_members')
+    .select('handle, name, level, tab, bio, subscription_price, subscription_period, join_date, acquisition_source, activity_status, cancelled_churns_in_days');
+
+  if (f.tab && f.tab !== 'all') q = q.eq('tab', f.tab);
+  if (f.priceTier && f.priceTier !== 'all') q = q.eq('subscription_price', Number(f.priceTier));
+  if (f.source && f.source !== 'all') q = q.eq('acquisition_source', f.source);
+  if (outreachHandles) q = q.in('handle', outreachHandles);
+  if (f.search && f.search.trim()) {
+    const s = f.search.trim();
+    q = q.or(`handle.ilike.%${s}%,name.ilike.%${s}%`);
+  }
+
+  // Default upped to 1500 so a single page covers the full community (~900 now)
+  // even when no filters are applied.
+  const { data, error } = await q.limit(Math.min(f.limit ?? 1500, 3000));
+  if (error) throw new Error(`directory: ${error.message}`);
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+
+  // Attach open-outreach counts in one round-trip.
+  const handles = Array.from(new Set(rows.map((r) => r.handle as string)));
+  let outreachByHandle = new Map<string, number>();
+  if (handles.length > 0) {
+    const { data: out } = await sb
+      .from('crm_outreach')
+      .select('member_handle, status')
+      .in('member_handle', handles)
+      .in('status', ['scheduled', 'ready', 'sent']);
+    for (const o of out ?? []) {
+      const h = o.member_handle as string;
+      outreachByHandle.set(h, (outreachByHandle.get(h) ?? 0) + 1);
+    }
+  }
+
+  const enriched: DirectoryMember[] = rows.map((r) => {
+    const joinDate = (r.join_date as string | null) ?? null;
+    const daysInCommunity = joinDate
+      ? Math.floor((Date.now() - new Date(joinDate).getTime()) / (1000 * 60 * 60 * 24))
+      : null;
+    const m: DirectoryMember = {
+      handle: r.handle as string,
+      name: (r.name as string | null) ?? null,
+      level: (r.level as number | null) ?? null,
+      tab: r.tab as string,
+      subscription_price: (r.subscription_price as number | null) ?? null,
+      subscription_period: (r.subscription_period as string | null) ?? null,
+      join_date: joinDate,
+      acquisition_source: (r.acquisition_source as string | null) ?? null,
+      activity_status: (r.activity_status as string | null) ?? null,
+      days_in_community: daysInCommunity,
+      cancelled_churns_in_days: (r.cancelled_churns_in_days as number | null) ?? null,
+      open_outreach: outreachByHandle.get(r.handle as string) ?? 0,
+    };
+    if (m.tab === 'cancelling') {
+      m.intervention = prescribeIntervention({
+        handle: m.handle,
+        name: m.name,
+        level: m.level,
+        bio: (r.bio as string | null) ?? null,
+        cancelled_churns_in_days: m.cancelled_churns_in_days,
+        subscription_price: m.subscription_price,
+        join_date: m.join_date,
+        acquisition_source: m.acquisition_source,
+        activity_status: m.activity_status,
+      });
+    }
+    return m;
+  });
+
+  let filtered = enriched;
+  if (f.hasOpenOutreach === 'yes') filtered = filtered.filter((m) => m.open_outreach > 0);
+  else if (f.hasOpenOutreach === 'no') filtered = filtered.filter((m) => m.open_outreach === 0);
+
+  const priorityRank = (p: InterventionAction['priority'] | undefined) =>
+    p === 'high' ? 0 : p === 'medium' ? 1 : p === 'low' ? 2 : 3;
+
+  switch (f.sort) {
+    case 'tenure_asc':
+      filtered.sort((a, b) => (a.days_in_community ?? Infinity) - (b.days_in_community ?? Infinity));
+      break;
+    case 'days_to_churn_asc':
+      filtered.sort((a, b) => (a.cancelled_churns_in_days ?? Infinity) - (b.cancelled_churns_in_days ?? Infinity));
+      break;
+    case 'priority':
+      filtered.sort((a, b) => priorityRank(a.intervention?.priority) - priorityRank(b.intervention?.priority));
+      break;
+    case 'level_desc':
+      filtered.sort((a, b) => (b.level ?? 0) - (a.level ?? 0));
+      break;
+    case 'tenure_desc':
+    default:
+      filtered.sort((a, b) => (b.days_in_community ?? -1) - (a.days_in_community ?? -1));
+  }
+
+  return filtered;
+}
+
+export async function getMembersDirectoryFilterOptions(): Promise<{ priceTiers: string[]; sources: string[] }> {
+  const sb = getSkoolSupabase();
+  const { data } = await sb
+    .from('current_members')
+    .select('subscription_price, acquisition_source');
+  const prices = new Set<string>();
+  const sources = new Set<string>();
+  for (const r of data ?? []) {
+    if (r.subscription_price !== null && r.subscription_price !== undefined) prices.add(String(r.subscription_price));
+    if (r.acquisition_source) sources.add(r.acquisition_source as string);
+  }
+  return {
+    priceTiers: Array.from(prices).sort((a, b) => Number(a) - Number(b)),
+    sources: Array.from(sources).sort(),
+  };
+}
+
 export interface OutreachRow {
   id: string;
   member_handle: string;
@@ -321,9 +523,20 @@ export interface OutreachRow {
   step: number;
   channel: string;
   scheduled_for: string;
-  status: 'scheduled' | 'ready' | 'sent' | 'skipped' | 'failed' | 'responded';
+  status: 'scheduled' | 'ready' | 'sent' | 'skipped' | 'failed' | 'responded' | 'no_response';
   payload: Record<string, unknown> | null;
   created_at: string;
+  preview_body?: string | null;
+}
+
+// Pulls the fully [Name]-substituted body server-side so the modal renders
+// exactly what would be sent. Mirrors the logic in execute-crm-outreach.js.
+export function renderOutreachBody(row: OutreachRow): string | null {
+  const copy = (row.payload as { copy?: { body?: string } } | null)?.copy;
+  const rawBody = copy?.body;
+  if (!rawBody) return null;
+  const first = (row.member_name || 'there').split(/\s+/)[0];
+  return rawBody.replace(/\[Name\]/g, first);
 }
 
 const OUTREACH_ACTIVE_STATUSES = ['scheduled', 'ready'];

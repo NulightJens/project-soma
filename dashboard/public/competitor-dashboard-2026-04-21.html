@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skool Games Tech Top 10 — Competitor Dashboard · 2026-04-21</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #161923;
+    --panel-2: #1d2230;
+    --ink: #e7e9ee;
+    --muted: #8d93a3;
+    --accent: #e8b64a;
+    --accent-2: #6aa4ff;
+    --good: #4ad37b;
+    --warn: #e4a14a;
+    --bad: #e45c5c;
+    --line: #2a2f3e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 32px 24px 72px; }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 28px; }
+  h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.01em; }
+  h2 { margin: 36px 0 12px; font-size: 20px; letter-spacing: -0.005em; color: var(--ink); }
+  h3 { margin: 22px 0 8px; font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .grid { display: grid; gap: 16px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 20px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .kpi .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .kpi .value { font-size: 22px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi .sub { font-size: 11px; margin-top: 2px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); position: sticky; top: 0; background: var(--panel); }
+  tbody tr:hover { background: var(--panel-2); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+  .pill.good { background: rgba(74,211,123,0.16); color: var(--good); }
+  .pill.warn { background: rgba(228,161,74,0.18); color: var(--warn); }
+  .pill.bad { background: rgba(228,92,92,0.18); color: var(--bad); }
+  .pill.flat { background: rgba(141,147,163,0.18); color: var(--muted); }
+  .tactic { background: var(--panel-2); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; }
+  .tactic h4 { margin: 0 0 6px; font-size: 15px; }
+  .tactic .example { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+  .tactic .quote { font-family: ui-monospace, monospace; font-size: 12px; background: #0a0c12; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; margin-top: 8px; }
+  .gap { border-left: 3px solid var(--accent-2); background: var(--panel-2); padding: 12px 18px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; }
+  .gap b { color: var(--accent-2); }
+  ul.swipe { list-style: none; padding: 0; margin: 0; }
+  ul.swipe li { padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 13.5px; }
+  ul.swipe li:last-child { border: none; }
+  ul.swipe small { color: var(--muted); }
+  .rank { display: inline-block; width: 22px; height: 22px; text-align: center; line-height: 22px; font-size: 11px; font-weight: 600; background: var(--panel-2); border-radius: 50%; margin-right: 4px; }
+  .rank-1, .rank-2, .rank-3 { background: var(--accent); color: #111; }
+  .note { color: var(--muted); font-size: 12px; font-style: italic; }
+  img.chart { max-width: 100%; display: block; margin: 12px 0; border-radius: 8px; border: 1px solid var(--line); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Skool Games Tech Top 10 — Competitor Dashboard</h1>
+  <div class="sub">Q2 2026 snapshot scraped 2026-04-20 · 10 highest-MRR-growth Tech communities · owned by skoolio, built from the underlying raw-scrape analysis at <code>/tmp/skool-scrape/analysis/</code></div>
+</header>
+
+<div class="grid kpis">
+  <div class="kpi">
+    <div class="label">Communities analyzed</div>
+    <div class="value">10</div>
+    <div class="sub">Top-10 MRR-growth Tech category</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Combined MRR</div>
+    <div class="value">$547k</div>
+    <div class="sub">Monthly, across the 10</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Price range</div>
+    <div class="value">$0 – $98</div>
+    <div class="sub">Free to premium</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Top MRR/member</div>
+    <div class="value">$78.48</div>
+    <div class="sub">Chase AI+ · single-admin</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Largest community</div>
+    <div class="value">22,700</div>
+    <div class="sub">Clief Notes · free tier</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Best retention claim</div>
+    <div class="value">92%</div>
+    <div class="sub">Early AI-dopters (self-reported)</div>
+  </div>
+</div>
+
+<!-- ===== Pricing + MRR comparison ===== -->
+<div class="panel">
+  <h2>1 · Pricing + MRR efficiency comparison</h2>
+  <p class="sub">Sorted by rank (MRR growth). Revenue efficiency = MRR per paying member — shows whether a community compounds per-head or just volume-wins.</p>
+  <div style="overflow-x:auto">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Community</th>
+        <th>Owner</th>
+        <th>Price</th>
+        <th class="num">Members</th>
+        <th class="num">MRR</th>
+        <th class="num">MRR / member</th>
+        <th>Archetype</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="rank rank-1">1</span></td><td><b>NoeAI Premium</b><div class="sub">Ads + content systems specialist</div></td><td>Noe Varner</td><td>$97/mo</td><td class="num">683</td><td class="num">$48,319</td><td class="num"><span class="pill good">$70.75</span></td><td>Premium AI Systems</td></tr>
+      <tr><td><span class="rank rank-2">2</span></td><td><b>Agentic Academy</b><div class="sub">Copy-paste agentic systems</div></td><td>Simon Scrapes</td><td>$37/mo</td><td class="num">1,200</td><td class="num">$55,154</td><td class="num"><span class="pill warn">$45.96</span></td><td>Mid-Tier Automation</td></tr>
+      <tr><td><span class="rank rank-3">3</span></td><td><b>Early AI-dopters</b><div class="sub">Superhuman AI-generalist · 92% retention</div></td><td>Mark Kashef</td><td>$77/mo</td><td class="num">1,200</td><td class="num">$56,346</td><td class="num"><span class="pill warn">$46.95</span></td><td>Mid-Tier Automation</td></tr>
+      <tr><td><span class="rank">4</span></td><td><b>Chase AI+</b><div class="sub">1 admin · 1,000 members · highest $/member</div></td><td>Chase Hannegan</td><td>$98/mo</td><td class="num">1,000</td><td class="num">$78,483</td><td class="num"><span class="pill good">$78.48</span></td><td>Premium AI Systems</td></tr>
+      <tr><td><span class="rank">5</span></td><td><b>RoboNuggets Community</b><div class="sub">$3M+ software discounts · 2x Skool Awards</div></td><td>Jay E</td><td>$97/mo</td><td class="num">1,300</td><td class="num">$99,509</td><td class="num"><span class="pill good">$76.55</span></td><td>Premium AI Systems</td></tr>
+      <tr><td><span class="rank">6</span></td><td><b>Clief Notes</b><div class="sub">Free · 22.7k members · upsell funnel</div></td><td>Jake Van Clief</td><td>Free</td><td class="num">22,700</td><td class="num">$21,603</td><td class="num"><span class="pill bad">$0.95</span></td><td>Loss-Leader</td></tr>
+      <tr><td><span class="rank">7</span></td><td><b>AI Automations by Jack</b><div class="sub">110+ blueprints · daily live calls · $100k/mo claim</div></td><td>Jack Roberts</td><td>$77/mo</td><td class="num">2,800</td><td class="num">$130,248</td><td class="num"><span class="pill warn">$46.52</span></td><td>Mid-Tier Automation</td></tr>
+      <tr><td><span class="rank">8</span></td><td><b>AI VIDEO SKOOL</b><div class="sub">Video / image only · weekly contests</div></td><td>Andy Han</td><td>$9/mo</td><td class="num">1,800</td><td class="num">$12,376</td><td class="num"><span class="pill bad">$6.88</span></td><td>Loss-Leader</td></tr>
+      <tr><td><span class="rank">9</span></td><td><b>Claude Club</b><div class="sub">Non-coders · trading bot specialist</div></td><td>Samin Yasar</td><td>$89/mo</td><td class="num">285</td><td class="num">$15,341</td><td class="num"><span class="pill good">$53.83</span></td><td>Premium AI Systems</td></tr>
+      <tr><td><span class="rank">10</span></td><td><b>Imperio Digital</b><div class="sub">Spanish language · 5 live sessions/wk</div></td><td>Benjamin Cordero</td><td>$49/mo</td><td class="num">811</td><td class="num">$29,943</td><td class="num"><span class="pill warn">$36.92</span></td><td>Mid-Tier Automation</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">Green $/member ≥ $50 (compound efficiency). Amber $25–$50 (acquisition-led). Red &lt; $25 (loss-leader / free).</p>
+</div>
+
+<div class="row">
+  <div class="panel">
+    <h3>Price vs MRR</h3>
+    <img class="chart" src="/competitor-charts/price-vs-mrr.png" alt="Price vs MRR scatter">
+    <p class="note">$77–$98 is the profit-max band. Below $50 you are in volume play; free-tier tops out ~$21k MRR requiring 22k members.</p>
+  </div>
+  <div class="panel">
+    <h3>MRR per member</h3>
+    <img class="chart" src="/competitor-charts/mrr-per-member.png" alt="MRR per member bar chart">
+    <p class="note">Chase AI+ single-admin model wins per-head efficiency. Aggressive acquisition at $37 (Agentic Academy) ties the $77 mid-tier on $/member.</p>
+  </div>
+</div>
+
+<!-- ===== Retention ===== -->
+<div class="panel">
+  <h2>2 · Retention signals (what the market is claiming)</h2>
+  <p class="sub">Only one community puts retention on the about-page. Everyone else hides it. Assume if it is not claimed, it is not a strength.</p>
+  <div style="overflow-x:auto">
+  <table>
+    <thead><tr><th>Community</th><th>Retention claim / proxy</th><th>Mechanism driving retention</th><th>Verifiability</th></tr></thead>
+    <tbody>
+      <tr><td>Early AI-dopters (#3)</td><td><b>"92% retention. Members don't leave because nothing else compares."</b></td><td>1:1 coaching included, instructor shows up 365 days straight, credentialed authority</td><td><span class="pill warn">Self-reported</span></td></tr>
+      <tr><td>NoeAI Premium (#1)</td><td>Not stated · inferred stickiness from premium $/member ($70.75)</td><td>44+ custom skills, 22+ MCPs, 1-on-1 DMs</td><td><span class="pill flat">Inferred</span></td></tr>
+      <tr><td>Chase AI+ (#4)</td><td>Not stated · highest $/member ($78.48) at 1 admin = retention proof</td><td>100+ async templates, 90-day money-back, low-touch self-serve</td><td><span class="pill flat">Inferred</span></td></tr>
+      <tr><td>RoboNuggets (#5)</td><td>Not stated · "2x Skool Awards" social proof substitute</td><td>$3M+ software discounts gated to annual subs → sticky annual conversion</td><td><span class="pill flat">Inferred</span></td></tr>
+      <tr><td>AI Automations Jack (#7)</td><td>"100% tech support guarantee" (≠ retention, but adjacent)</td><td>Daily live calls + unlimited tech support + "AntiGravity OS" framework</td><td><span class="pill flat">Adjacent claim</span></td></tr>
+      <tr><td>AI VIDEO SKOOL (#8)</td><td>Retention via gamification: "Weekly contests" + level 8 = free lifetime</td><td>Leaderboards, cash prizes, level-based rewards</td><td><span class="pill flat">Gamified</span></td></tr>
+      <tr><td>Imperio Digital (#10)</td><td>"nivel 8 = membresía gratuita de por vida" (level 8 = free lifetime)</td><td>Spanish-language moat + gamified lifetime conversion</td><td><span class="pill flat">Gamified</span></td></tr>
+      <tr><td>The rest</td><td>No retention claim</td><td>—</td><td><span class="pill bad">None</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">Take-away for AA: <b>retention is the most under-claimed metric in the category</b>. If your CRM pipeline drives measured retention past 60%, that claim alone is more differentiating than any pricing move.</p>
+</div>
+
+<!-- ===== 3 Tactics to Steal ===== -->
+<div class="panel">
+  <h2>3 · The 3 tactics to steal</h2>
+  <p class="sub">Highest-impact, lowest-cost copy + positioning moves extracted from the swipe file. Rank-ordered by how cheap they are to implement for AA.</p>
+
+  <div class="tactic">
+    <h4>Tactic 1 · "Lock in your price for life" instead of date-based urgency</h4>
+    <div>Member-count thresholds + "lock in for life" converts fence-sitters by making the urgency evergreen. Members returning later pay more forever — creates infinite FOMO. 5 of the top 10 use this; all 5 are in the top half of MRR growth.</div>
+    <div class="quote">"⚠️ WARNING - Price increases to $87/month@1.2k members, join today &amp; lock in your price for life" — Agentic Academy (#2)</div>
+    <div class="quote">"⏰ Price going up to $49 at 1900 members. Join now to lock in your price for life. 6 spots remaining" — AI VIDEO SKOOL (#8)</div>
+    <div class="example">Steal for AA: swap any date-based language for member-count threshold ("Price increases to $117 at 600 members · lock in $97 for life"). Requires a visible counter on the About page.</div>
+  </div>
+
+  <div class="tactic">
+    <h4>Tactic 2 · Proprietary-framework naming beats feature lists</h4>
+    <div>Winners don't say "we have 100 templates." They say "AntiGravity OS" or "Viral Content Factory" or "Agentic Launchpad." A named framework is memorable, shareable, and implies a system worth paying for.</div>
+    <div class="quote">"✅ Full AI system stack + AntiGravity OS (plug &amp; play)" — AI Automations by Jack (#7)</div>
+    <div class="quote">"✅ Viral Content System — Use Claude Code to a Viral Content Factory" — NoeAI Premium (#1)</div>
+    <div class="quote">"Copy-paste agentic systems - plug them in and they work today" — Agentic Academy (#2)</div>
+    <div class="example">Steal for AA: name the cortextOS starter flow. Something like "The Architect Loop" or "Agent Launchpad." Makes everything else in the community a branded unit.</div>
+  </div>
+
+  <div class="tactic">
+    <h4>Tactic 3 · Credibility via results, not credentials</h4>
+    <div>Early AI-dopters (#3, 92% retention) leads with the retention number. Credential-first communities underperform. Hard outcome numbers beat "Marine vet, MSc, Ex-Amazon."</div>
+    <div class="quote">"Here's Travis with a 30k win. Here's Michael with 20k. Here's Fraser with a 48k retainer." — Early AI-dopters (#3)</div>
+    <div class="quote">"⭐ Top 0.01% Skool community | 🏆 2x Skool Awards Winner" — RoboNuggets (#5)</div>
+    <div class="quote">"92% retention. Members don't leave because nothing else compares." — Early AI-dopters (#3)</div>
+    <div class="example">Steal for AA: lead the About page with one hard number. Current options from data: "$37k MRR, 557 active members, 94% retention for email-invite cohort." Any one of those beats a paragraph of bio.</div>
+  </div>
+</div>
+
+<!-- ===== Positioning gaps ===== -->
+<div class="panel">
+  <h2>4 · Positioning gaps (whitespace the top 10 are missing)</h2>
+  <p class="sub">None of the 10 own these angles. Any are viable for a tier-2 or vertical-focused AA play.</p>
+
+  <div class="gap"><b>Industry-vertical AI implementation.</b> Every top-10 teaches <i>horizontal</i> AI skills. A community teaching "Claude Code for law firms" or "AI systems for mortgage brokers" with compliance-safe templates would own that niche outright. Zero direct competitors.</div>
+
+  <div class="gap"><b>Corporate-employee stealth automation.</b> Teaching W-2 employees how to automate their own jobs quietly, with security-conscious workflows that don't trip IT monitoring. All 10 current communities target entrepreneurs / agency owners.</div>
+
+  <div class="gap"><b>AI for physical-product / e-commerce operators.</b> Inventory forecasting, ad buying, customer support — implemented with Claude Code. All current communities assume software/info-product businesses.</div>
+
+  <div class="gap"><b>AI for non-profits + social impact.</b> Grant research, donor comms, impact reporting. Zero competitors here, and non-profit budgets are real for annual prepaid subs.</div>
+
+  <div class="gap"><b>AI product development (SaaS / No-Code).</b> Building actual software products with Claude Code, not just agency automations. Current communities stop at the client-work layer.</div>
+</div>
+
+<!-- ===== Swipe file ===== -->
+<div class="panel">
+  <h2>5 · Swipe file highlights</h2>
+  <p class="sub">Best 18 lines extracted from the full 100-line swipe file. Reach for these when writing AA About copy, DMs, or ads.</p>
+
+  <h3>Hero hooks (lead with one of these)</h3>
+  <ul class="swipe">
+    <li>"Build AI systems that run your ads, content, and automations — even if you've never coded." <small>— NoeAI Premium (#1)</small></li>
+    <li>"Skip the 2-year learning curve - build agentic systems that actually run your business, today." <small>— Agentic Academy (#2)</small></li>
+    <li>"Everyone in AI is learning 'one' thing. Then the tech shifts and they're back to zero. Not in here. We build superhuman AI-generalists." <small>— Early AI-dopters (#3)</small></li>
+    <li>"You can stitch 4 communities together, or... walk into the one that replaces them all." <small>— Early AI-dopters (#3)</small></li>
+    <li>"Learn AI. Land Clients." <small>— Chase AI+ (#4) · short, punchy, action-verb heavy</small></li>
+    <li>"Learn to build systems and methods that will last a decade." <small>— Clief Notes (#6)</small></li>
+  </ul>
+
+  <h3>Urgency + scarcity</h3>
+  <ul class="swipe">
+    <li>"🚨 Price increases at 680 members 🚨" <small>— NoeAI Premium (#1)</small></li>
+    <li>"Join today &amp; lock in your price for life" <small>— Agentic Academy (#2)</small></li>
+    <li>"⏰ Price going up to $49 at 1900 members. Join now to lock in your price for life. 6 spots remaining" <small>— AI VIDEO SKOOL (#8)</small></li>
+    <li>"💰 Lock in at $58/month with an annual membership" <small>— Chase AI+ (#4) · 41% annual discount anchor</small></li>
+    <li>"🚨40% Flash Sale On Annual / VIP Membership: Ends 4/22🚨" <small>— Chase AI+ (#4)</small></li>
+  </ul>
+
+  <h3>Credibility / social proof</h3>
+  <ul class="swipe">
+    <li>"92% retention. Members don't leave because nothing else compares." <small>— Early AI-dopters (#3)</small></li>
+    <li>"Here's Travis with a 30k win. Here's Michael with 20k. Here's Fraser with a 48k retainer. This stuff works." <small>— Early AI-dopters (#3)</small></li>
+    <li>"⭐ Top 0.01% Skool community | 🏆 2x Skool Awards Winner" <small>— RoboNuggets (#5)</small></li>
+    <li>"I show up every day. 365+ days straight." <small>— Early AI-dopters (#3)</small></li>
+  </ul>
+
+  <h3>Offer framing</h3>
+  <ul class="swipe">
+    <li>"Copy-paste agentic systems - plug them in and they work today" <small>— Agentic Academy (#2)</small></li>
+    <li>"Unlock the exact AI systems behind my $100K/month AI business." <small>— AI Automations by Jack (#7)</small></li>
+    <li>"Turn every Claude tutorial you watch into real AI co-workers that handle your trading, taxes, content, sales, and life to save 10-20 hours every week" <small>— Claude Club (#9)</small></li>
+  </ul>
+</div>
+
+<!-- ===== Additional charts ===== -->
+<div class="panel">
+  <h2>6 · The landscape at a glance</h2>
+  <div class="row">
+    <div>
+      <h3>Members vs MRR</h3>
+      <img class="chart" src="/competitor-charts/members-vs-mrr.png" alt="Members vs MRR">
+    </div>
+    <div>
+      <h3>Price distribution</h3>
+      <img class="chart" src="/competitor-charts/price-distribution.png" alt="Price distribution">
+    </div>
+  </div>
+  <div class="row" style="margin-top:4px">
+    <div>
+      <h3>Badge vs MRR</h3>
+      <img class="chart" src="/competitor-charts/badge-mrr.png" alt="Badge vs MRR">
+    </div>
+    <div>
+      <h3>Niche heatmap</h3>
+      <img class="chart" src="/competitor-charts/niche-heatmap.png" alt="Niche heatmap">
+    </div>
+  </div>
+</div>
+
+<footer style="margin-top:28px; padding-top:16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px;">
+  Generated 2026-04-21 by skoolio · source raw scrape + analysis at <code>/tmp/skool-scrape/analysis/</code> · supporting files: <code>report.md</code>, <code>swipe-file.md</code>, <code>synthesis/01-pricing-offers.md</code>, <code>synthesis/02-copywriting-hooks.md</code>, <code>synthesis/03-niche-positioning.md</code>
+</footer>
+
+</div>
+</body>
+</html>
