@@ -726,16 +726,21 @@ busCommand
 
 busCommand
   .command('evaluate-experiment')
-  .description('Evaluate a running experiment with a measured value')
+  .description('Evaluate a running experiment with a measured value, a 1-10 score, or both')
   .argument('<id>', 'Experiment ID')
-  .argument('<value>', 'Measured value')
-  .option('--score <n>', 'Score 1-10')
+  .argument('[value]', 'Measured value (quantitative metrics); omit for pure qualitative --score evals')
+  .option('--score <n>', 'Score rubric 1-10 (stored in its own field; doubles as the result value when no positional value is provided)')
   .option('--justification <text>', 'Justification text')
-  .action((id: string, value: string, opts: { score?: string; justification?: string }) => {
+  .action((id: string, value: string | undefined, opts: { score?: string; justification?: string }) => {
     const env = resolveEnv();
     const agentDir = env.agentDir || process.cwd();
-    const experiment = evaluateExperiment(agentDir, id, parseFloat(value), {
-      score: opts.score ? parseInt(opts.score, 10) : undefined,
+    const scoreInt = opts.score ? parseInt(opts.score, 10) : undefined;
+    if (scoreInt !== undefined && (scoreInt < 1 || scoreInt > 10 || !Number.isInteger(scoreInt))) {
+      console.error('ERROR: --score must be an integer between 1 and 10');
+      process.exit(1);
+    }
+    const experiment = evaluateExperiment(agentDir, id, value !== undefined ? parseFloat(value) : undefined, {
+      score: scoreInt,
       justification: opts.justification,
     });
     console.log(JSON.stringify(experiment, null, 2));
