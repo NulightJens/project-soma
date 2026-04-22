@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, existsSync, writeFileSync, unlinkSync, statSync } from 'fs';
-import { execFile } from 'child_process';
+import { execFile, execFileSync } from 'child_process';
 import { join } from 'path';
 import { createHash } from 'crypto';
 import { hardRestart } from '../bus/system.js';
@@ -53,6 +53,7 @@ export class FastChecker {
   private ctxWarningFiredAt: number = 0;    // dedup: 15min cooldown between warnings
   private ctxHandoffFiredAt: number = 0;    // fires once per session (0 = not yet)
   private ctxHandoffDeadlineAt: number = 0; // timestamp after which force-restart fires
+  private ctxAutoresetFiredAt: number = 0;  // Tier 0 auto-reset: fires once per session
   private ctxLastSessionId: string | null = null; // detects new session → clears stale deadline
   private ctxCircuitRestarts: number[] = []; // timestamps of recent context-triggered restarts
   private ctxCircuitBrokenAt: number | null = null; // when circuit tripped (null = healthy)
@@ -864,8 +865,11 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
    * Read ctx thresholds from config.json with mtime-based caching (BUG-048 pattern).
    * Re-reads from disk only when the file has changed so dashboard updates take effect
    * within one poll cycle without a daemon restart.
+   *
+   * `autoreset` is 0 when disabled (absent or explicit 0). Any value > 0 arms the
+   * Tier 0 silent auto-reset path.
    */
-  private getCtxThresholds(): { warn: number; handoff: number } {
+  private getCtxThresholds(): { warn: number; handoff: number; autoreset: number } {
     try {
       const configPath = join(this.agent.getAgentDir(), 'config.json');
       const mtime = statSync(configPath).mtimeMs;
@@ -874,14 +878,49 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
         const config = this.agent.getConfig();
         config.ctx_warning_threshold = cfg.ctx_warning_threshold;
         config.ctx_handoff_threshold = cfg.ctx_handoff_threshold;
+        config.ctx_autoreset_threshold = cfg.ctx_autoreset_threshold;
         this.ctxConfigMtime = mtime;
       }
     } catch { /* keep stale values */ }
     const config = this.agent.getConfig();
+    const raw = config.ctx_autoreset_threshold;
+    const autoreset = typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? raw : 0;
     return {
       warn: config.ctx_warning_threshold ?? 70,
       handoff: config.ctx_handoff_threshold ?? 80,
+      autoreset,
     };
+  }
+
+  /**
+   * Best-effort synchronous snapshot for the current agent. Called by Tier 0
+   * before it force-restarts. Wraps the scripts/snapshot-agent.sh helper with
+   * a 10s cap and full stderr swallowing so a broken snapshot does not block
+   * the actual restart. Always --silent (daemon-initiated auto-resets must not
+   * page Logan).
+   */
+  private runAutoresetSnapshot(reason: string): void {
+    try {
+      const scriptPath = join(this.frameworkRoot, 'scripts', 'snapshot-agent.sh');
+      if (!existsSync(scriptPath)) {
+        this.log(`snapshot-agent.sh not found at ${scriptPath} — skipping snapshot`);
+        return;
+      }
+      execFileSync('bash', [scriptPath, this.agent.name, '--silent', '--reason', reason], {
+        env: {
+          ...process.env,
+          CTX_AGENT_NAME: this.agent.name,
+          CTX_AGENT_DIR: this.agent.getAgentDir(),
+          CTX_FRAMEWORK_ROOT: this.frameworkRoot,
+        },
+        stdio: 'ignore',
+        timeout: 10_000,
+      });
+    } catch (err) {
+      // Snapshot failed. Caller still restarts — losing a snapshot is better
+      // than letting the agent drift toward the hard 80% handoff tier.
+      this.log(`snapshot-agent.sh failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   /**
@@ -927,6 +966,7 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
           this.ctxHandoffFiredAt = 0;
           this.ctxHandoffDeadlineAt = 0;
           this.ctxWarningFiredAt = 0;
+          this.ctxAutoresetFiredAt = 0;
           this.log(`New session detected (${incomingSessionId.slice(0, 8)}…) — per-session ctx state reset`);
         }
         this.ctxLastSessionId = incomingSessionId;
@@ -941,7 +981,7 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
       return;
     }
 
-    const { warn, handoff } = this.getCtxThresholds();
+    const { warn, handoff, autoreset } = this.getCtxThresholds();
 
     // No threshold configured — observe-only mode (log but don't act)
     if (this.agent.getConfig().ctx_handoff_threshold === undefined) return;
@@ -954,6 +994,40 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
       this.log(`Handoff deadline exceeded (${Math.round(effectivePct)}%) — force restarting`);
       this.ctxHandoffDeadlineAt = 0;
       this.forceContextRestart(`ctx ${Math.round(effectivePct)}% — handoff not completed within 5min`);
+      return;
+    }
+
+    // Tier 0: silent auto-reset — takes a snapshot and force-restarts BEFORE
+    // the graceful-handoff tier fires. Disabled unless ctx_autoreset_threshold > 0.
+    // Fires once per session lifecycle; session-id change clears the fired flag.
+    // Idempotency: if .restart-planned already exists AND is recent, another
+    // path is already restarting the agent, so we skip to avoid stacking restart
+    // requests. Stale markers (> 2min old) are treated as leaked from an earlier
+    // crash and ignored — otherwise a single orphaned marker would permanently
+    // disable Tier 0 for that agent.
+    if (autoreset > 0 && effectivePct >= autoreset && this.ctxAutoresetFiredAt === 0) {
+      const restartPlannedMarker = join(this.paths.stateDir, '.restart-planned');
+      if (existsSync(restartPlannedMarker)) {
+        let markerAge = Infinity;
+        try { markerAge = now - statSync(restartPlannedMarker).mtimeMs; } catch { /* ignore */ }
+        if (markerAge < 2 * 60_000) {
+          this.log(`Tier 0 would fire at ${Math.round(effectivePct)}% but .restart-planned present (age ${Math.round(markerAge / 1000)}s) — skipping`);
+          this.ctxAutoresetFiredAt = now; // latch so we do not re-check every poll
+          return;
+        }
+        this.log(`Tier 0: .restart-planned is stale (${Math.round(markerAge / 1000)}s old) — proceeding anyway`);
+      }
+      this.ctxAutoresetFiredAt = now;
+      const pctRound = Math.round(effectivePct);
+      this.log(`Tier 0 auto-reset fired at ${pctRound}% (threshold ${autoreset}%)`);
+      this.runAutoresetSnapshot(`ctx auto-reset at ${pctRound}%`);
+      // Reset context_status.json pre-emptively so the restarted session's
+      // FastChecker does not immediately re-fire Tier 0 off the stale value.
+      try {
+        writeFileSync(statusPath, JSON.stringify({ used_percentage: 0, exceeds_200k_tokens: false, written_at: new Date().toISOString() }));
+      } catch { /* non-fatal */ }
+      // forceContextRestart handles circuit breaker + hardRestart + sessionRefresh.
+      this.forceContextRestart(`ctx auto-reset at ${pctRound}% (tier 0)`);
       return;
     }
 

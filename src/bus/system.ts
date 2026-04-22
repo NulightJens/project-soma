@@ -6,6 +6,14 @@ import { ensureDir } from '../utils/atomic.js';
 import { TelegramAPI } from '../telegram/api.js';
 import type { BusPaths } from '../types/index.js';
 
+export interface AutoCompactAgentReport {
+  agent: string;
+  snapshot_ok: boolean;
+  restart_planned: boolean;
+  already_in_flight: boolean;
+  reason: string;
+}
+
 // --- Types ---
 
 export interface AutoCommitReport {
@@ -90,6 +98,66 @@ export function hardRestart(paths: BusPaths, agentName: string, reason?: string)
   const timestamp = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
   const logLine = `[${timestamp}] HARD-RESTART: ${resolvedReason}\n`;
   appendFileSync(join(paths.logDir, 'restarts.log'), logLine, 'utf-8');
+}
+
+/**
+ * Manually trigger a silent snapshot + hard-restart for a named agent.
+ *
+ * Provides an ops hatch so the full chain (memory snapshot, Neon episode,
+ * .force-fresh + .restart-planned) can be fired from the CLI when needed
+ * (debugging, forced reset, manual testing). The daemon's FastChecker fires
+ * the same chain automatically at the Tier 0 threshold, so this is purely
+ * a manual helper — the daemon respawn loop picks up the markers and starts
+ * a clean fresh session.
+ *
+ * Idempotency: if `.restart-planned` is already present, we skip to avoid
+ * stacking restart requests when both Tier 0 and an operator fire at once.
+ */
+export function autoCompactAgent(
+  paths: BusPaths,
+  agentName: string,
+  frameworkRoot: string,
+  options: { silent?: boolean; reason?: string } = {},
+): AutoCompactAgentReport {
+  const reason = options.reason || 'manual auto-compact';
+  const silent = options.silent ?? true;
+
+  ensureDir(paths.stateDir);
+  const plannedMarker = join(paths.stateDir, '.restart-planned');
+  if (existsSync(plannedMarker)) {
+    return {
+      agent: agentName,
+      snapshot_ok: false,
+      restart_planned: false,
+      already_in_flight: true,
+      reason,
+    };
+  }
+
+  // 1. Snapshot (best-effort — we still restart if this fails).
+  let snapshotOk = false;
+  try {
+    const scriptPath = join(frameworkRoot, 'scripts', 'snapshot-agent.sh');
+    if (existsSync(scriptPath)) {
+      const args = [scriptPath, agentName, '--reason', reason];
+      if (silent) args.splice(2, 0, '--silent');
+      execFileSync('bash', args, { stdio: 'ignore', timeout: 10_000 });
+      snapshotOk = true;
+    }
+  } catch {
+    // Snapshot failure is non-fatal; fall through to restart.
+  }
+
+  // 2. Arm force-fresh + restart-planned. The daemon's next tick picks these up.
+  hardRestart(paths, agentName, `AUTO-COMPACT: ${reason}`);
+
+  return {
+    agent: agentName,
+    snapshot_ok: snapshotOk,
+    restart_planned: true,
+    already_in_flight: false,
+    reason,
+  };
 }
 
 /**
