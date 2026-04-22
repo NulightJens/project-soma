@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, existsSync, writeFileSync, unlinkSync, statSync } from 'fs';
-import { execFile, execFileSync } from 'child_process';
+import { execFile, execFileSync, spawn } from 'child_process';
 import { join } from 'path';
 import { createHash } from 'crypto';
 import { hardRestart } from '../bus/system.js';
@@ -54,6 +54,7 @@ export class FastChecker {
   private ctxHandoffFiredAt: number = 0;    // fires once per session (0 = not yet)
   private ctxHandoffDeadlineAt: number = 0; // timestamp after which force-restart fires
   private ctxAutoresetFiredAt: number = 0;  // Tier 0 auto-reset: fires once per session
+  private ctxSessionStartedAt: number = 0;  // set on first session_id observed; gates Tier 0 boot-window
   private ctxLastSessionId: string | null = null; // detects new session → clears stale deadline
   private ctxCircuitRestarts: number[] = []; // timestamps of recent context-triggered restarts
   private ctxCircuitBrokenAt: number | null = null; // when circuit tripped (null = healthy)
@@ -893,11 +894,17 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
   }
 
   /**
-   * Best-effort synchronous snapshot for the current agent. Called by Tier 0
-   * before it force-restarts. Wraps the scripts/snapshot-agent.sh helper with
-   * a 10s cap and full stderr swallowing so a broken snapshot does not block
-   * the actual restart. Always --silent (daemon-initiated auto-resets must not
-   * page Logan).
+   * Best-effort NON-BLOCKING snapshot for the current agent. Called by Tier 0
+   * alongside a force-restart. Launched detached with `spawn` so the 1s poll
+   * loop is never blocked by slow I/O in the snapshot chain (Neon INSERT,
+   * memory file append). Always --silent (daemon-initiated auto-resets must
+   * not page Logan).
+   *
+   * We do NOT wait for the snapshot to finish. The caller proceeds with
+   * hardRestart + sessionRefresh immediately. Worst case: the agent process
+   * dies while the snapshot is mid-write. Partial snapshot is acceptable —
+   * losing context is what we are avoiding, and the Neon + memory steps are
+   * each individually idempotent (append-only, insert-only).
    */
   private runAutoresetSnapshot(reason: string): void {
     try {
@@ -906,7 +913,7 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
         this.log(`snapshot-agent.sh not found at ${scriptPath} — skipping snapshot`);
         return;
       }
-      execFileSync('bash', [scriptPath, this.agent.name, '--silent', '--reason', reason], {
+      const child = spawn('bash', [scriptPath, this.agent.name, '--silent', '--reason', reason], {
         env: {
           ...process.env,
           CTX_AGENT_NAME: this.agent.name,
@@ -914,11 +921,14 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
           CTX_FRAMEWORK_ROOT: this.frameworkRoot,
         },
         stdio: 'ignore',
-        timeout: 10_000,
+        detached: true,
       });
+      child.on('error', err => this.log(`snapshot-agent.sh spawn failed (non-fatal): ${err.message}`));
+      // unref so the Node event loop is not kept alive by the child
+      child.unref();
     } catch (err) {
-      // Snapshot failed. Caller still restarts — losing a snapshot is better
-      // than letting the agent drift toward the hard 80% handoff tier.
+      // Snapshot failed to spawn. Caller still restarts — losing a snapshot is
+      // better than letting the agent drift toward the hard 80% handoff tier.
       this.log(`snapshot-agent.sh failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
     }
   }
@@ -970,6 +980,7 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
           this.log(`New session detected (${incomingSessionId.slice(0, 8)}…) — per-session ctx state reset`);
         }
         this.ctxLastSessionId = incomingSessionId;
+        this.ctxSessionStartedAt = now;
       }
     } catch { return; }
 
@@ -1000,22 +1011,36 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
     // Tier 0: silent auto-reset — takes a snapshot and force-restarts BEFORE
     // the graceful-handoff tier fires. Disabled unless ctx_autoreset_threshold > 0.
     // Fires once per session lifecycle; session-id change clears the fired flag.
+    //
+    // Boot-window floor: refuse to fire within 60s of session start. Without
+    // this, an agent that boots at or above the threshold (bloated CLAUDE.md,
+    // large handoff doc, heavy bootstrap) enters a restart loop — every fresh
+    // session would immediately cross the threshold and trip Tier 0 again.
+    //
     // Idempotency: if .restart-planned already exists AND is recent, another
     // path is already restarting the agent, so we skip to avoid stacking restart
-    // requests. Stale markers (> 2min old) are treated as leaked from an earlier
-    // crash and ignored — otherwise a single orphaned marker would permanently
-    // disable Tier 0 for that agent.
+    // requests. Stale markers (> 2min old or negative age from clock skew) are
+    // treated as leaked from an earlier crash and ignored — otherwise a single
+    // orphaned marker would permanently disable Tier 0 for that agent.
     if (autoreset > 0 && effectivePct >= autoreset && this.ctxAutoresetFiredAt === 0) {
+      const sessionAge = this.ctxSessionStartedAt > 0 ? now - this.ctxSessionStartedAt : Infinity;
+      if (sessionAge >= 0 && sessionAge < 60_000) {
+        this.log(`Tier 0 would fire at ${Math.round(effectivePct)}% but session is only ${Math.round(sessionAge / 1000)}s old — skipping (boot-window guard)`);
+        return; // do not latch — let the next poll reconsider after boot window
+      }
       const restartPlannedMarker = join(this.paths.stateDir, '.restart-planned');
       if (existsSync(restartPlannedMarker)) {
-        let markerAge = Infinity;
+        let markerAge: number = Infinity;
         try { markerAge = now - statSync(restartPlannedMarker).mtimeMs; } catch { /* ignore */ }
-        if (markerAge < 2 * 60_000) {
+        // Treat negative ages (clock skew) as stale — a marker "from the future"
+        // is almost certainly a leftover whose mtime we cannot trust.
+        const markerIsFresh = markerAge >= 0 && markerAge < 2 * 60_000;
+        if (markerIsFresh) {
           this.log(`Tier 0 would fire at ${Math.round(effectivePct)}% but .restart-planned present (age ${Math.round(markerAge / 1000)}s) — skipping`);
           this.ctxAutoresetFiredAt = now; // latch so we do not re-check every poll
           return;
         }
-        this.log(`Tier 0: .restart-planned is stale (${Math.round(markerAge / 1000)}s old) — proceeding anyway`);
+        this.log(`Tier 0: .restart-planned is stale (age ${markerAge}ms) — proceeding anyway`);
       }
       this.ctxAutoresetFiredAt = now;
       const pctRound = Math.round(effectivePct);
@@ -1111,6 +1136,7 @@ Reply using: cortextos bus send-telegram ${chatId} '<your reply>'
     this.ctxHandoffFiredAt = 0;
     this.ctxHandoffDeadlineAt = 0;
     this.ctxWarningFiredAt = 0;
+    this.ctxAutoresetFiredAt = 0;
 
     // Write .force-fresh + .restart-planned (hardRestart from src/bus/system.ts)
     hardRestart(this.paths, this.agent.name, `CONTEXT-FORCE-RESTART: ${reason}`);

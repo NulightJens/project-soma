@@ -314,3 +314,75 @@ describe('Tier 0 autoreset tier selection', () => {
     expect(selectTier(55, false, { autoreset: Number.NaN })).toBe('none');
   });
 });
+
+// --- Tier 0 boot-window guard ---
+//
+// Tier 0 must NOT fire within 60s of session start. Otherwise a fresh boot
+// that lands above the threshold (bloated CLAUDE.md, pre-loaded handoff doc)
+// will enter a restart loop: each new session crosses the threshold within
+// the first tick and immediately triggers another restart.
+
+describe('Tier 0 boot-window guard', () => {
+  function shouldFire(sessionStartedAtMs: number, now: number): boolean {
+    const sessionAge = sessionStartedAtMs > 0 ? now - sessionStartedAtMs : Infinity;
+    if (sessionAge >= 0 && sessionAge < 60_000) return false; // boot window
+    return true;
+  }
+
+  it('skips when session just booted (age 0s)', () => {
+    const now = Date.now();
+    expect(shouldFire(now, now)).toBe(false);
+  });
+
+  it('skips when session is 59s old', () => {
+    const now = Date.now();
+    expect(shouldFire(now - 59_000, now)).toBe(false);
+  });
+
+  it('fires once session is 60s old', () => {
+    const now = Date.now();
+    expect(shouldFire(now - 60_000, now)).toBe(true);
+  });
+
+  it('fires when session is many minutes old', () => {
+    const now = Date.now();
+    expect(shouldFire(now - 10 * 60_000, now)).toBe(true);
+  });
+
+  it('fires when we never saw a session_id (sessionStartedAt never set)', () => {
+    // Legacy agents without session_id in context_status.json fall back
+    // to Infinity age → always past the boot window.
+    expect(shouldFire(0, Date.now())).toBe(true);
+  });
+});
+
+// --- .restart-planned staleness, clock-skew safe ---
+
+describe('.restart-planned staleness check', () => {
+  function markerIsFresh(markerMtimeMs: number, now: number): boolean {
+    const markerAge = now - markerMtimeMs;
+    return markerAge >= 0 && markerAge < 2 * 60_000;
+  }
+
+  it('fresh marker (30s old) blocks Tier 0', () => {
+    const now = Date.now();
+    expect(markerIsFresh(now - 30_000, now)).toBe(true);
+  });
+
+  it('stale marker (3min old) does not block Tier 0', () => {
+    const now = Date.now();
+    expect(markerIsFresh(now - 3 * 60_000, now)).toBe(false);
+  });
+
+  it('marker exactly 2min old does not block Tier 0 (boundary)', () => {
+    const now = Date.now();
+    expect(markerIsFresh(now - 120_000, now)).toBe(false);
+  });
+
+  it('clock skew: marker mtime in the future is treated as stale', () => {
+    // Negative markerAge = system clock jumped backward. Do not trust the
+    // marker — treat as leaked and proceed with Tier 0.
+    const now = Date.now();
+    expect(markerIsFresh(now + 5 * 60_000, now)).toBe(false);
+  });
+});
