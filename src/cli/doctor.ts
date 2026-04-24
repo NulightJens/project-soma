@@ -15,7 +15,7 @@ export const doctorCommand = new Command('doctor')
   .option('--instance <id>', 'Instance ID', 'default')
   .description('Diagnose common issues')
   .action(async (options: { instance: string }) => {
-    console.log('\ncortextOS Doctor\n');
+    console.log('\nSOMA Doctor\n');
 
     const checks: Check[] = [];
 
@@ -202,10 +202,10 @@ export const doctorCommand = new Command('doctor')
           timeout: 10000,
         });
         const tunnels: Array<{ name: string }> = JSON.parse(listOut);
-        tunnelExists = tunnels.some((t) => t.name === 'cortextos');
+        tunnelExists = tunnels.some((t) => t.name === 'SOMA');
       } catch { /* not authenticated or cloudflared not installed */ }
       checks.push({
-        name: "Tunnel 'cortextos'",
+        name: "Tunnel 'SOMA'",
         status: tunnelExists ? 'pass' : 'warn',
         message: tunnelExists ? 'Exists' : 'Not created',
         fix: !tunnelExists ? 'Run: cortextos tunnel start' : undefined,
@@ -263,7 +263,7 @@ export const doctorCommand = new Command('doctor')
           name: 'upstream remote',
           status: 'warn',
           message: 'Not configured',
-          fix: 'Run: git remote add upstream <canonical-cortextos-repo-url>',
+          fix: 'Run: git remote add upstream <canonical-SOMA-repo-url>',
         });
       }
     }

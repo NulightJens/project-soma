@@ -2123,7 +2123,7 @@ busCommand
     console.log(`\n${verb} ${patched} agent(s). ${skipped} already up to date or skipped.`);
     if (!opts.dryRun && patched > 0) {
       console.log('\nRestart affected agents to apply the new settings:');
-      console.log('  cortextos restart <agent-name>');
+      console.log('  SOMA restart <agent-name>');
     }
   });
 

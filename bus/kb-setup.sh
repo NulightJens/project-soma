@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# kb-setup.sh — Initialize the cortextOS knowledge base for an org
+# kb-setup.sh — Initialize the SOMA knowledge base for an org
 # Creates the Python venv and ChromaDB directory structure.
 #
 # Usage: bash bus/kb-setup.sh [--org ORG] [--instance ID]
@@ -38,7 +38,7 @@ VENV_DIR="$FRAMEWORK_ROOT/knowledge-base/venv"
 MMRAG_PY="$FRAMEWORK_ROOT/knowledge-base/scripts/mmrag.py"
 REQS="$FRAMEWORK_ROOT/knowledge-base/scripts/requirements.txt"
 
-echo "Setting up cortextOS knowledge base"
+echo "Setting up SOMA knowledge base"
 echo "  Org: $ORG"
 echo "  Instance: $INSTANCE_ID"
 echo "  ChromaDB: $CHROMADB_DIR"

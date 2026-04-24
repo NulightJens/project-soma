@@ -1,6 +1,6 @@
 # Agent Migration Skill
 
-> Port any existing agent workspace — cortextOS legacy, custom Claude setup, or any other agent system — into a cortextOS v2 agent. This skill is for the orchestrator. Run it when the user wants to bring an existing agent into the system.
+> Port any existing agent workspace — SOMA legacy, custom Claude setup, or any other agent system — into a SOMA v2 agent. This skill is for the orchestrator. Run it when the user wants to bring an existing agent into the system.
 
 ---
 
@@ -231,7 +231,7 @@ Send a workspace orientation message via the bus. This is the first message the 
 
 ```bash
 cortextos bus send-message <new_name> normal \
-  'You have been migrated from a legacy agent workspace into cortextOS v2. Before doing anything else — before messaging the user, before setting up crons, before running onboarding — read your entire workspace:
+  'You have been migrated from a legacy agent workspace into SOMA v2. Before doing anything else — before messaging the user, before setting up crons, before running onboarding — read your entire workspace:
 
 1. Bootstrap files: IDENTITY.md, SOUL.md, MEMORY.md, USER.md, GUARDRAILS.md, GOALS.md, HEARTBEAT.md
 2. All files in .claude/skills/ — understand what each skill does
@@ -240,7 +240,7 @@ cortextos bus send-message <new_name> normal \
 
 Once you have read everything, send the user a Telegram message confirming what you found: your role, what skills you have, what docs are loaded, and any gaps or missing credentials you noticed.
 
-Then proceed with cortextOS onboarding (/onboarding), but treat it as a migration-aware onboarding: skip or fast-track any steps that are already handled by the pre-loaded files (identity, role, voice, goals). Focus onboarding on: tool access verification, API key setup, cron confirmation, and any gaps specific to your domain.'
+Then proceed with SOMA onboarding (/onboarding), but treat it as a migration-aware onboarding: skip or fast-track any steps that are already handled by the pre-loaded files (identity, role, voice, goals). Focus onboarding on: tool access verification, API key setup, cron confirmation, and any gaps specific to your domain.'
 ```
 
 Log the dispatch:

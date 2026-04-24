@@ -51,7 +51,7 @@ describe('Advanced Task Management', () => {
   let paths: BusPaths;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-taskmgmt-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-taskmgmt-test-'));
     paths = {
       ctxRoot: testDir,
       inbox: join(testDir, 'inbox', 'agent1'),

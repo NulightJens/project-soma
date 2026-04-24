@@ -10,7 +10,7 @@ describe('Task Management', () => {
   let paths: BusPaths;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-task-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-task-test-'));
     paths = {
       ctxRoot: testDir,
       inbox: join(testDir, 'inbox', 'paul'),
@@ -116,7 +116,7 @@ describe('Task Management', () => {
 /**
  * Cross-org task lifecycle — exercises the findTaskFile fallback so an
  * assignee in one org can drive the lifecycle of a task filed by an
- * orchestrator in a sibling org. Standard cortextOS dispatch pattern:
+ * orchestrator in a sibling org. Standard SOMA dispatch pattern:
  * an orchestrator in one org files a task, a specialist in another org
  * needs to update and complete it from their own agent session.
  *
@@ -132,7 +132,7 @@ describe('Cross-org task lifecycle', () => {
   let originalWarn: typeof console.warn;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-crossorg-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-crossorg-test-'));
     // Nested layout: <ctxRoot>/orgs/{OrgA,OrgB}/tasks/
     mkdirSync(join(testDir, 'orgs', 'OrgA', 'tasks'), { recursive: true });
     mkdirSync(join(testDir, 'orgs', 'OrgB', 'tasks'), { recursive: true });
@@ -327,7 +327,7 @@ describe('claimTask — atomic claim (beads-inspired)', () => {
   let paths: BusPaths;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-claim-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-claim-test-'));
     paths = {
       ctxRoot: testDir,
       inbox: join(testDir, 'inbox', 'x'),
@@ -404,7 +404,7 @@ describe('Task audit log (append-only JSONL)', () => {
   let paths: BusPaths;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-audit-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-audit-test-'));
     paths = {
       ctxRoot: testDir,
       inbox: join(testDir, 'inbox', 'x'),
@@ -493,7 +493,7 @@ describe('Task dependency DAG (blocks / blocked_by)', () => {
   let paths: BusPaths;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-dag-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-dag-test-'));
     paths = {
       ctxRoot: testDir,
       inbox: join(testDir, 'inbox', 'x'),
@@ -620,7 +620,7 @@ describe('compactTasks — semantic compaction of old completed tasks', () => {
   let paths: BusPaths;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-compact-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-compact-test-'));
     paths = {
       ctxRoot: testDir,
       inbox: join(testDir, 'inbox', 'x'),

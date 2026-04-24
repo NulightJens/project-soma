@@ -560,7 +560,7 @@ export function submitCommunityItem(
       let prUrl = '';
       try {
         const prTitle = `Community ${itemType}: ${itemName}`;
-        const prBody = `## ${itemName}\n\n${description}\n\n**Type:** ${itemType}\n**Author:** ${author}\n\n---\n*Submitted via cortextOS community publishing*`;
+        const prBody = `## ${itemName}\n\n${description}\n\n**Type:** ${itemType}\n**Author:** ${author}\n\n---\n*Submitted via SOMA community publishing*`;
         const ghOut = (execFileSync(
           'gh',
           ['pr', 'create', '--repo', upstreamRepo, '--title', prTitle, '--body', prBody],

@@ -6,7 +6,7 @@ import { IPCClient } from '../daemon/ipc-server.js';
 import { TelegramAPI, formatValidateError } from '../telegram/api.js';
 
 /**
- * BUG-035 fix: discover the cortextOS framework root without depending on
+ * BUG-035 fix: discover the SOMA framework root without depending on
  * `process.cwd()`. Order of precedence:
  *   1. CTX_FRAMEWORK_ROOT env var (explicit, set by ecosystem.config.js)
  *   2. CTX_PROJECT_ROOT env var (legacy alias)
@@ -22,7 +22,7 @@ export function discoverProjectRoot(): string {
   if (process.env.CTX_FRAMEWORK_ROOT) return process.env.CTX_FRAMEWORK_ROOT;
   if (process.env.CTX_PROJECT_ROOT) return process.env.CTX_PROJECT_ROOT;
   // Canonical install location (install.mjs always installs to ~/cortextos)
-  const canonical = join(homedir(), 'cortextos');
+  const canonical = join(homedir(), 'SOMA');
   if (existsSync(join(canonical, 'orgs')) || existsSync(join(canonical, 'agents'))) {
     return canonical;
   }

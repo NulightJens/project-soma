@@ -19,7 +19,7 @@ export const ecosystemCommand = new Command('ecosystem')
     } else if (process.env.CTX_PROJECT_ROOT) {
       projectRoot = process.env.CTX_PROJECT_ROOT;
     } else {
-      const canonical = join(homedir(), 'cortextos');
+      const canonical = join(homedir(), 'SOMA');
       projectRoot = existsSync(join(canonical, 'orgs')) ? canonical : process.cwd();
     }
 
@@ -77,7 +77,7 @@ export const ecosystemCommand = new Command('ecosystem')
     // low: a transient infrastructure wobble could exhaust retries before
     // the daemon stabilized. 50 leaves real headroom.
     //
-    // BUG-019 fix: emit a cortextos-dashboard PM2 entry alongside the daemon
+    // BUG-019 fix: emit a SOMA-dashboard PM2 entry alongside the daemon
     // so the dashboard runs under PM2 supervision instead of as an orphan
     // `npm run dev &` background shell job started by /onboarding. Now it
     // gets restart-on-crash, log files in ~/.pm2/logs/, and reboot survival
@@ -87,7 +87,7 @@ export const ecosystemCommand = new Command('ecosystem')
     const dashboardAppBlock = hasDashboard
       ? `,
     {
-      name: 'cortextos-dashboard',
+      name: 'SOMA-dashboard',
       script: 'npm',
       args: 'run dev',
       cwd: ${JSON.stringify(dashboardDir)},

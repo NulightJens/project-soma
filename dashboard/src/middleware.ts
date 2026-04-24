@@ -1,4 +1,4 @@
-// cortextOS Dashboard - Auth middleware
+// SOMA Dashboard - Auth middleware
 // Checks for next-auth session cookie; redirects to /login if missing.
 // Cannot import auth.ts directly because it chains to better-sqlite3,
 // which is not available in the Edge Runtime.

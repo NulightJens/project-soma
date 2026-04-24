@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# cortextOS shared environment resolution
+# SOMA shared environment resolution
 # Source this at the top of bus/ and scripts/ files after determining SCRIPT_DIR.
 #
 # Handles:

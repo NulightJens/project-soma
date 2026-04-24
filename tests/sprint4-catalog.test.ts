@@ -10,7 +10,7 @@ import {
 } from '../src/bus/catalog.js';
 
 describe('Sprint 4: Community Catalog', () => {
-  const testDir = join(tmpdir(), `cortextos-sprint4-${Date.now()}`);
+  const testDir = join(tmpdir(), `SOMA-sprint4-${Date.now()}`);
   const frameworkRoot = join(testDir, 'framework');
   const ctxRoot = join(testDir, 'ctx');
 

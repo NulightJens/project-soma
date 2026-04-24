@@ -1,6 +1,6 @@
-# Contributing to cortextOS
+# Contributing to SOMA
 
-Thank you for contributing a skill or agent template to the cortextOS community catalog. This guide covers everything you need to submit a contribution.
+Thank you for contributing a skill or agent template to the SOMA community catalog. This guide covers everything you need to submit a contribution.
 
 ## What Can Be Contributed
 
@@ -114,7 +114,7 @@ Before opening a PR, verify:
 
 ```bash
 git clone https://github.com/grandamenium/cortextos.git
-cd cortextos
+cd SOMA
 git checkout -b feat/skill-<your-skill-name>
 ```
 
@@ -186,4 +186,4 @@ Once approved, `review_status` will be set to `"approved"` and the item will app
 
 ## Questions
 
-Open a GitHub issue or message the cortextOS community channel.
+Open a GitHub issue or message the SOMA community channel.

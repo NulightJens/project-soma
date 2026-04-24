@@ -1,4 +1,4 @@
-// cortextOS Dashboard - Shared TypeScript interfaces
+// SOMA Dashboard - Shared TypeScript interfaces
 // Matches JSON schemas from bus/ scripts exactly
 
 // -- Health & Action Types --

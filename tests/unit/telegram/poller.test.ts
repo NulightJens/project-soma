@@ -44,7 +44,7 @@ describe('TelegramPoller — offset-after-handler', () => {
   let stateDir: string;
 
   beforeEach(() => {
-    stateDir = mkdtempSync(join(tmpdir(), 'cortextos-poller-'));
+    stateDir = mkdtempSync(join(tmpdir(), 'SOMA-poller-'));
   });
 
   afterEach(() => {

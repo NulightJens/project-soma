@@ -188,7 +188,7 @@ export function OrganizationTab() {
         <CardContent className="py-8 text-center">
           <p className="text-sm text-muted-foreground">
             Organization not configured. Run{' '}
-            <code className="bg-muted px-1.5 py-0.5 rounded text-xs">/cortextos-setup</code>{' '}
+            <code className="bg-muted px-1.5 py-0.5 rounded text-xs">/SOMA-setup</code>{' '}
             to set up your Organization.
           </p>
         </CardContent>

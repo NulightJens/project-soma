@@ -1,6 +1,6 @@
 # Claude Remote Agent
 
-Persistent 24/7 Claude Code agent controlled via Telegram. Runs via cortextos daemon with auto-restart and crash recovery.
+Persistent 24/7 Claude Code agent controlled via Telegram. Runs via SOMA daemon with auto-restart and crash recovery.
 
 ## First Boot Check
 

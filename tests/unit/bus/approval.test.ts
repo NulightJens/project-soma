@@ -36,13 +36,13 @@ function mkPaths(root: string): BusPaths {
 }
 
 beforeEach(() => {
-  testDir = mkdtempSync(join(tmpdir(), 'cortextos-approval-test-'));
+  testDir = mkdtempSync(join(tmpdir(), 'SOMA-approval-test-'));
   // Distinct framework root so the path-resolution regression test can
   // verify postActivity receives the FRAMEWORK path, not the runtime
   // state (ctxRoot) path. In production these are separate directories
-  // (~/cortextOS/ vs ~/.cortextos/default/) and the approval bug shipped
+  // (~/cortextos/ vs ~/.cortextos/default/) and the approval bug shipped
   // because the original code conflated them.
-  frameworkRoot = mkdtempSync(join(tmpdir(), 'cortextos-framework-test-'));
+  frameworkRoot = mkdtempSync(join(tmpdir(), 'SOMA-framework-test-'));
   paths = mkPaths(testDir);
   postActivitySpy.mockClear();
   postActivitySpy.mockResolvedValue(true);

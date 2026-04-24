@@ -80,7 +80,7 @@ cortextos bus check-inbox
 When an agent reports task completion:
 
 ```bash
-# 1. Complete the task in cortextOS
+# 1. Complete the task in SOMA
 cortextos bus complete-task "$TASK_ID" --result "<what was produced>"
 
 # 2. Log the event

@@ -57,7 +57,7 @@ const dummyPaths = {
 const baseOptions = {
   org: 'TestOrg',
   agent: 'tester',
-  frameworkRoot: '/home/test/cortextOS',
+  frameworkRoot: '/home/test/SOMA',
   instanceId: 'test',
 };
 
@@ -147,13 +147,13 @@ describe('queryKnowledgeBase — graceful missing-config', () => {
   it('missing config: warn + return empty KBQueryResponse, execFileSync NEVER called', () => {
     mockMissingKbConfig();
 
-    const result = queryKnowledgeBase(dummyPaths, 'what is cortextos?', baseOptions);
+    const result = queryKnowledgeBase(dummyPaths, 'what is SOMA?', baseOptions);
 
     expect(execFileSyncMock).not.toHaveBeenCalled();
     expect(result).toEqual({
       results: [],
       total: 0,
-      query: 'what is cortextos?',
+      query: 'what is SOMA?',
       collection: 'shared-TestOrg',
     });
     expect(warnLog.some((m) => m.includes('TestOrg') && /run setup/i.test(m))).toBe(true);

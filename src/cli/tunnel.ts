@@ -4,7 +4,7 @@ import { existsSync, writeFileSync, readFileSync, mkdirSync, chmodSync } from 'f
 import { join } from 'path';
 import { homedir } from 'os';
 
-const TUNNEL_NAME = 'cortextos';
+const TUNNEL_NAME = 'SOMA';
 const PLIST_LABEL = 'com.cortextos.tunnel';
 const PLIST_PATH = join(homedir(), 'Library', 'LaunchAgents', `${PLIST_LABEL}.plist`);
 const CLOUDFLARED_CERT = join(homedir(), '.cloudflared', 'cert.pem');
@@ -39,7 +39,7 @@ function writeTunnelConfig(instance: string, config: TunnelConfig): void {
 function checkPlatform(): void {
   if (process.platform !== 'darwin') {
     console.error('  cortextos tunnel requires macOS (uses launchd for persistence).');
-    console.error('  On Linux/Windows, run cloudflared manually: cloudflared tunnel run cortextos');
+    console.error('  On Linux/Windows, run cloudflared manually: cloudflared tunnel run SOMA');
     process.exit(1);
   }
 }
@@ -305,7 +305,7 @@ const startCommand = new Command('start')
     const port = parseInt(options.port, 10);
 
     checkPlatform();
-    console.log('\ncortextOS Tunnel\n');
+    console.log('\nSOMA Tunnel\n');
 
     // 1. Check cloudflared installed
     const version = checkCloudflared();
@@ -406,7 +406,7 @@ const statusCommand = new Command('status')
   .description('Show tunnel URL and running status')
   .action(async (options: { instance: string }) => {
     checkPlatform();
-    console.log('\ncortextOS Tunnel Status\n');
+    console.log('\nSOMA Tunnel Status\n');
 
     // cloudflared installed?
     let cfVersion = 'not installed';

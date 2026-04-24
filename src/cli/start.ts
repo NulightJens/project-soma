@@ -19,7 +19,7 @@ export const startCommand = new Command('start')
   .argument('[agent]', 'Specific agent to start (starts all if omitted)')
   .option('--instance <id>', 'Instance ID', 'default')
   .option('--foreground', 'Run daemon in foreground (no PM2, for debugging)')
-  .description('Start the cortextOS daemon and agents')
+  .description('Start the SOMA daemon and agents')
   .action(async (agent: string | undefined, options: { instance: string; foreground?: boolean }) => {
     const ipc = new IPCClient(options.instance);
     const daemonRunning = await ipc.isDaemonRunning();
@@ -57,7 +57,7 @@ export const startCommand = new Command('start')
 
       if (options.foreground) {
         // Run in foreground (blocking) — useful for debugging
-        console.log('Starting cortextOS daemon in foreground...');
+        console.log('Starting SOMA daemon in foreground...');
         console.log('(Press Ctrl+C to stop)\n');
         const child = spawn(process.execPath, [daemonScript, '--instance', options.instance], {
           stdio: 'inherit',
@@ -74,7 +74,7 @@ export const startCommand = new Command('start')
         // PM2 available — use ecosystem or direct pm2 start
         const ecosystemPath = join(projectRoot, 'ecosystem.config.js');
         if (existsSync(ecosystemPath)) {
-          console.log('Starting cortextOS daemon via PM2...');
+          console.log('Starting SOMA daemon via PM2...');
           try {
             execSync('pm2 start ecosystem.config.js', { stdio: 'inherit', cwd: projectRoot });
             execSync('pm2 save', { stdio: 'inherit', cwd: projectRoot });

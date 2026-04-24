@@ -6,7 +6,7 @@ triggers: ["build", "m2c1", "worker agent", "autonomous build", "spin up worker"
 
 # M2C1 Worker Agent Skill
 
-> Any cortextOS agent can autonomously build complete software by acting as the "human" in the M2C1 framework, managing a dedicated worker Claude Code session through the full 12-phase lifecycle.
+> Any SOMA agent can autonomously build complete software by acting as the "human" in the M2C1 framework, managing a dedicated worker Claude Code session through the full 12-phase lifecycle.
 
 > Worker session spawn is fully implemented. Use `cortextos spawn-worker` to launch an isolated Claude Code M2C1 build session.
 
@@ -15,7 +15,7 @@ triggers: ["build", "m2c1", "worker agent", "autonomous build", "spin up worker"
 ## Overview
 
 This skill enables 3-layer agentception:
-1. **You** (the cortextOS agent) act as the human/supervisor
+1. **You** (the SOMA agent) act as the human/supervisor
 2. **Worker** (a fresh Claude Code session) acts as the M2C1 orchestrator
 3. **Subagents** (spawned by the worker) execute parallel research and tasks
 
@@ -25,7 +25,7 @@ You provide the brain dump, answer discovery questions, help with tool setup, mo
 
 ## Prerequisites
 
-- M2C1 skill files available (bundled in cortextos templates)
+- M2C1 skill files available (bundled in SOMA templates)
 - A clear project idea or brain dump
 - An isolated directory for the build
 - Worker session spawn mechanism available (`cortextos spawn-worker`)
@@ -203,7 +203,7 @@ cortextos bus send-message <worker-name> normal '<your answers>'
 Base your answers on:
 - The original brain dump requirements
 - Any research you have done
-- Your domain knowledge as a cortextOS agent
+- Your domain knowledge as a SOMA agent
 - The org's goals and constraints (GOALS.md, knowledge.md)
 
 If you do not know the answer, make a reasonable decision and note it. Do not block the worker with "ask the user" unless it is truly a human-only decision.
@@ -231,7 +231,7 @@ Before the worker starts building, ask yourself:
 - What accounts/services does the project need? (APIs, hosting, etc.)
 - What CLI tools should be installed? (expo, vercel, railway, etc.)
 - What env variables does the worker need? (API keys, tokens, etc.)
-- What skills could help the worker? (existing cortextOS skills)
+- What skills could help the worker? (existing SOMA skills)
 - What testing tools are needed? (iOS Simulator, Playwright, etc.)
 
 ### MCP Configuration
@@ -283,7 +283,7 @@ cortextos bus send-message <worker-name> normal 'Source .env in your project dir
 
 ### Skills for the Worker
 
-Copy relevant cortextOS skills to the worker's project:
+Copy relevant SOMA skills to the worker's project:
 ```bash
 # If the worker needs browser automation knowledge, the agent-browser skill
 # is already in templates/agent/.claude/skills/agent-browser/SKILL.md and

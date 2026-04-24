@@ -156,7 +156,7 @@ export const addAgentCommand = new Command('add-agent')
             `**Dashboard:** ${dashboardUrl}`,
             `**Communication Style:** ${ctx.communication_style || 'casual'}`,
             `**Day Mode:** ${ctx.day_mode_start || '08:00'} - ${ctx.day_mode_end || '00:00'}`,
-            '**Framework:** cortextOS Node.js',
+            '**Framework:** SOMA Node.js',
             '',
             '---',
             '',
@@ -258,7 +258,7 @@ function findTemplateDir(projectRoot: string, template: string): string | null {
   const candidates = [
     join(projectRoot, 'templates', template),
     join(frameworkRoot, 'templates', template),
-    join(projectRoot, 'node_modules', 'cortextos', 'templates', template),
+    join(projectRoot, 'node_modules', 'SOMA', 'templates', template),
     // Relative to this file for development
     join(__dirname, '..', '..', 'templates', template),
   ];
@@ -310,7 +310,7 @@ function createMinimalAgent(agentDir: string, name: string, org: string, templat
 }
 
 function createAgentsMd(name: string, org: string, template: string): string {
-  return `# cortextOS ${template.charAt(0).toUpperCase() + template.slice(1)}
+  return `# SOMA ${template.charAt(0).toUpperCase() + template.slice(1)}
 
 ## BOOTSTRAP PROTOCOL - READ EVERY FILE BEFORE DOING ANYTHING
 

@@ -186,7 +186,7 @@ export function checkTaskDependencies(
 /**
  * Find the on-disk path of a task file by ID, supporting cross-org lookup.
  *
- * cortextOS's standard dispatch pattern is an orchestrator in one org
+ * SOMA's standard dispatch pattern is an orchestrator in one org
  * filing tasks that get assigned to specialists in other orgs. Before
  * this helper existed, updateTask
  * and completeTask hardcoded `join(paths.taskDir, taskId + '.json')` — which

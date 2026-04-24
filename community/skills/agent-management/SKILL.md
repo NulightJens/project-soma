@@ -1,13 +1,13 @@
 ---
 name: agent-management
-description: "You need to create a new agent, restart a crashed agent, change an agent's model or config, fix a Telegram bot token, troubleshoot why an agent is not responding, enable or disable an agent, spawn an agent for another user, manage PM2 process management, reset crash limits, or do anything that touches an agent's lifecycle, configuration, or credentials. This is the definitive guide for every agent operation in cortextOS."
+description: "You need to create a new agent, restart a crashed agent, change an agent's model or config, fix a Telegram bot token, troubleshoot why an agent is not responding, enable or disable an agent, spawn an agent for another user, manage PM2 process management, reset crash limits, or do anything that touches an agent's lifecycle, configuration, or credentials. This is the definitive guide for every agent operation in SOMA."
 triggers: ["new agent", "create agent", "spawn agent", "add agent", "restart", "soft restart", "hard restart", "disable agent", "enable agent", "change model", "switch model", "bot token", "BotFather", "agent not responding", "agent crashed", "agent down", "crash limit", "reset crashes", "agent health", "list agents", "heartbeat", "onboard", "setup agent", "configure agent", ".env", "config.json", "pm2", "ecosystem.config", "cross-org", "agent for someone else", "agent management", "agent lifecycle", "agent credentials", "telegram bot", "token not working"]
 external_calls: ["api.telegram.org"]
 ---
 
 # Agent Management
 
-> The definitive guide for managing cortextOS agent lifecycle. Every operation, every script, every protocol. Follow these EXACTLY - do not improvise.
+> The definitive guide for managing SOMA agent lifecycle. Every operation, every script, every protocol. Follow these EXACTLY - do not improvise.
 
 ---
 
@@ -44,7 +44,7 @@ cp -r "$CTX_FRAMEWORK_ROOT/templates/$TEMPLATE" \
 # 1. Open Telegram, message @BotFather
 # 2. Send /newbot
 # 3. Choose a name (e.g., "My Agent")
-# 4. Choose a username (e.g., myagent_cortextos_bot)
+# 4. Choose a username (e.g., myagent_SOMA_bot)
 # 5. Copy the bot token
 
 # Step 3: Get chat ID

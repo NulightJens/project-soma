@@ -174,20 +174,20 @@ function validateOrgName(name: string): boolean {
 }
 
 function findProjectRoot(): string {
-  // Prefer CTX_FRAMEWORK_ROOT if set (running inside cortextOS session)
+  // Prefer CTX_FRAMEWORK_ROOT if set (running inside SOMA session)
   if (process.env.CTX_FRAMEWORK_ROOT && existsSync(join(process.env.CTX_FRAMEWORK_ROOT, 'dist', 'cli.js'))) {
     return process.env.CTX_FRAMEWORK_ROOT;
   }
   const cwd = process.cwd();
   if (existsSync(join(cwd, 'dist', 'cli.js'))) return cwd;
-  // Walk up to find package.json with cortextos name
+  // Walk up to find package.json with SOMA name
   let dir = cwd;
   for (let i = 0; i < 4; i++) {
     const pkg = join(dir, 'package.json');
     if (existsSync(pkg)) {
       try {
         const { name } = JSON.parse(require('fs').readFileSync(pkg, 'utf-8'));
-        if (name === 'cortextos' && existsSync(join(dir, 'dist', 'cli.js'))) return dir;
+        if (name === 'SOMA' && existsSync(join(dir, 'dist', 'cli.js'))) return dir;
       } catch { /* ignore */ }
     }
     const parent = join(dir, '..');
@@ -207,7 +207,7 @@ export const setupCommand = new Command('setup')
 
     const iface = rl();
 
-    console.log('\n  Welcome to cortextOS setup\n');
+    console.log('\n  Welcome to SOMA setup\n');
     console.log('  This wizard will:');
     console.log('    1. Check and install dependencies');
     console.log('    2. Create your organization');

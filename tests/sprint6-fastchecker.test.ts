@@ -4,7 +4,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 
 describe('Sprint 6: Fast-Checker Completeness', () => {
-  const testDir = join(tmpdir(), `cortextos-sprint6-${Date.now()}`);
+  const testDir = join(tmpdir(), `SOMA-sprint6-${Date.now()}`);
   const stateDir = join(testDir, 'state', 'testbot');
 
   beforeEach(() => {

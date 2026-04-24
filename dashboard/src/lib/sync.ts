@@ -1,4 +1,4 @@
-// cortextOS Dashboard - JSON/JSONL to SQLite sync engine
+// SOMA Dashboard - JSON/JSONL to SQLite sync engine
 // Bridges agent-written files on disk with the SQLite read cache.
 
 import fs from 'fs';

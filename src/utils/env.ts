@@ -6,7 +6,7 @@ import { ensureDir } from './atomic.js';
 import { validateAgentName, validateOrgName } from './validate.js';
 
 /**
- * Resolve the cortextOS environment context.
+ * Resolve the SOMA environment context.
  * Equivalent of bash _ctx-env.sh - reads from env vars, .cortextos-env, .env files.
  */
 export function resolveEnv(overrides?: Partial<CtxEnv>): CtxEnv {
@@ -14,9 +14,9 @@ export function resolveEnv(overrides?: Partial<CtxEnv>): CtxEnv {
 
   // Try reading .cortextos-env from cwd
   let envFile: Record<string, string> = {};
-  const cortextosEnvPath = join(process.cwd(), '.cortextos-env');
-  if (existsSync(cortextosEnvPath)) {
-    envFile = parseEnvFile(cortextosEnvPath);
+  const SOMAEnvPath = join(process.cwd(), '.cortextos-env');
+  if (existsSync(SOMAEnvPath)) {
+    envFile = parseEnvFile(SOMAEnvPath);
   }
 
   const instanceId =

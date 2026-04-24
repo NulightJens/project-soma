@@ -1,4 +1,4 @@
-// cortextOS Dashboard - Heartbeat data fetcher
+// SOMA Dashboard - Heartbeat data fetcher
 // Reads directly from filesystem (heartbeats change frequently; SQLite may lag).
 
 import fs from 'fs/promises';

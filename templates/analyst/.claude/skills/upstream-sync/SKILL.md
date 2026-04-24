@@ -1,18 +1,18 @@
 ---
 name: upstream-sync
-description: "Check for cortextOS framework updates from the remote repo. Fetches changes, categorizes them, explains in plain English, and applies only with user approval."
+description: "Check for SOMA framework updates from the remote repo. Fetches changes, categorizes them, explains in plain English, and applies only with user approval."
 triggers: ["upstream", "framework update", "check updates", "new version", "pull changes"]
 ---
 
 # Upstream Sync
 
-Check for cortextOS framework updates from the remote repository. Never auto-merges. Always explains changes and waits for approval.
+Check for SOMA framework updates from the remote repository. Never auto-merges. Always explains changes and waits for approval.
 
 ## When to Run
 
 - Daily cron (configured in config.json)
 - When user asks about updates
-- After hearing about new cortextOS features
+- After hearing about new SOMA features
 
 ## Workflow
 

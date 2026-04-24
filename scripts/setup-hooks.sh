@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup-hooks.sh — Install cortextOS git hooks into the local repo
+# setup-hooks.sh — Install SOMA git hooks into the local repo
 #
 # Run once after cloning:
 #   bash scripts/setup-hooks.sh
@@ -32,6 +32,6 @@ install_hook() {
   echo "  Installed: .git/hooks/$name"
 }
 
-echo "Installing cortextOS git hooks..."
+echo "Installing SOMA git hooks..."
 install_hook pre-push
 echo "Done. Hooks active for this repo clone."

@@ -1,7 +1,7 @@
 ---
 name: framework-upstream-auto-update
 effort: low
-description: "Daily upstream framework auto-update workflow. Fetches new cortextos commits, classifies by type and touched paths, auto-applies safe bug fixes, routes features/mixed to [ORCHESTRATOR] for approval, and verifies the apply with build + test before reporting."
+description: "Daily upstream framework auto-update workflow. Fetches new SOMA commits, classifies by type and touched paths, auto-applies safe bug fixes, routes features/mixed to [ORCHESTRATOR] for approval, and verifies the apply with build + test before reporting."
 triggers: ["upstream check", "framework update", "check upstream", "upstream auto-update", "framework upstream", "apply upstream", "sync upstream"]
 ---
 
@@ -23,7 +23,7 @@ triggers: ["upstream check", "framework update", "check upstream", "upstream aut
 
 ### Step 1 — Fetch and inspect
 ```bash
-cd /path/to/cortextos
+cd /path/to/SOMA
 cortextos bus check-upstream
 ```
 Read the output. If it reports no new commits, skip to Step 7 (log noop and stop).
@@ -65,14 +65,14 @@ When flagging: collect the commit SHAs, commit messages, and touched paths, and 
 ### Step 4 — Apply safe bugfix / docs / chore commits
 If all new commits are pure bugfix or docs/chore AND none touch the guardrail paths:
 ```bash
-cd /path/to/cortextos
+cd /path/to/SOMA
 CORTEXTOS_CONFIRM_UPSTREAM_MERGE=yes cortextos bus check-upstream --apply
 ```
 **The `CORTEXTOS_CONFIRM_UPSTREAM_MERGE=yes` env var is required.** Without it, `check-upstream --apply` returns `{"status": "error", "error": "Refusing to auto-merge upstream..."}` as a safety gate. The env var is the "I have reviewed the diff and I trust the changes" signal. Set it inline, not exported, so it does not leak into subsequent unrelated commands.
 
 After applying:
 ```bash
-cd /path/to/cortextos
+cd /path/to/SOMA
 npm install
 npm audit --audit-level=moderate
 npm run build

@@ -52,7 +52,7 @@ describe('AgentManager.discoverAndStart - BUG-028 fix', () => {
   let frameworkRoot: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-am-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-am-test-'));
     ctxRoot = join(testDir, 'instance');
     frameworkRoot = join(testDir, 'framework');
     mkdirSync(join(ctxRoot, 'config'), { recursive: true });
@@ -145,7 +145,7 @@ describe('AgentManager.discoverAndStart - BUG-043 fix (multi-org support)', () =
   let frameworkRoot: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-am-multiorg-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-am-multiorg-'));
     ctxRoot = join(testDir, 'instance');
     frameworkRoot = join(testDir, 'framework');
     mkdirSync(join(ctxRoot, 'config'), { recursive: true });
@@ -217,7 +217,7 @@ describe('AgentManager.discoverAndStart - BUG-043 fix (multi-org support)', () =
   });
 
   it('returns empty list when orgs/ does not exist (backward compat)', async () => {
-    const emptyDir = mkdtempSync(join(tmpdir(), 'cortextos-am-empty-'));
+    const emptyDir = mkdtempSync(join(tmpdir(), 'SOMA-am-empty-'));
     try {
       // No orgs/ dir at all — daemon should not error, just discover nothing
       const am = new AgentManager('test-instance', ctxRoot, emptyDir, 'acme');
@@ -238,7 +238,7 @@ describe('AgentManager.restartAgent - BUG-007 fix (rebuild Telegram poller)', ()
   let frameworkRoot: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-am-restart-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-am-restart-test-'));
     ctxRoot = join(testDir, 'instance');
     frameworkRoot = join(testDir, 'framework');
     mkdirSync(join(ctxRoot, 'config'), { recursive: true });

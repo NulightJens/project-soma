@@ -55,7 +55,7 @@ function writeStore(store = SAMPLE_STORE) {
 }
 
 beforeEach(() => {
-  tmpDir = mkdtempSync(join(tmpdir(), 'cortextos-oauth-test-'));
+  tmpDir = mkdtempSync(join(tmpdir(), 'SOMA-oauth-test-'));
   mockFetch.mockReset();
 });
 

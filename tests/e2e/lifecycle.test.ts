@@ -33,7 +33,7 @@ describe('E2E Lifecycle', () => {
   }
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-e2e-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-e2e-'));
     ctxRoot = join(testDir, '.cortextos', 'test');
     mkdirSync(ctxRoot, { recursive: true });
   });

@@ -30,7 +30,7 @@ export const dashboardCommand = new Command('dashboard')
   .option('--instance <id>', 'Instance ID', 'default')
   .option('--build', 'Build for production first (recommended for Cloudflare Tunnel / remote access)')
   .option('--install', 'Install dashboard dependencies first')
-  .description('Start the cortextOS dashboard (Next.js)')
+  .description('Start the SOMA dashboard (Next.js)')
   .action(async (options: { port: string; instance: string; build?: boolean; install?: boolean }) => {
     const { execSync, spawn } = require('child_process');
 
@@ -202,7 +202,7 @@ function findDashboardDir(): string | null {
   const candidates = [
     join(process.cwd(), 'dashboard'),
     join(__dirname, '..', '..', 'dashboard'),
-    join(process.cwd(), 'node_modules', 'cortextos', 'dashboard'),
+    join(process.cwd(), 'node_modules', 'SOMA', 'dashboard'),
   ];
   for (const dir of candidates) {
     if (existsSync(join(dir, 'package.json'))) return dir;

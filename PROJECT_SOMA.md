@@ -1,6 +1,6 @@
 # Project SOMA
 
-> **Digital twins of agent brains.** A persistent, prioritized, context-isolated multi-agent system built by forking cortextOS and absorbing the strongest primitives from gbrain, gstack, and graphify.
+> **Digital twins of agent brains.** A persistent, prioritized, context-isolated multi-agent system built by forking cortextOS (upstream) and absorbing the strongest primitives from gbrain, gstack, and graphify.
 
 | | |
 |---|---|
@@ -8,7 +8,7 @@
 | **Started** | 2026-04-23 |
 | **Owner** | Jens Heitmann (nulight) |
 | **Upstream fork** | grandamenium/cortextos (MIT) |
-| **Destination** | nulight/cortextos (fork + evolve in place, rename deferred) |
+| **Destination** | NulightJens/cortextos (fork + evolve in place; display rebrand to SOMA per ADR-015, repo rename deferred) |
 | **License** | MIT (preserved from upstream; all sources MIT) |
 | **Status** | Phase 0 — planning + documentation |
 
@@ -22,7 +22,7 @@
 4. [Architecture](#4-architecture)
 5. [Source components & attribution](#5-source-components--attribution)
 6. [Cloudflare integration plan](#6-cloudflare-integration-plan)
-7. [cortextOS-specific improvements](#7-cortextos-specific-improvements)
+7. [SOMA-specific improvements](#7-soma-specific-improvements)
 8. [Agnostic distribution model](#8-agnostic-distribution-model)
 9. [Implementation roadmap](#9-implementation-roadmap)
 10. [Decisions log (ADRs)](#10-decisions-log-adrs)
@@ -51,11 +51,11 @@ The mental model: a town of agents, each with a workshop (worktree), a shared li
 
 ## 2. Genesis & naming
 
-**2026-04-23.** The project started as a Telegram-controllable agent setup using cortextOS + Hermes Agent (Nous Research). After installing both and bringing a cortextOS `system` orchestrator online with a shared bot (`@SoloScale_Bot`), the question shifted from "how do we configure this" to "how do we build the *right* system."
+**2026-04-23.** The project started as a Telegram-controllable agent setup using SOMA + Hermes Agent (Nous Research). After installing both and bringing a SOMA `system` orchestrator online with a shared bot (`@SoloScale_Bot`), the question shifted from "how do we configure this" to "how do we build the *right* system."
 
 Research into **gbrain** and **gstack** (both by Garry Tan, YC) revealed that each project independently solves one slice of what SOMA needs:
 
-- cortextOS solves persistent process management + Telegram UX.
+- SOMA solves persistent process management + Telegram UX.
 - gbrain solves durable task queueing + knowledge memory.
 - gstack solves git-worktree isolation + Claude subprocess delegation.
 
@@ -83,7 +83,7 @@ Consequences:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ Control plane: Telegram · iOS · Dashboard (Next.js) · CLI        │
-│                        (inherited from cortextOS)                │
+│                        (inherited from SOMA)                │
 └──────────────────────┬───────────────────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────────────────┐
@@ -136,16 +136,16 @@ This keeps token cost tuned to task shape and maps cleanly to the user's stated 
 
 | Component | Purpose | Source | Backend |
 |---|---|---|---|
-| **cortextos-daemon** | Process supervisor, file bus, Telegram poller, heartbeat | cortextOS (inherited) | Node + PM2 |
+| **cortextos-daemon** | Process supervisor, file bus, Telegram poller, heartbeat | SOMA (inherited) | Node + PM2 |
 | **Minions queue** | Durable prioritized task queue with DAGs | gbrain (ported) | SQLite → PGLite → D1 |
 | **WorktreeManager** | Per-job git worktree allocation + patch harvest | gstack (ported) | Node + git |
 | **claude-subprocess handler** | Workhorse reasoning via subscription | gstack pattern | subprocess + NDJSON stream |
 | **Brain layer** | Shared typed-graph memory + embeddings | gbrain-lite (ported) | SQLite/PGLite + pgvector |
 | **Skill registry** | Fat-markdown dispatch w/ frontmatter | gstack format | filesystem |
 | **Codebase map** (opt) | Tree-sitter AST graph per worktree | graphify (vendored) | JSON files, MCP |
-| **Telegram poller** | User control plane | cortextOS (inherited) | HTTP long-poll |
-| **Dashboard** | Web UI | cortextOS (inherited) | Next.js |
-| **Tunnel** (opt) | Remote access | cortextOS + Cloudflare | cloudflared |
+| **Telegram poller** | User control plane | SOMA (inherited) | HTTP long-poll |
+| **Dashboard** | Web UI | SOMA (inherited) | Next.js |
+| **Tunnel** (opt) | Remote access | SOMA + Cloudflare | cloudflared |
 
 ---
 
@@ -153,7 +153,7 @@ This keeps token cost tuned to task shape and maps cleanly to the user's stated 
 
 All four sources are **MIT-licensed** — legally clean to combine and redistribute.
 
-### cortextOS — upstream
+### SOMA — upstream
 - **Repo:** github.com/grandamenium/cortextos
 - **License:** MIT (c) 2026 Cortext LLC
 - **Role:** base fork. Inherit wholesale.
@@ -205,7 +205,7 @@ All four sources are **MIT-licensed** — legally clean to combine and redistrib
 Cloudflare is a **distribution multiplier**, not a dependency. SOMA must run fully local (single Mac) and fully cloud (globally distributed) from the same codebase.
 
 ### Tier 1 — adopt immediately
-- **Cloudflare Tunnel** (already in cortextOS via `cortextos tunnel`). Keep. Lets the dashboard and any webhook endpoints be reachable from the user's phone without port forwarding.
+- **Cloudflare Tunnel** (already in SOMA via `cortextos tunnel`). Keep. Lets the dashboard and any webhook endpoints be reachable from the user's phone without port forwarding.
 
 ### Tier 2 — adopt when distributing
 - **Cloudflare Workers** — public API surface for the agnostic distribution. Every SOMA instance gets a Worker subdomain; Worker auths incoming webhooks (Telegram, Stripe, GitHub, etc.) and forwards to the local daemon via Tunnel.
@@ -234,19 +234,19 @@ One interface, four impls. Same rule for the brain layer (memory backend) and th
 
 ---
 
-## 7. cortextOS-specific improvements
+## 7. SOMA-specific improvements
 
 Things we'll fix as we fork:
 
-1. **Replace ad-hoc file-bus tasks with Minions queue** — current cortextOS tasks live as JSON files in `bus/tasks/`. No priority, no retry, no DAG. Keep the file bus for *messages* (lightweight, pub/sub-y) and move *work items* to Minions. Clear split of concerns.
+1. **Replace ad-hoc file-bus tasks with Minions queue** — current SOMA tasks live as JSON files in `bus/tasks/`. No priority, no retry, no DAG. Keep the file bus for *messages* (lightweight, pub/sub-y) and move *work items* to Minions. Clear split of concerns.
 2. **Shift specialists from persistent PTY to ephemeral workers** — right now 6 agents = 6 Claude Code sessions burning context rotation. After SOMA, 1 persistent orchestrator PTY + N ephemeral subprocess workers pulled from the queue. Specialists become *skill bundles*, not processes.
 3. **Unify identity / skill formats** — currently `IDENTITY.md`, `SOUL.md`, `GOALS.md`, `GUARDRAILS.md` per agent. Move to gstack SKILL.md frontmatter + gbrain page-of-record format. Auto-generated from templates with placeholder injection.
 4. **Introduce `{{PREAMBLE}}` pattern** — every skill invocation gets update checks, session counting, learnings search, timeline log prepended automatically. Gstack proved this works.
-5. **Add git-worktree isolation** — cortextOS has zero filesystem isolation today. Adding WorktreeManager removes a whole class of race-condition bugs.
+5. **Add git-worktree isolation** — SOMA has zero filesystem isolation today. Adding WorktreeManager removes a whole class of race-condition bugs.
 6. **Port `runCycle` as the overnight maintenance primitive** — replaces any ad-hoc "run stuff at night" patterns.
 7. **Add `fail-improve` telemetry** — every LLM fallback logged; regex patterns auto-derived from repeated failures; 87% deterministic goal (gbrain's reported result).
-8. **Split "configured" vs "enabled" vs "running"** explicitly in the registry — cortextOS conflates these, which confused us on first run (all 6 agents were enabled by default even though only `system` was intended to start).
-9. **Keychain fallback for headless deployments** — cortextOS spawns `claude` which reads macOS Keychain. For Linux/Docker/cloud distribution, we need `CLAUDE_CODE_OAUTH_TOKEN` env var path documented + `claude setup-token` wizard.
+8. **Split "configured" vs "enabled" vs "running"** explicitly in the registry — SOMA conflates these, which confused us on first run (all 6 agents were enabled by default even though only `system` was intended to start).
+9. **Keychain fallback for headless deployments** — SOMA spawns `claude` which reads macOS Keychain. For Linux/Docker/cloud distribution, we need `CLAUDE_CODE_OAUTH_TOKEN` env var path documented + `claude setup-token` wizard.
 10. **Dashboard: surface the queue** — add pages for Minions job list, worktree status, memory search, skill catalog.
 
 ---
@@ -273,7 +273,7 @@ Implementation:
 - [x] Research gbrain, gstack, graphify
 - [x] Write PROJECT_SOMA.md (this file)
 - [ ] Run `gh auth login` (user action)
-- [ ] Fork grandamenium/cortextos → nulight/cortextos
+- [ ] Fork grandamenium/cortextos → NulightJens/cortextos
 - [ ] Update `origin` remote on local `~/cortextos`
 - [ ] Commit + push SOMA doc to `main` or `soma/phase-0` branch
 - [ ] Open tracking issues for phases 1–7
@@ -310,7 +310,7 @@ Implementation:
 ### Phase 4 — Orchestrator rewrite (1 week)
 - [ ] System agent's main loop: poll inbox → decompose → `submit_job` → poll status → reply to Telegram.
 - [ ] Specialists converted from PTY to skill-bundle + job handler.
-- [ ] Cascade the 5 disabled cortextos specialists (skool/social-media/brand/content/growth) into skill sets invoked by the system orchestrator.
+- [ ] Cascade the 5 disabled SOMA specialists (skool/social-media/brand/content/growth) into skill sets invoked by the system orchestrator.
 
 ### Phase 5 — Skill format unification (1 week)
 - [ ] Adopt gstack SKILL.md frontmatter schema.
@@ -338,10 +338,10 @@ Implementation:
 
 ### ADR-001: Fork + evolve in place (not new repo)
 **Date:** 2026-04-23
-**Context:** Two options — fork cortextos and evolve, or start a new repo that pulls from all three.
-**Decision:** Fork cortextos. Rename deferred.
+**Context:** Two options — fork SOMA and evolve, or start a new repo that pulls from all three.
+**Decision:** Fork SOMA. Rename deferred.
 **Rationale:** Preserves ability to pull upstream bugfixes. Cortextos has the most runtime code already working (PM2, daemon, Telegram, dashboard). gbrain/gstack are donors, not bases.
-**Consequences:** We inherit cortextos's commit history and issue references. If we ever want to submit improvements back upstream, the path exists.
+**Consequences:** We inherit SOMA's commit history and issue references. If we ever want to submit improvements back upstream, the path exists.
 
 ### ADR-002: SQLite as default queue backend (not Postgres)
 **Date:** 2026-04-23
@@ -419,7 +419,7 @@ Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is
 **Decision:** Full restyle in one pass:
   - `globals.css` — OKLCH gold/mustard tokens → hex monochrome tokens bound to the shadcn contract. Destructive red is the one chromatic exception.
   - `soma-tokens.css` — parallel `--soma-*` namespace (still present for explicit SOMA-wrapped surfaces).
-  - `layout.tsx` — body font default swapped Sora → Manrope; metadata title cortextOS → SOMA.
+  - `layout.tsx` — body font default swapped Sora → Manrope; metadata title SOMA → SOMA.
   - All 25 component files swept: success/warning/info/category → monochrome + icon + label; destructive retained.
   - `chart-theme.ts` — gold/blue/purple/pink/green palette → monochrome ramp `[#15171a, #4b4d52, #808286, #b4b5b8, #e5e7eb, #999999]`; severity `error` kept as `#ef4444`.
   - 3 lingering inline hex values (urgent badge, markdown link color, cost-tracking chart) all converted.
@@ -446,10 +446,10 @@ Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is
 **Decision:** Where donor systems have overlapping capabilities, **integrate into a single coherent implementation** that preserves the full capability surface of each. No parallel-but-separate ports of the same concept. Concrete integrations:
   - **LLM execution handlers.** gbrain's `anthropic-subagent` (SDK + two-phase tool ledger) and gstack's `claude -p` subprocess pattern both run LLM reasoning. Integrate into **one unified `runner` handler** with engine selection (`subscription` default, `api` opt-in per ADR-008). Shared code: tool ledger durability, transcript persistence, turn budgeting, cache discipline. Engine-specific code: process spawn vs. SDK call.
   - **Persistent memory.** gbrain's page-of-record + typed graph and gstack's `learnings.jsonl` are both long-term memory. Integrate: learnings become typed edges (`learned_from` relation) in the unified brain graph. No separate JSONL sidecar.
-  - **Scheduled work.** gbrain's `runCycle` + `cron-scheduler` skill and cortextOS's existing cron primitives are both scheduled execution. Integrate: `runCycle` phases become normal Minion jobs scheduled via cron-generator; cortextOS's existing cron entries migrate to Minions rows. One scheduler, not two.
+  - **Scheduled work.** gbrain's `runCycle` + `cron-scheduler` skill and SOMA's existing cron primitives are both scheduled execution. Integrate: `runCycle` phases become normal Minion jobs scheduled via cron-generator; SOMA's existing cron entries migrate to Minions rows. One scheduler, not two.
   - **Skill format.** gbrain and gstack already share the `SKILL.md` + frontmatter convention (Garry Tan authored both). Adopt verbatim — no translation layer.
   - **Graph enrichment.** graphify's tree-sitter AST + Leiden clustering and gbrain's entity-extraction subagents are both graph writers. Integrate behind one `BrainEnricher` interface writing into gbrain's storage (per revised ADR-004).
-  - **File bus vs. queue.** cortextOS's file bus carries *messages* (events, heartbeats, telemetry — lightweight pub/sub). Minions carries *work items* (durable tasks with priority, DAG, retry). Different purposes, cleanly separated. No overlap to integrate.
+  - **File bus vs. queue.** SOMA's file bus carries *messages* (events, heartbeats, telemetry — lightweight pub/sub). Minions carries *work items* (durable tasks with priority, DAG, retry). Different purposes, cleanly separated. No overlap to integrate.
   - **Worktree + shell handler.** gstack's `WorktreeManager` and gbrain's shell-handler env allowlist combine: the worker allocates a worktree per job, the shell handler executes inside it with the scrubbed env. One pipeline, two primitives composed.
 **Rationale:** Parallel implementations of the same concept produce silo conflicts, dilute the mental model, and force consumers to understand both. Integrated implementations preserve every capability while presenting a single coherent API.
 **Consequences:** Every port proposal must answer: *is there an existing concept in SOMA that overlaps with this?* If yes, integrate. If no, introduce cleanly. "Is there overlap?" is a required ADR-012 check before any new module lands.
@@ -461,7 +461,7 @@ Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is
   - gbrain: port the entire Minions package (queue, worker, all handlers including the 710-LOC subagent handler with two-phase tool ledger, aggregator, transcript, rate-leases, quiet-hours, stagger, backoff), `runCycle` with `yieldBetweenPhases`, `fail-improve` loop, page-of-record + timeline format, typed graph with confidence tags, pgvector hybrid search.
   - gstack: port `WorktreeManager`, `session-runner` NDJSON parser, `{{PREAMBLE}}` template pipeline, `gen-skill-docs`, continuous-checkpoint `WIP:` commits, learnings JSONL, `/freeze` + `/guard` + `/careful` scope locks, sidebar-agent, pair-agent ref system (`@e1`/`@c1`), cross-model second opinions, intent classifier.
   - graphify: elevated to first-class enrichment pipeline (see revised ADR-004) — tree-sitter AST, Leiden clustering, multimodal ingest, god-nodes.
-  - cortextOS: PM2 daemon + crash recovery + 71-hour rotation + file bus + Telegram poller all preserved.
+  - SOMA: PM2 daemon + crash recovery + 71-hour rotation + file bus + Telegram poller all preserved.
 **Rationale:** The Twin Principle is the organizing narrative. It is not a ceiling on capability. A dumber twin is a worse twin. Every donor system solves a real problem; discarding capabilities to fit a cleaner story compounds into a weaker platform.
 **Consequences:** Phase-level scope expands. Phase 1 alone now includes the full gbrain subagent handler (gated per ADR-008 but ported in full). Phase 6 (brain) is larger than initially sketched. Phase lengths in §9 are indicative — real work expands to match capability preservation.
 
@@ -480,6 +480,17 @@ Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is
   - Internal APIs, memory files, handler protocols, and logs are **not** affected — they stay in their native complexity.
   - Not a conflict with ADR-011: internals preserved in full; user-facing presentation filtered separately.
 
+### ADR-015: Rebrand display + npm package identity to SOMA; defer runtime-infra rename
+**Date:** 2026-04-23
+**Context:** User directive — *"I just want it referred to as Project SOMA across the app and references."* ADR-005 originally deferred any rename until after Phase 5 to avoid touching every file before the architecture stabilised. With Phase 1 at ~92% and the app now exercisable end-to-end, the branding mismatch (metadata says SOMA, CLI/docs/templates still say SOMA) is friction for the human operator the whole project is aimed at (see ADR-014).
+**Decision:** Rebrand the **human-visible surface** (all prose, docs, template markdown, dashboard UI copy, source-code comments, npm `name` field) to SOMA in this session. Explicitly **defer** the **runtime-infra rename** (CLI binary alias `soma`, `~/.cortextos/` state dir, PM2 app names `cortextos-daemon` / `cortextos-jobs-worker`, local repo dir `~/cortextos`, GitHub remote URL, `.cortextos-env` / `.cortextos-startup.md` internal filenames) to a dedicated migration slot because each requires user-side state-handling (stop daemon, migrate state dir with symlink fallback, re-install CLI, `pm2 delete` + restart, GitHub-side rename).
+**Rationale:** Splits the rebrand into a zero-behavioural-change sweep (safe to land today) and a behavioural migration (needs a runbook the operator executes). Honours the user's directive without breaking their running daemon or installed CLI. Preserves ADR-005's upstream-merge posture for `grandamenium/cortextos` remote tracking (only the `name` field conflicts — trivial to resolve on pull).
+**Consequences:**
+  - **Partially supersedes ADR-005.** The "package stays SOMA" clause is overridden for the `package.json name` field; the "repo stays SOMA until Phase 5" clause is preserved (local dir, remote URL, state dir, PM2 IDs unchanged in this session).
+  - Display-layer rename is a single pure-text commit touching ~300 files with zero behavioural impact. `tsc --noEmit` and the vitest suite must stay green across the sweep.
+  - A follow-up "SOMA infra migration" slot (post-Phase-1 or during Phase 5) covers: adding `soma` as a bin alias alongside `cortextos`, renaming the state dir with a symlink so existing installs keep working, renaming PM2 apps with a migration command, and optionally renaming the local repo + GitHub fork.
+  - Brief cognitive dissonance during the deferral window: docs say "SOMA" but operators still type `cortextos jobs submit ...`. Acceptable because the commands keep working — no broken shortcuts, no orphaned state.
+
 ---
 
 ## 11. Open questions
@@ -490,7 +501,7 @@ Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is
 - **Q4 — Graphify adoption depth:** vendor as git submodule vs npm dep (it's Python, so neither — pip install in a venv). Likely pin to a tag and document.
 - **Q5 — Telemetry opt-in:** gstack has an opt-in Supabase telemetry pipeline. Do we ship the same pattern or stay zero-telemetry?
 - **Q6 — Multi-tenancy:** is a SOMA instance ever shared across humans, or always single-user? Currently single-user; multi-tenancy is a "not now" but affects schema choices.
-- **Q7 — iOS app:** cortextOS mentions "Native iOS app coming soon." Do we build this or defer?
+- **Q7 — iOS app:** SOMA mentions "Native iOS app coming soon." Do we build this or defer?
 
 ---
 
@@ -517,20 +528,20 @@ Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is
 Linear journal. Append-only. Each entry: date, one-line summary, what happened, what it changed.
 
 ### 2026-04-23 — Project begins
-- cortextOS + Hermes installed earlier today for Telegram-controllable agents.
-- Brought up cortextOS `solo-scale` org with `system` orchestrator; 5 specialists (skool, social-media, brand, content, growth) configured but disabled.
+- SOMA + Hermes installed earlier today for Telegram-controllable agents.
+- Brought up SOMA `solo-scale` org with `system` orchestrator; 5 specialists (skool, social-media, brand, content, growth) configured but disabled.
 - Discovered `ALLOWED_USER` security gate; added to all agent `.env` files; `system` online in Telegram as @SoloScale_Bot.
 - Researched gbrain (Garry Tan): found Minions queue + markdown-first memory + `runCycle` maintenance primitive.
 - Researched gstack (Garry Tan): found WorktreeManager + `claude -p` subprocess pattern + fat-markdown skills.
 - Researched graphify (Safi Shamsi): promising codebase-cartography tool but too young to depend on structurally; adopt as skill, not platform.
 - User named the project **SOMA**.
-- Decided to fork + evolve cortextos rather than start fresh.
+- Decided to fork + evolve SOMA rather than start fresh.
 - `gh auth login` completed as `NulightJens`.
 - Forked grandamenium/cortextos → NulightJens/cortextos. Remotes: `origin` = fork, `upstream` = original.
 - Rebased local branch onto upstream `main`, picked up 5 upstream fixes (telegram validation, cron gap detection, HTML parse mode, cron boot, IPC hard-restart).
 - Committed PROJECT_SOMA.md to `main` (commit `8fba559`).
 - Started branch `soma/phase-1-minions`.
-- **Design system adopted.** User supplied Jens personal monochrome brand (`brand-jens-monochrome.css` + `03-brand-jens-personal.md`). Visual tokens only — brand/voice rules explicitly excluded per user direction. Decision: add SOMA tokens as a parallel namespace (`--soma-*`) alongside the existing cortextOS gold theme so new SOMA UI can adopt immediately without restyling the legacy dashboard. Full theme cut-over deferred to a dedicated commit when enough SOMA UI exists to justify the churn.
+- **Design system adopted.** User supplied Jens personal monochrome brand (`brand-jens-monochrome.css` + `03-brand-jens-personal.md`). Visual tokens only — brand/voice rules explicitly excluded per user direction. Decision: add SOMA tokens as a parallel namespace (`--soma-*`) alongside the existing SOMA gold theme so new SOMA UI can adopt immediately without restyling the legacy dashboard. Full theme cut-over deferred to a dedicated commit when enough SOMA UI exists to justify the churn.
   - `dashboard/src/app/soma-tokens.css` added — light + dark `--soma-*` palette, `.soma` wrapper class with `var(--font-manrope)`, surface/CTA data-attribute helpers.
   - Manrope wired into `dashboard/src/app/layout.tsx` alongside existing Sora + JetBrains_Mono.
 - **Phase 1 scaffold.** `src/minions/` created with port plan, types, schema, engine interface.
@@ -550,7 +561,7 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **ADR-010 added.** Full dashboard monochrome restyle executed (not token-only):
   - `globals.css` — OKLCH gold/mustard → hex monochrome bound to shadcn contract.
   - `soma-tokens.css` — parallel `--soma-*` namespace preserved.
-  - `layout.tsx` — body font Sora → Manrope; metadata cortextOS → SOMA.
+  - `layout.tsx` — body font Sora → Manrope; metadata SOMA → SOMA.
   - 25 component files swept (67 chromatic utilities replaced with monochrome + icons + labels, semantic meaning preserved via `IconCheck` / `IconAlertTriangle` / `IconAlertCircle` / shape variation for status dots).
   - `chart-theme.ts` — chromatic palette → monochrome ramp; `severity.error` kept as `#ef4444` per ADR.
   - 3 inline hex values (urgent badge, markdown link color, cost-tracking chart) all converted.

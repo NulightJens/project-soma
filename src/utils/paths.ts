@@ -55,7 +55,7 @@ export function resolvePaths(
 export function getIpcPath(instanceId: string = 'default'): string {
   validateInstanceId(instanceId);
   if (process.platform === 'win32') {
-    return `\\\\.\\pipe\\cortextos-${instanceId}`;
+    return `\\\\.\\pipe\\SOMA-${instanceId}`;
   }
   return join(homedir(), '.cortextos', instanceId, 'daemon.sock');
 }

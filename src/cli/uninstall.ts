@@ -8,17 +8,17 @@ export const uninstallCommand = new Command('uninstall')
   .option('--instance <id>', 'Instance ID', 'default')
   .option('--force', 'Skip confirmation')
   .option('--keep-state', 'Remove agent config but preserve state directory (logs, tasks, heartbeats)')
-  .description('Remove cortextOS state directories and PM2 processes')
+  .description('Remove SOMA state directories and PM2 processes')
   .action(async (options: { instance: string; force?: boolean; keepState?: boolean }) => {
     const instanceId = options.instance;
     const ctxRoot = join(homedir(), '.cortextos', instanceId);
 
     if (!existsSync(ctxRoot)) {
-      console.log(`No cortextOS state found at ${ctxRoot}`);
+      console.log(`No SOMA state found at ${ctxRoot}`);
       return;
     }
 
-    console.log(`\nUninstalling cortextOS instance: ${instanceId}`);
+    console.log(`\nUninstalling SOMA instance: ${instanceId}`);
     console.log(`  State directory: ${ctxRoot}`);
     if (options.keepState) {
       console.log('  Mode: --keep-state (preserving state directory, removing agent config only)\n');
@@ -35,10 +35,10 @@ export const uninstallCommand = new Command('uninstall')
       });
       if (pm2Result.status === 0 && pm2Result.stdout) {
         const processes = JSON.parse(pm2Result.stdout);
-        const cortextosProcesses = processes.filter((p: { name: string }) =>
-          p.name.startsWith('cortextos-') || p.name.startsWith(`ctx-${instanceId}`),
+        const SOMAProcesses = processes.filter((p: { name: string }) =>
+          p.name.startsWith('SOMA-') || p.name.startsWith(`ctx-${instanceId}`),
         );
-        for (const p of cortextosProcesses) {
+        for (const p of SOMAProcesses) {
           const del = spawnSync('pm2', ['delete', p.name], { timeout: 5000, stdio: 'pipe' });
           if (del.status === 0) {
             console.log(`  Stopped PM2 process: ${p.name}`);
@@ -78,5 +78,5 @@ export const uninstallCommand = new Command('uninstall')
       } catch { /* ignore */ }
     }
 
-    console.log('\n  cortextOS uninstalled.');
+    console.log('\n  SOMA uninstalled.');
   });

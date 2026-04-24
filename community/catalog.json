@@ -5,7 +5,7 @@
     {
       "name": "orchestrator",
       "description": "Orchestrator agent — coordinates other agents, handles morning/evening reviews, manages goals and approvals, weekly reporting",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "agent",
       "version": "1.0.0",
       "tags": ["orchestrator", "management", "reviews", "goals"],
@@ -17,7 +17,7 @@
     {
       "name": "analyst",
       "description": "Analyst agent — system health, metrics, theta-wave autoresearch, community publishing, upstream sync",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "agent",
       "version": "1.0.0",
       "tags": ["analyst", "metrics", "research", "health"],
@@ -29,7 +29,7 @@
     {
       "name": "agent",
       "description": "General-purpose worker agent — base template for specialist agents. Handles tasks, Telegram comms, memory, and skill execution",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "agent",
       "version": "1.0.0",
       "tags": ["agent", "worker", "general-purpose"],
@@ -41,7 +41,7 @@
     {
       "name": "tasks",
       "description": "Task lifecycle management — create, update, complete tasks with KPI logging. Every significant piece of work gets a task",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["tasks", "workflow", "kpi", "visibility"],
@@ -53,7 +53,7 @@
     {
       "name": "comms",
       "description": "Telegram and agent-to-agent message handling — format reference, reply patterns, callback handling, bidirectional file send/receive",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["telegram", "messaging", "comms", "inbox"],
@@ -65,7 +65,7 @@
     {
       "name": "autoresearch",
       "description": "Structured experimentation loop — form hypothesis, make targeted change, measure outcome, keep or discard. Theta wave research cycles",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["research", "experiments", "theta-wave", "optimization"],
@@ -77,7 +77,7 @@
     {
       "name": "m2c1-worker",
       "description": "Autonomous software builds — spawn a dedicated M2C1 worker session to build any project through 12 structured phases",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["m2c1", "builds", "worker", "autonomous", "software"],
@@ -89,7 +89,7 @@
     {
       "name": "worker-agents",
       "description": "Spawn, manage, and terminate isolated worker agents for parallel autonomous tasks",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["workers", "parallel", "spawn", "isolation"],
@@ -101,7 +101,7 @@
     {
       "name": "knowledge-base",
       "description": "RAG-powered org knowledge base — ingest documents, query with natural language, keep institutional knowledge searchable",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["rag", "knowledge", "search", "memory"],
@@ -113,7 +113,7 @@
     {
       "name": "approvals",
       "description": "Human approval gate — request approval before external actions (email, deploy, delete, financial), block until approved",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["approvals", "safety", "human-in-loop", "guardrails"],
@@ -125,7 +125,7 @@
     {
       "name": "memory",
       "description": "Session and long-term memory management — daily memory files, MEMORY.md, KB ingestion for cross-session continuity",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["memory", "continuity", "session", "persistence"],
@@ -137,7 +137,7 @@
     {
       "name": "cron-management",
       "description": "Recurring schedule management — set up crons, persist across restarts, prevent duplicates",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["cron", "scheduling", "recurring", "automation"],
@@ -149,7 +149,7 @@
     {
       "name": "heartbeat",
       "description": "Agent health monitoring — update heartbeat, check stale tasks, log events, prevent showing as DEAD on dashboard",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["heartbeat", "health", "monitoring", "dashboard"],
@@ -161,7 +161,7 @@
     {
       "name": "human-tasks",
       "description": "Human task routing — when blocked by a capability gap, create a human task with clear instructions and priority",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["human-tasks", "blockers", "escalation", "routing"],
@@ -173,7 +173,7 @@
     {
       "name": "agent-management",
       "description": "Agent lifecycle management — create, start, stop, restart agents, handle crashes and context exhaustion",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["agents", "lifecycle", "management", "crash-recovery"],
@@ -185,7 +185,7 @@
     {
       "name": "activity-channel",
       "description": "Org-wide activity broadcast — post significant completions to the shared activity channel for all agents to see",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["activity", "broadcast", "org", "visibility"],
@@ -197,7 +197,7 @@
     {
       "name": "event-logging",
       "description": "Activity feed logging — log session events, task completions, and milestones so they appear in the dashboard",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["events", "logging", "activity", "dashboard"],
@@ -209,7 +209,7 @@
     {
       "name": "system-diagnostics",
       "description": "Debug stuck systems — diagnose unresponsive agents, stale tasks, bus issues, PTY problems",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["diagnostics", "debug", "troubleshooting", "health"],
@@ -221,7 +221,7 @@
     {
       "name": "onboarding",
       "description": "First-boot onboarding wizard — guides new agents through identity setup, Telegram configuration, and first session startup",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["onboarding", "setup", "first-boot", "configuration"],
@@ -233,7 +233,7 @@
     {
       "name": "morning-review",
       "description": "Daily morning briefing — overnight recap, task summaries, pending approvals, goal progress, day plan",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["morning", "briefing", "review", "daily"],
@@ -245,7 +245,7 @@
     {
       "name": "evening-review",
       "description": "Daily evening wrap-up — what was shipped, blockers, plan for overnight, goals progress",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["evening", "review", "daily", "wrap-up"],
@@ -257,7 +257,7 @@
     {
       "name": "weekly-review",
       "description": "Weekly performance review — metrics, accomplishments, blockers, next week goals",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["weekly", "review", "performance", "metrics"],
@@ -269,7 +269,7 @@
     {
       "name": "theta-wave",
       "description": "Overnight autonomous research cycles — assign research cycles to agents, monitor results, surface findings",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["theta-wave", "research", "overnight", "autonomous"],
@@ -281,7 +281,7 @@
     {
       "name": "goal-management",
       "description": "Goal setting and tracking — create goals, assign to agents, track progress, refresh daily",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["goals", "strategy", "tracking", "management"],
@@ -293,7 +293,7 @@
     {
       "name": "local-version-control",
       "description": "Git workflow management — commit, branch, PR creation, merge conflict resolution for agent-managed code",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["git", "version-control", "pr", "workflow"],
@@ -305,7 +305,7 @@
     {
       "name": "nighttime-mode",
       "description": "Night mode behavior — quieter notifications, autonomous work, overnight research execution",
-      "author": "cortextos",
+      "author": "SOMA",
       "type": "skill",
       "version": "1.0.0",
       "tags": ["nighttime", "autonomous", "quiet", "overnight"],

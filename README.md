@@ -1,6 +1,6 @@
-![npm version](https://img.shields.io/npm/v/cortextos) ![License](https://img.shields.io/badge/license-MIT-green) ![Node](https://img.shields.io/badge/node-20%2B-brightgreen) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)
+![npm version](https://img.shields.io/npm/v/SOMA) ![License](https://img.shields.io/badge/license-MIT-green) ![Node](https://img.shields.io/badge/node-20%2B-brightgreen) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)
 
-# cortextOS
+# SOMA
 
 **Persistent 24/7 Claude Code agents you control from Telegram or your phone.**
 
@@ -39,7 +39,7 @@ Boss:    Done. "morning-inbox" cron set — runs daily at 08:00.
 
 ```mermaid
 flowchart TD
-    U["User (Telegram / iOS)"] --> CLI["cortextOS Daemon (Node.js)"]
+    U["User (Telegram / iOS)"] --> CLI["SOMA Daemon (Node.js)"]
     CLI --> O["Orchestrator agent"]
     CLI --> A["Analyst agent"]
     CLI --> W["Specialist agents"]
@@ -59,7 +59,7 @@ flowchart TD
 # 1. Install PM2 globally if you don't have it
 npm install -g pm2
 
-# 2. Install cortextOS
+# 2. Install SOMA
 curl -fsSL https://raw.githubusercontent.com/grandamenium/cortextos/main/install.mjs | node
 
 # 3. Open the project in Claude Code and run guided onboarding
@@ -131,7 +131,7 @@ cortextos dashboard          # Start web dashboard (--port 3000)
 
 ## Security
 
-cortextOS has undergone a dedicated security hardening sprint covering prompt injection resistance, guardrail enforcement, and approval gate integrity. Agents require explicit human approval before any external action (email, deploy, delete, financial). The guardrails system is self-improving: agents log near-misses and extend GUARDRAILS.md each session.
+SOMA has undergone a dedicated security hardening sprint covering prompt injection resistance, guardrail enforcement, and approval gate integrity. Agents require explicit human approval before any external action (email, deploy, delete, financial). The guardrails system is self-improving: agents log near-misses and extend GUARDRAILS.md each session.
 
 ---
 

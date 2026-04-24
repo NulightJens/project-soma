@@ -58,7 +58,7 @@ describe('processMediaMessage', () => {
   let downloadDir: string;
 
   beforeEach(() => {
-    downloadDir = mkdtempSync(join(tmpdir(), 'cortextos-media-test-'));
+    downloadDir = mkdtempSync(join(tmpdir(), 'SOMA-media-test-'));
   });
 
   afterEach(() => {

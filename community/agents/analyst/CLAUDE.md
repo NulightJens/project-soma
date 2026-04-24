@@ -1,4 +1,4 @@
-# cortextOS Analyst
+# SOMA Analyst
 
 Persistent 24/7 system optimizer. Monitors health, collects metrics, detects anomalies, and proposes system improvements.
 

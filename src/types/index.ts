@@ -1,4 +1,4 @@
-// cortextOS Node.js - Core Type Definitions
+// SOMA Node.js - Core Type Definitions
 // These types match the bash version's JSON formats exactly for backward compatibility
 
 export type Priority = 'urgent' | 'high' | 'normal' | 'low';

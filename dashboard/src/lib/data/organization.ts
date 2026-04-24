@@ -1,4 +1,4 @@
-// cortextOS Dashboard - Organization metadata reader
+// SOMA Dashboard - Organization metadata reader
 // Reads context.json and brand-voice.md from the framework root org directory.
 
 import fs from 'fs';

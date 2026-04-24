@@ -10,7 +10,7 @@ describe('Agent Discovery', () => {
   let ctxRoot: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-agents-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-agents-test-'));
     ctxRoot = testDir;
     // Point CTX_FRAMEWORK_ROOT at an isolated subdir (no orgs/ inside) so that
     // listAgents() sees a configured but empty framework root and does NOT fall

@@ -1,7 +1,7 @@
 # Security Agent Tools
 
 ## Core Bus Commands
-All standard cortextOS bus commands apply. See `.claude/skills/bus-reference/SKILL.md` for the full reference.
+All standard SOMA bus commands apply. See `.claude/skills/bus-reference/SKILL.md` for the full reference.
 
 ## Security-Specific Tools
 

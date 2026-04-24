@@ -338,7 +338,7 @@ export class AgentProcess {
     this.pty = null;
     this.clearSessionTimer();
 
-    // When the cortextos daemon is shut down by PM2, SIGTERM propagates to
+    // When the SOMA daemon is shut down by PM2, SIGTERM propagates to
     // the whole process group and reaches each PTY's Claude Code child
     // BEFORE the daemon's stopAll() loop has a chance to call stopAgent() on
     // it. Those children exit cleanly (code 0) but arrive at handleExit with

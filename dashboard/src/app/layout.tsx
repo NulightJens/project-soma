@@ -24,7 +24,7 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: "SOMA",
-  description: "Persistent agent OS. Forked from cortextOS.",
+  description: "Persistent agent OS. Forked from SOMA.",
   viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
   appleWebApp: {
     capable: true,

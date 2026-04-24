@@ -1,4 +1,4 @@
-// cortextOS Dashboard - Event data fetcher
+// SOMA Dashboard - Event data fetcher
 // Reads from SQLite (synced from JSONL event files on disk).
 
 import { db } from '@/lib/db';

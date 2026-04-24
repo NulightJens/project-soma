@@ -25,7 +25,7 @@ describe('Bus System', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-system-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-system-test-'));
   });
 
   afterEach(() => {
@@ -84,7 +84,7 @@ describe('Bus System', () => {
     let gitDir: string;
 
     beforeEach(() => {
-      gitDir = mkdtempSync(join(tmpdir(), 'cortextos-autocommit-test-'));
+      gitDir = mkdtempSync(join(tmpdir(), 'SOMA-autocommit-test-'));
       execSync('git init', { cwd: gitDir, stdio: 'pipe' });
       execSync('git config user.email "test@test.com"', { cwd: gitDir, stdio: 'pipe' });
       execSync('git config user.name "Test"', { cwd: gitDir, stdio: 'pipe' });

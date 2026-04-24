@@ -67,7 +67,7 @@ describe('FastChecker', () => {
   let paths: BusPaths;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-fastchecker-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-fastchecker-test-'));
     paths = createTestPaths(testDir);
   });
 
@@ -325,7 +325,7 @@ describe('FastChecker', () => {
         'alice',
         '999',
         'Hello there',
-        '/opt/cortextos',
+        '/opt/SOMA',
         undefined,
         'My previous reply to you',
       );
@@ -341,7 +341,7 @@ describe('FastChecker', () => {
         'alice',
         '123',
         'Hi',
-        '/opt/cortextos',
+        '/opt/SOMA',
       );
 
       expect(result).not.toContain('[Your last message');
@@ -355,7 +355,7 @@ describe('FastChecker', () => {
         'alice',
         '999',
         'Hello',
-        '/opt/cortextos',
+        '/opt/SOMA',
         undefined,
         longText,
       );
@@ -371,7 +371,7 @@ describe('FastChecker', () => {
         'alice',
         '999',
         'Hello',
-        '/opt/cortextos',
+        '/opt/SOMA',
         'Original message',
         'Last sent text',
       );
@@ -381,7 +381,7 @@ describe('FastChecker', () => {
     });
 
     it('instruction uses single quotes to prevent shell variable expansion of $-numbers', () => {
-      const result = FastChecker.formatTelegramTextMessage('alice', '999', 'Hello', '/opt/cortextos');
+      const result = FastChecker.formatTelegramTextMessage('alice', '999', 'Hello', '/opt/SOMA');
       expect(result).toContain("send-telegram 999 '<your reply>'");
     });
   });
@@ -773,7 +773,7 @@ describe('FastChecker', () => {
       checker.start();
       await vi.advanceTimersByTimeAsync(50 * 60 * 1000);
       expect(execFile).toHaveBeenCalledWith(
-        'cortextos',
+        'SOMA',
         expect.arrayContaining(['bus', 'update-heartbeat', expect.stringContaining('[watchdog] my-agent alive — idle session')]),
         expect.any(Function),
       );
@@ -804,7 +804,7 @@ describe('FastChecker', () => {
       checker.start();
       await vi.advanceTimersByTimeAsync(20 * 1000);
       expect(execFile).not.toHaveBeenCalledWith(
-        'cortextos',
+        'SOMA',
         expect.arrayContaining([expect.stringContaining('[watchdog]')]),
         expect.any(Function),
       );

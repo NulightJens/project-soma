@@ -27,10 +27,10 @@ Reference spec: https://google.github.io/A2A/
 
 ## Goal
 
-Add a thin HTTP facade that makes any cortextOS agent appear as an A2A-compatible agent to external callers. Existing bus protocol stays unchanged. No agent templates need to be modified. This is a facade only — the cortextOS bus remains the internal transport.
+Add a thin HTTP facade that makes any SOMA agent appear as an A2A-compatible agent to external callers. Existing bus protocol stays unchanged. No agent templates need to be modified. This is a facade only — the SOMA bus remains the internal transport.
 
 **Explicitly not in scope:**
-- Replacing the cortextOS bus with A2A internally
+- Replacing the SOMA bus with A2A internally
 - Supporting all optional A2A extensions (streaming SSE, multi-turn file artifacts)
 - Full A2A client (outbound calls to other A2A agents) — v1 is server-side only
 
@@ -51,7 +51,7 @@ External A2A Caller
              │ translate
              ▼
 ┌─────────────────────────┐
-│   cortextOS Bus         │  ← existing: src/bus/
+│   SOMA Bus         │  ← existing: src/bus/
 │   (file or Supabase)    │
 └─────────────────────────┘
              │
@@ -62,7 +62,7 @@ External A2A Caller
 └─────────────────────────┘
 ```
 
-The facade runs as a sidecar alongside the daemon. It exposes a minimal A2A HTTP API, translates requests to cortextOS bus messages, and polls the bus for responses.
+The facade runs as a sidecar alongside the daemon. It exposes a minimal A2A HTTP API, translates requests to SOMA bus messages, and polls the bus for responses.
 
 ---
 
@@ -118,21 +118,21 @@ Skills are read from SKILL.md frontmatter `name` and `description` fields — no
 
 ### `src/a2a/task-bridge.ts` — Task translation layer
 
-Translates between A2A task states and cortextOS bus operations:
+Translates between A2A task states and SOMA bus operations:
 
 ```typescript
-// Incoming A2A task → cortextOS bus message
+// Incoming A2A task → SOMA bus message
 async function submitTask(task: A2ATaskRequest, paths: BusPaths): Promise<string> {
   const text = extractText(task.message.parts);
   const msgId = await sendMessage(paths, 'a2a-gateway', agentName, 'normal', text);
   
-  // Store A2A task state indexed by cortextOS message ID
-  writeA2ATaskState(paths, task.id, { status: 'working', cortextosMessageId: msgId });
+  // Store A2A task state indexed by SOMA message ID
+  writeA2ATaskState(paths, task.id, { status: 'working', SOMAMessageId: msgId });
   
   return task.id;
 }
 
-// Poll cortextOS bus for response → A2A task result
+// Poll SOMA bus for response → A2A task result
 async function pollForResult(taskId: string, paths: BusPaths): Promise<A2ATask> {
   const state = readA2ATaskState(paths, taskId);
   const response = findResponseToMessage(paths, state.cortextosMessageId);
@@ -205,7 +205,7 @@ Returns the Agent Card. Public, no auth.
 
 ### `POST /tasks/send`
 
-Submit a new task. Translates to a cortextOS inbox message sent to the agent.
+Submit a new task. Translates to a SOMA inbox message sent to the agent.
 
 **Request:**
 ```json
@@ -309,7 +309,7 @@ cortextos bus a2a-tasks [--agent <name>]
 - Deployable and discoverable by other A2A agents
 
 ### Phase 2: Task submit + poll (2-3 days)
-- `POST /tasks/send` → cortextOS bus message
+- `POST /tasks/send` → SOMA bus message
 - `GET /tasks/:taskId` → poll for reply
 - Task state in local JSON files
 - Functional end-to-end: external agent can assign tasks and get results
@@ -326,13 +326,13 @@ cortextos bus a2a-tasks [--agent <name>]
 
 ## Open Questions
 
-1. **Multi-agent discovery:** If all cortextOS agents on a machine run A2A servers, should there be a registry endpoint (e.g. `GET /agents`) listing the fleet? Useful for orchestrators from other frameworks.
+1. **Multi-agent discovery:** If all SOMA agents on a machine run A2A servers, should there be a registry endpoint (e.g. `GET /agents`) listing the fleet? Useful for orchestrators from other frameworks.
 
-2. **Task timeout:** If the cortextOS agent takes > N seconds to reply (context window, complex task), A2A clients may time out. What is the right timeout, and should we implement long-polling or SSE streaming to handle slow responses?
+2. **Task timeout:** If the SOMA agent takes > N seconds to reply (context window, complex task), A2A clients may time out. What is the right timeout, and should we implement long-polling or SSE streaming to handle slow responses?
 
 3. **Inbound A2A vs Telegram:** Currently agents receive instructions via Telegram. A2A adds a second input path. Should the agent distinguish them in formatting? (e.g. `=== A2A TASK from [agent] ===` vs `=== TELEGRAM from ===`)
 
-4. **Outbound A2A (client):** v1 is server-only. When should we add A2A client capability so cortextOS agents can call other A2A agents as tools?
+4. **Outbound A2A (client):** v1 is server-only. When should we add A2A client capability so SOMA agents can call other A2A agents as tools?
 
 5. **Port assignment:** If multiple agents run on the same machine, each needs a unique port. How is this managed — sequential assignment from `a2a_port` base, or explicit per-agent config?
 

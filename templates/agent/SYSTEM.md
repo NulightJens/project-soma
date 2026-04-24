@@ -4,7 +4,7 @@
 **Timezone:** (set from context.json at agent creation)
 **Orchestrator:** (set from context.json at agent creation)
 **Dashboard:** (set from context.json at agent creation)
-**Framework:** cortextOS Node.js
+**Framework:** SOMA Node.js
 
 ---
 

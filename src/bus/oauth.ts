@@ -1,5 +1,5 @@
 /**
- * OAuth token rotation system for cortextOS.
+ * OAuth token rotation system for SOMA.
  *
  * Manages multi-account Claude OAuth credentials with automatic rotation
  * based on utilization thresholds.

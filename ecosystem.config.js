@@ -1,4 +1,4 @@
-// PM2 ecosystem config for cortextOS daemon.
+// PM2 ecosystem config for SOMA daemon.
 // Portable: paths resolve at load time relative to this file and the user's home.
 // Override any value with environment variables before `pm2 start`.
 

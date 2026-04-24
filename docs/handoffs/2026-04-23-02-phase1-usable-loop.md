@@ -15,7 +15,7 @@
 
 ## Resume in 30 seconds
 
-- **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS; absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
+- **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from SOMA; absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
 - **Last commit:** `986102e` — "soma: SIGKILL-rescue regression against real subprocess worker"
 - **Green signals:** 92 Minions+CLI+regression vitest cases passing (92 includes a real-subprocess SIGKILL-rescue regression); `npx tsc --noEmit` clean across both the SOMA package AND the `dashboard/` package; `cortextos jobs` CLI verified end-to-end; dashboard `/jobs` route live at `localhost:3000/jobs` with plain-language summaries + progressive-disclosure raw-JSON toggle per ADR-014; `cortextos-daemon` online via PM2.
@@ -112,8 +112,8 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 | `CLAUDE.md` | Harness — how Claude Code works on this repo. 10 sections: stack, ownership zones, hard limits, local-first, data discipline, env/security, hub-spoke, memory/retros, DB rules, ADR habit. Read at session start. |
 | `PROJECT_SOMA.md` | Living source of truth — vision + architecture + 13 ADRs + phased roadmap + chronicle + glossary. ~580 lines. §10 = ADR log, §13 = chronicle. |
 | `HANDOFF.md` | **This file.** Resume-here snapshot. |
-| `CONTRIBUTING.md` | Contributor guide (skills, agents, org templates). Unchanged from upstream cortextos. |
-| `README.md` | Upstream cortextos README — still describes cortextOS. SOMA-specific replacement comes with Phase 5 rename. |
+| `CONTRIBUTING.md` | Contributor guide (skills, agents, org templates). Unchanged from upstream SOMA. |
+| `README.md` | Upstream SOMA README — still describes SOMA. SOMA-specific replacement comes with Phase 5 rename. |
 
 ### Minions queue (Phase 1)
 | File | LOC | Purpose |
@@ -154,7 +154,7 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 | `dashboard/src/components/charts/chart-theme.ts` | Chart palette monochrome ramp; severity.error keeps `#ef4444` |
 | 25 component files | Chromatic utilities swept to monochrome + icons + labels (see ADR-010 flagged visual-regression risks) |
 
-### Upstream cortextos (inherited, not yet rewritten)
+### Upstream SOMA (inherited, not yet rewritten)
 | Zone | Status |
 |---|---|
 | `src/daemon/` | Active — runs the PM2-managed `cortextos-daemon` supervising agents |
@@ -191,7 +191,7 @@ f613fe3  soma: phase 1 scaffold + monochrome design tokens
 8fba559  docs: introduce Project SOMA — fork charter, architecture, roadmap
 ```
 
-Everything below `8fba559` is upstream cortextos history (rebased at fork time).
+Everything below `8fba559` is upstream SOMA history (rebased at fork time).
 
 ---
 
@@ -306,7 +306,7 @@ git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-min
 
 ### Local state
 - `~/cortextos` — working tree (branch: `soma/phase-1-minions`)
-- `~/.cortextos/default/` — cortextos state root (agent memories, heartbeats, enabled-agents.json)
+- `~/.cortextos/default/` — SOMA state root (agent memories, heartbeats, enabled-agents.json)
 - `~/.cortextos/default/config/enabled-agents.json` — toggle agents on/off without removing them
 - `~/cortextos/orgs/solo-scale/` — user's personal org (gitignored). `system` agent live, 5 specialists (skool/social-media/brand/content/growth) disabled.
 - `~/.pm2/` — PM2 state (`pm2 list`, `pm2 logs cortextos-daemon`)
@@ -348,13 +348,13 @@ git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-min
 
 8. **Commits show `Max Computer <max@Maxs-Mac-mini.local>`.** Local git user.name/user.email not set in this repo. See §8 open threads for the fix command. Doesn't block work.
 
-9. **The existing dashboard's `cortextos` sidebar/header branding still references cortextOS** — metadata title is `SOMA` but navigation copy wasn't swept. Iterative — rebrand as we rewrite routes.
+9. **The existing dashboard's `cortextos` sidebar/header branding still references SOMA** — metadata title is `SOMA` but navigation copy wasn't swept. Iterative — rebrand as we rewrite routes.
 
 10. **`orgs/` is gitignored** but `orgs/solo-scale/` exists in the working tree with our live bot tokens. `git status` will never show it; `git add orgs/` is the ONLY way to accidentally commit secrets. `CLAUDE.md` §6 says never use `git add` broader than file-by-file.
 
 11. **Dev server + daemon restart interaction:** the Next.js dev server runs independently of PM2. Restarting the daemon (`pm2 restart cortextos-daemon`) doesn't touch the dashboard. Restarting dashboard: kill the next-dev process, re-run `cortextos dashboard`.
 
-12. **Upstream rebases:** `git fetch upstream && git rebase upstream/main` picks up upstream cortextos fixes. Last rebase was during fork; we picked up 5 fixes for free. Re-do periodically once Phase 1 lands to main.
+12. **Upstream rebases:** `git fetch upstream && git rebase upstream/main` picks up upstream SOMA fixes. Last rebase was during fork; we picked up 5 fixes for free. Re-do periodically once Phase 1 lands to main.
 
 ---
 

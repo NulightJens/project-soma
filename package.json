@@ -1,7 +1,7 @@
 {
-  "name": "cortextos",
+  "name": "soma",
   "version": "0.1.1",
-  "description": "Persistent 24/7 Claude Code agents with multi-agent orchestration",
+  "description": "Project SOMA — persistent 24/7 Claude Code agent operating system with durable priority queue, worktree isolation, Telegram + dashboard UX",
   "main": "dist/daemon.js",
   "bin": {
     "cortextos": "dist/cli.js"

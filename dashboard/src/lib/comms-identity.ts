@@ -34,7 +34,7 @@ export function resolveIdentity(ctxRoot: string): CommsIdentity {
 
   // Discover agents from enabled-agents.json — the authoritative registry.
   // The inbox directory is NOT reliable because it contains non-agent dirs
-  // (dashboard, mobile-user, cortextos) that would pollute the agents set.
+  // (dashboard, mobile-user, SOMA) that would pollute the agents set.
   const configPath = path.join(ctxRoot, 'config', 'enabled-agents.json');
   if (fs.existsSync(configPath)) {
     try {

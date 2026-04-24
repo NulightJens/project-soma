@@ -96,7 +96,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             cO
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-semibold tracking-tight">cortextOS</h1>
+            <h1 className="text-xl font-semibold tracking-tight">SOMA</h1>
             <p className="text-xs text-muted-foreground mt-1">Agent Orchestration</p>
           </div>
         </div>

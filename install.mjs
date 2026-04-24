@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * cortextOS cross-platform installer
+ * SOMA cross-platform installer
  *
  * Mac/Linux:   curl -fsSL https://raw.githubusercontent.com/grandamenium/cortextos/main/install.mjs | node
  * Windows:     node -e "$(irm https://raw.githubusercontent.com/grandamenium/cortextos/main/install.mjs)"
@@ -13,7 +13,7 @@ import { join } from 'path';
 import { homedir, platform } from 'os';
 
 const REPO_URL = process.env.CORTEXTOS_REPO || 'https://github.com/grandamenium/cortextos.git';
-const INSTALL_DIR = process.env.CORTEXTOS_DIR || join(homedir(), 'cortextos');
+const INSTALL_DIR = process.env.CORTEXTOS_DIR || join(homedir(), 'SOMA');
 
 // CORTEXTOS_BRANCH lets you install a specific branch instead of `main`. Useful
 // for testing fixes before they merge:
@@ -73,7 +73,7 @@ function tryInstall(label, installFn) {
 }
 
 console.log('');
-console.log(`${BOLD}cortextOS installer${R}`);
+console.log(`${BOLD}SOMA installer${R}`);
 console.log('Persistent 24/7 Claude Code agents with Telegram control');
 console.log('');
 
@@ -401,7 +401,7 @@ if (existsSync(INSTALL_DIR)) {
     fail(`${INSTALL_DIR} exists but is not a git repo. Remove it or set CORTEXTOS_DIR to a different path.`);
   }
 } else {
-  log(`Cloning cortextOS (branch: ${REPO_BRANCH}) to ${INSTALL_DIR}...`);
+  log(`Cloning SOMA (branch: ${REPO_BRANCH}) to ${INSTALL_DIR}...`);
   runVisible(`git clone --branch ${REPO_BRANCH} ${REPO_URL} ${JSON.stringify(INSTALL_DIR)}`);
   ok('Cloned');
 
@@ -409,7 +409,7 @@ if (existsSync(INSTALL_DIR)) {
   log('Configuring git remotes...');
   try {
     run('git remote rename origin upstream', { cwd: INSTALL_DIR });
-    ok('"upstream" remote configured (tracks canonical cortextOS)');
+    ok('"upstream" remote configured (tracks canonical SOMA)');
   } catch {
     warn('Could not configure upstream remote — run manually: git remote rename origin upstream');
   }
@@ -470,7 +470,7 @@ ok('Build complete');
 
 // ─── 10. Link CLI globally ────────────────────────────────────────────────────
 
-log('Linking cortextos CLI...');
+log('Linking SOMA CLI...');
 try {
   runVisible('npm link', { cwd: INSTALL_DIR });
 } catch {
@@ -481,10 +481,10 @@ try {
   }
 }
 
-if (commandExists('cortextos')) {
-  ok('cortextos CLI available');
+if (commandExists('SOMA')) {
+  ok('SOMA CLI available');
 } else {
-  warn('cortextos not in PATH yet. You may need to restart your terminal.');
+  warn('SOMA not in PATH yet. You may need to restart your terminal.');
 }
 
 // ─── 11. PM2 ─────────────────────────────────────────────────────────────────
@@ -514,7 +514,7 @@ try {
 // ─── Done ─────────────────────────────────────────────────────────────────────
 
 console.log('');
-console.log(`${G}${BOLD}cortextOS installed successfully!${R}`);
+console.log(`${G}${BOLD}SOMA installed successfully!${R}`);
 console.log('');
 
 if (!commandExists('claude')) {

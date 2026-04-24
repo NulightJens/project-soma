@@ -27,7 +27,7 @@ import { jobsCommand } from './jobs.js';
 const program = new Command();
 
 program
-  .name('cortextos')
+  .name('SOMA')
   .description('Persistent 24/7 Claude Code agents with multi-agent orchestration')
   .version('0.1.1');
 

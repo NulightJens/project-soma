@@ -29,7 +29,7 @@ describe('BUG-036: lifecycle marker writes', () => {
   const origHome = process.env.HOME;
 
   beforeEach(() => {
-    tmpHome = mkdtempSync(join(tmpdir(), 'cortextos-bug036-'));
+    tmpHome = mkdtempSync(join(tmpdir(), 'SOMA-bug036-'));
     process.env.HOME = tmpHome;
   });
 
@@ -50,9 +50,9 @@ describe('BUG-036: lifecycle marker writes', () => {
 
     it('creates the state directory if it does not exist', () => {
       // The state dir does not exist yet — helper must mkdirSync it
-      writeDisableMarker('cortextos1', 'analyst', 'test reason');
+      writeDisableMarker('SOMA1', 'analyst', 'test reason');
 
-      const stateDir = join(homedir(), '.cortextos', 'cortextos1', 'state', 'analyst');
+      const stateDir = join(homedir(), '.cortextos', 'SOMA1', 'state', 'analyst');
       expect(existsSync(stateDir)).toBe(true);
     });
 
@@ -77,9 +77,9 @@ describe('BUG-036: lifecycle marker writes', () => {
     });
 
     it('creates the state directory if it does not exist', () => {
-      writeStopMarker('cortextos1', 'analyst', 'test reason');
+      writeStopMarker('SOMA1', 'analyst', 'test reason');
 
-      const stateDir = join(homedir(), '.cortextos', 'cortextos1', 'state', 'analyst');
+      const stateDir = join(homedir(), '.cortextos', 'SOMA1', 'state', 'analyst');
       expect(existsSync(stateDir)).toBe(true);
     });
 

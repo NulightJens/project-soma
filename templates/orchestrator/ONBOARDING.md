@@ -2,7 +2,7 @@
 
 This is your first session as the orchestrator. Complete every step before starting normal operations. Do not skip steps.
 
-> **Environment variables**: `CTX_ROOT`, `CTX_FRAMEWORK_ROOT`, `CTX_ORG`, `CTX_AGENT_NAME`, `CTX_TELEGRAM_CHAT_ID`, and `CTX_INSTANCE_ID` are automatically set by the cortextOS framework.
+> **Environment variables**: `CTX_ROOT`, `CTX_FRAMEWORK_ROOT`, `CTX_ORG`, `CTX_AGENT_NAME`, `CTX_TELEGRAM_CHAT_ID`, and `CTX_INSTANCE_ID` are automatically set by the SOMA framework.
 
 ---
 
@@ -238,7 +238,7 @@ cortextos bus send-message <agent> normal "Your goals are set for today. Check G
 
 Before knowledge base setup, check if the user is migrating:
 
-> "Are you setting this system up from scratch, or migrating from an existing cortextOS instance or another workspace?
+> "Are you setting this system up from scratch, or migrating from an existing SOMA instance or another workspace?
 >
 > If you have an existing setup, I can import your agent memory files, copy over skills and workflows, and re-ingest your knowledge base. This saves hours of setup time."
 

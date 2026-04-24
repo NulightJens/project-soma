@@ -3,7 +3,7 @@
  * Source: assets/brand-jens-monochrome.css (handoff 2026-04-23)
  *
  * Purpose: provide the SOMA design tokens as a parallel namespace
- * (`--soma-*`) alongside the existing cortextOS gold theme. SOMA-native
+ * (`--soma-*`) alongside the existing SOMA gold theme. SOMA-native
  * UI (Phase 1+ queue dashboard, worker status, memory search, etc.)
  * consumes these tokens directly. A future commit will rebind shadcn's
  * `--primary`/`--accent`/etc. to `--soma-*` for a full restyle.
@@ -59,7 +59,7 @@
 /*
  * SOMA-scoped utility class. Wrap any SOMA-native view in a
  * `<div class="soma">` to inherit monochrome surface + text defaults
- * without touching the global cortextOS theme.
+ * without touching the global SOMA theme.
  */
 .soma {
   background-color: var(--soma-background);

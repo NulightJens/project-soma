@@ -5,7 +5,7 @@ import { tmpdir } from 'os';
 import { detectDayNightMode } from '../src/bus/heartbeat.js';
 
 describe('Sprint 7: Environment & Config Completeness', () => {
-  const testDir = join(tmpdir(), `cortextos-sprint7-${Date.now()}`);
+  const testDir = join(tmpdir(), `SOMA-sprint7-${Date.now()}`);
 
   beforeEach(() => {
     mkdirSync(testDir, { recursive: true });
@@ -143,7 +143,7 @@ describe('Sprint 7: Environment & Config Completeness', () => {
 
   describe('Uninstall', () => {
     it('state directory can be cleaned up', () => {
-      const ctxRoot = join(testDir, 'cortextos-state');
+      const ctxRoot = join(testDir, 'SOMA-state');
       mkdirSync(join(ctxRoot, 'inbox'), { recursive: true });
       mkdirSync(join(ctxRoot, 'state'), { recursive: true });
       mkdirSync(join(ctxRoot, 'logs'), { recursive: true });

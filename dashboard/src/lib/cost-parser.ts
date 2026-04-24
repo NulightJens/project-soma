@@ -1,4 +1,4 @@
-// cortextOS Dashboard - Cost parser
+// SOMA Dashboard - Cost parser
 // Parses ~/.claude/projects/*.jsonl for token usage and calculates cost.
 
 import fs from 'fs';

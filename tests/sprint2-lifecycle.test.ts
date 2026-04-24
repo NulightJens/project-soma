@@ -4,7 +4,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 
 describe('Sprint 2: Onboarding & Lifecycle', () => {
-  const testDir = join(tmpdir(), `cortextos-sprint2-${Date.now()}`);
+  const testDir = join(tmpdir(), `SOMA-sprint2-${Date.now()}`);
 
   beforeEach(() => {
     mkdirSync(testDir, { recursive: true });
@@ -135,7 +135,7 @@ describe('Sprint 2: Onboarding & Lifecycle', () => {
 
   describe('install creates proper directory structure', () => {
     it('creates all required state directories', () => {
-      const ctxRoot = join(testDir, 'cortextos-state');
+      const ctxRoot = join(testDir, 'SOMA-state');
       const dirs = [
         ctxRoot,
         join(ctxRoot, 'config'),

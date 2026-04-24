@@ -14,7 +14,7 @@ describe('Telegram Logging', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-tg-log-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-tg-log-'));
   });
 
   afterEach(() => {
@@ -89,7 +89,7 @@ describe('TelegramAPI.sendPhoto', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-tg-photo-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-tg-photo-'));
   });
 
   afterEach(() => {

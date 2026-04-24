@@ -1,6 +1,6 @@
 # Tools Quick Reference
 
-All cortextOS commands: `cortextos bus <command>`. Full docs in skill files — load the relevant skill when you need details on a workflow.
+All SOMA commands: `cortextos bus <command>`. Full docs in skill files — load the relevant skill when you need details on a workflow.
 
 ---
 

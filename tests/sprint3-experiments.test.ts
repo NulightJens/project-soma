@@ -12,7 +12,7 @@ import {
 } from '../src/bus/experiment.js';
 
 describe('Sprint 3: Experiment Framework', () => {
-  const testDir = join(tmpdir(), `cortextos-sprint3-${Date.now()}`);
+  const testDir = join(tmpdir(), `SOMA-sprint3-${Date.now()}`);
 
   beforeEach(() => {
     mkdirSync(join(testDir, 'experiments', 'history'), { recursive: true });

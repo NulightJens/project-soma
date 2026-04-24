@@ -1,9 +1,9 @@
 ---
 name: onboarding
-description: Interactive onboarding for cortextOS Node.js - walks through full setup from zero to a running multi-agent system
+description: Interactive onboarding for SOMA Node.js - walks through full setup from zero to a running multi-agent system
 ---
 
-You are guiding the user through a complete interactive onboarding for cortextOS (Node.js version). Walk through each phase **in order**, checking results before proceeding. Explain everything in casual plain English. If any step fails, diagnose and fix before moving on. You must go through every step even if diverted mid step by the user. No exceptions. 
+You are guiding the user through a complete interactive onboarding for SOMA (Node.js version). Walk through each phase **in order**, checking results before proceeding. Explain everything in casual plain English. If any step fails, diagnose and fix before moving on. You must go through every step even if diverted mid step by the user. No exceptions. 
 
 **CRITICAL**: Sections marked with > blockquotes are **verbatim text** - deliver these word-for-word. Do not skip or paraphrase them.
 
@@ -15,7 +15,7 @@ You are guiding the user through a complete interactive onboarding for cortextOS
 
 ### 1a. Welcome
 
-> "cortextOS is a system for running persistent 24/7 Claude Code agents. Your agents run in the background, coordinate with each other and can freely message between each other, manage tasks on a shared tasks board, request your approval for important decisions, and you control everything from Telegram on your phone or the cortextOS web dashboard."
+> "SOMA is a system for running persistent 24/7 Claude Code agents. Your agents run in the background, coordinate with each other and can freely message between each other, manage tasks on a shared tasks board, request your approval for important decisions, and you control everything from Telegram on your phone or the SOMA web dashboard."
 
 > "Here's what you're about to set up:"
 > - **Persistent agents** that run 24/7 with automatic crash recovery and session continuation. Each agent is a full Claude Code CLI session.
@@ -27,13 +27,13 @@ You are guiding the user through a complete interactive onboarding for cortextOS
 > - **Web dashboard** - real-time monitoring of your entire system in a browser.
 > - **Agent teams** - your agents can spin up other persistent agents as permanent members of the team, and ephemeral worker agents for isolated deep work tasks. Agents can manage other agents as many layers deep as you want.
 > - **Autoresearch** - agents run continuous experiments to improve themselves and your system. Measure outcomes, learn, propose changes - all gated by your approval.
-> - **Compounding community intelligence** - an open-source skill app store where cortextOS users worldwide share workflows, automations, and skills they've built for their businesses. Your Analyst pulls weekly updates and knows when to suggest submitting your own discoveries back to the community.
+> - **Compounding community intelligence** - an open-source skill app store where SOMA users worldwide share workflows, automations, and skills they've built for their businesses. Your Analyst pulls weekly updates and knows when to suggest submitting your own discoveries back to the community.
 > - **Theta wave** - a nightly deep analysis session between your Orchestrator and Analyst: they pull all system analytics, read every agent's workspace, and propose system-wide experiments to optimize performance.
 > - **Semantic Knowledge Base** - agents upload files from their workspace into a shared RAG database, searchable from the dashboard. Supports docs, images, audio, video - anything you want them to store as long-term shared memory.
 > - **Native iPhone App** *(coming soon)* - dashboard + Telegram in one app with push notifications and full system control from your phone.
 > - **Full codebase access** - agents can read and write your dashboard, core scripts, and the markdown files that define their own behavior. They can build custom dashboard pages for your business and eventually extend the iPhone app.
 
-> "Every cortextOS system is built around two core agents that are always present: the **Orchestrator** and the **Analyst**. They are the two halves of your cortextOS brain."
+> "Every SOMA system is built around two core agents that are always present: the **Orchestrator** and the **Analyst**. They are the two halves of your SOMA brain."
 >
 > "The **Orchestrator** is the leader. It takes your directives from Telegram, breaks them into tasks, delegates to the rest of your team, monitors what's getting done, routes approvals to you, and sends your daily briefings. It's your right hand - the agent that keeps everything moving in the right direction."
 >
@@ -148,16 +148,16 @@ cortextos install
 ```bash
 # Reuse the 'default' instance dir if it exists and is empty (the typical
 # fresh-install state — `cortextos install` always creates default/ with an
-# empty enabled-agents.json). Otherwise pick the next free `cortextosN` slot.
+# empty enabled-agents.json). Otherwise pick the next free `SOMAN` slot.
 if [ -d "${HOME}/.cortextos/default" ] && \
    [ "$(cat "${HOME}/.cortextos/default/config/enabled-agents.json" 2>/dev/null | tr -d '[:space:]')" = "{}" ]; then
   INSTANCE_ID="default"
 else
   INSTANCE_NUM=1
-  while [ -d "${HOME}/.cortextos/cortextos${INSTANCE_NUM}" ]; do
+  while [ -d "${HOME}/.cortextos/SOMA${INSTANCE_NUM}" ]; do
     INSTANCE_NUM=$((INSTANCE_NUM + 1))
   done
-  INSTANCE_ID="cortextos${INSTANCE_NUM}"
+  INSTANCE_ID="SOMA${INSTANCE_NUM}"
 fi
 ```
 
@@ -181,13 +181,13 @@ export CTX_ROOT="${HOME}/.cortextos/${INSTANCE_ID}"
 
 ### 4a. Explain Organizations (verbatim)
 
-> "cortextOS organizes your agents into Organizations. An Organization is a group of agents that work together toward shared goals - for your business, a side project, or any domain of your life. Each org has its own task queue, approval workflow, analytics, set of dashboard pages, and shared context."
+> "SOMA organizes your agents into Organizations. An Organization is a group of agents that work together toward shared goals - for your business, a side project, or any domain of your life. Each org has its own task queue, approval workflow, analytics, set of dashboard pages, and shared context."
 
 ### 4b. Gather Organization context
 
 Ask these questions one at a time. Follow up on interesting answers. Let the user elaborate.
 
-1. "The more detail and context you give me during onboarding, the better cortextOS will work from day one. What will this Organization be for? Describe it in a sentence or two."
+1. "The more detail and context you give me during onboarding, the better SOMA will work from day one. What will this Organization be for? Describe it in a sentence or two."
 2. "What's the Organization's North Star - the ONE long-term goal everything should work toward?"
 3. "Based on that, what do you want to call this Organization?" (lowercase, hyphens OK - e.g., `mycompany`, `acme`, `demo`)
 
@@ -289,7 +289,7 @@ Walk through step by step:
 
 After token paste:
 
-7. Tell the user: "Now send any message to your new bot on Telegram (just 'hi' is fine). This lets me detect your chat ID so that only you can message your agent. You can configure other chat IDs later so other members of your team can use cortextOS as well."
+7. Tell the user: "Now send any message to your new bot on Telegram (just 'hi' is fine). This lets me detect your chat ID so that only you can message your agent. You can configure other chat IDs later so other members of your team can use SOMA as well."
 
 **CRITICAL — BUG-033 fix**: Do NOT wait for the user to type a confirmation in chat before running the polling curl below. Start the long-poll IMMEDIATELY after delivering the instruction. The poll uses `timeout=30` which blocks for up to 30 seconds waiting for a Telegram message — that IS the user's confirmation. If you wait for typed confirmation first, the poll starts too late and may miss the very first message a user sends to a brand-new bot (Telegram's `getUpdates` first-message-lost trap, BUG-023). The correct sequence is: deliver the instruction, then immediately run the curl loop in the same response.
 
@@ -383,7 +383,7 @@ cat "${CTX_ROOT}/dashboard.env"
 
 Write `${CTX_FRAMEWORK_ROOT}/dashboard/.env.local` (use the Write tool with full absolute paths - NOT `~`):
 ```
-# AUTO-GENERATED by cortextOS onboarding. Edit ~/.cortextos/<instance>/dashboard.env to change credentials.
+# AUTO-GENERATED by SOMA onboarding. Edit ~/.cortextos/<instance>/dashboard.env to change credentials.
 CTX_ROOT=<full path to CTX_ROOT>
 CTX_FRAMEWORK_ROOT=<full path to repo root>
 AUTH_SECRET=<from dashboard.env>
@@ -436,7 +436,7 @@ cd ${CTX_FRAMEWORK_ROOT}
 
 ## Phase 8: Knowledge Base
 
-> "cortextOS includes a semantic knowledge base - a shared RAG database your agents can read and write to. Agents upload files from their workspace - documents, images, audio, video - and any agent can query it with natural language. You can also search it from the web dashboard. Think of it as long-term shared memory across your entire team."
+> "SOMA includes a semantic knowledge base - a shared RAG database your agents can read and write to. Agents upload files from their workspace - documents, images, audio, video - and any agent can query it with natural language. You can also search it from the web dashboard. Think of it as long-term shared memory across your entire team."
 
 > "It requires a Google Gemini API key for embeddings. It's free to get one and the usage is minimal."
 
@@ -495,7 +495,7 @@ pm2 save
 
 ### 9b. Capture reboot-survival command (BUG-021 — DEFERRED, NOT mid-flow)
 
-**IMPORTANT — BUG-021 fix**: Run `pm2 startup` and capture its output, but DO NOT prompt the user to do anything mid-flow. The sudo paste step is friction in the critical path. Save the captured command for the end-of-onboarding summary in Phase 10 instead. The user can run it later (or never — cortextOS works fine without reboot persistence).
+**IMPORTANT — BUG-021 fix**: Run `pm2 startup` and capture its output, but DO NOT prompt the user to do anything mid-flow. The sudo paste step is friction in the critical path. Save the captured command for the end-of-onboarding summary in Phase 10 instead. The user can run it later (or never — SOMA works fine without reboot persistence).
 
 ```bash
 PM2_STARTUP_OUTPUT=$(pm2 startup 2>&1)
@@ -514,7 +514,7 @@ PM2_SUDO_CMD=$(echo "$PM2_STARTUP_OUTPUT" | grep -E '^sudo env PATH=' | head -1)
 ### 9c. Verify and hand off to Telegram
 
 ```bash
-pm2 list | grep cortextos
+pm2 list | grep SOMA
 ```
 
 > "Daemon is running. Your Orchestrator will message you on Telegram in 30-60 seconds. Head to Telegram and wait for the first message."
@@ -546,7 +546,7 @@ If `PM2_SUDO_CMD` from Phase 9b is non-empty, deliver this verbatim AT THE END (
 > <PM2_SUDO_CMD>
 > ```
 >
-> It will ask for your Mac password (the one you use to log in). When you type it, nothing appears on screen — that's normal. Just type and press Enter. This is a one-time setup. cortextOS works fine without it; you can do this anytime."
+> It will ask for your Mac password (the one you use to log in). When you type it, nothing appears on screen — that's normal. Just type and press Enter. This is a one-time setup. SOMA works fine without it; you can do this anytime."
 
 If `PM2_SUDO_CMD` is empty (PM2 startup is already configured, or the system doesn't need it), skip this section silently.
 

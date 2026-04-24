@@ -103,7 +103,7 @@ export function Sidebar({
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
           cO
         </div>
-        <span className="text-sm font-semibold tracking-tight">cortextOS</span>
+        <span className="text-sm font-semibold tracking-tight">SOMA</span>
       </div>
 
       {/* Search trigger */}

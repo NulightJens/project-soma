@@ -18,7 +18,7 @@ Patterns for agents performing structured web research.
 ## Search Tools
 Use WebSearch for broad queries, WebFetch for specific URLs:
 ```
-WebSearch: "cortextOS multi-agent orchestration 2026"
+WebSearch: "SOMA multi-agent orchestration 2026"
 WebFetch: "https://docs.anthropic.com/en/docs/agents"
 ```
 

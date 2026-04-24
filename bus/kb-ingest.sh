@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# kb-ingest.sh — Ingest files or directories into the cortextOS knowledge base
+# kb-ingest.sh — Ingest files or directories into the SOMA knowledge base
 #
 # Usage:
 #   bash bus/kb-ingest.sh <path> [<path>...] [options]

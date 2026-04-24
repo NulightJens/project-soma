@@ -8,7 +8,7 @@ describe('mkdir-based locking', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'cortextos-lock-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'SOMA-lock-test-'));
   });
 
   afterEach(() => {

@@ -4,7 +4,7 @@ import { join } from 'path';
 /**
  * Map an org name to its canonical filesystem casing.
  *
- * cortextOS treats the filesystem-exact spelling of an org directory as the
+ * SOMA treats the filesystem-exact spelling of an org directory as the
  * canonical identifier. When a caller supplies an org name with drifted
  * casing (e.g. "acmecorp" instead of "AcmeCorp"), every
  * downstream path join produces a SEPARATE state directory, which splits

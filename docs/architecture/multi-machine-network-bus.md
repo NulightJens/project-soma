@@ -8,7 +8,7 @@
 
 ## Problem
 
-cortextOS is a single-machine system. Every bus primitive — messages, tasks, approvals, events, heartbeats — is a local filesystem operation under `~/.cortextos/{instance}/`. Agents on separate machines cannot communicate. The dashboard reads files via Chokidar and cannot reach agents on other hosts.
+SOMA is a single-machine system. Every bus primitive — messages, tasks, approvals, events, heartbeats — is a local filesystem operation under `~/.cortextos/{instance}/`. Agents on separate machines cannot communicate. The dashboard reads files via Chokidar and cannot reach agents on other hosts.
 
 This document specifies Option A (Supabase) from issue #29, which is the recommended long-term solution.
 
@@ -206,7 +206,7 @@ CREATE TABLE secrets (
 );
 ```
 
-Agents read secrets via `cortextos secrets get <key>` — never touch the table directly.
+Agents read secrets via `SOMA secrets get <key>` — never touch the table directly.
 
 ---
 
@@ -264,7 +264,7 @@ No dashboard page logic changes — only the data layer changes. Each page that 
 
 - `secrets` table replaces per-machine `.env` for shared org secrets
 - `cortextos init` provisions Supabase tables on first run
-- `cortextos secrets set/get` CLI commands
+- `SOMA secrets set/get` CLI commands
 - **Deliverable:** No per-machine secret management for shared agents
 
 ### Phase 5: File bus deprecation
@@ -307,7 +307,7 @@ CTX_SUPABASE_SERVICE_KEY=<service_key>
 
 3. **Large payloads**: Tasks and events with large `metadata` or `description` fields will hit Supabase row limits (~1MB). Should blobs be stored in Supabase Storage with a URL reference in the row?
 
-4. **Migration tooling**: Existing local file bus data (tasks, events, heartbeats) needs a migration command to seed Supabase on first run. Define `cortextos migrate --to-supabase`.
+4. **Migration tooling**: Existing local file bus data (tasks, events, heartbeats) needs a migration command to seed Supabase on first run. Define `SOMA migrate --to-supabase`.
 
 5. **Dashboard auth**: The existing dashboard auth system (logins) currently gates filesystem access. After migration, it should gate Supabase RLS policy — is this additive or a replacement?
 

@@ -14,15 +14,15 @@
 
 ## [0.1.0] — 2026-03-30
 
-### cortextOS Node.js — Initial Release
+### SOMA Node.js — Initial Release
 
-Complete TypeScript/Node.js implementation of the cortextOS agent framework. Full feature parity with the bash reference implementation. 307 unit and integration tests, 0 failures. npm-ready.
+Complete TypeScript/Node.js implementation of the SOMA agent framework. Full feature parity with the bash reference implementation. 307 unit and integration tests, 0 failures. npm-ready.
 
 ---
 
-## What is cortextOS
+## What is SOMA
 
-cortextOS is a persistent 24/7 multi-agent framework built on Claude Code. Agents run as PM2-managed PTY processes, communicate over a file-based message bus, manage tasks, log analytics events, and are controlled via Telegram. This Node.js package ships the entire framework as a single `npm install` with a unified `cortextos` CLI.
+SOMA is a persistent 24/7 multi-agent framework built on Claude Code. Agents run as PM2-managed PTY processes, communicate over a file-based message bus, manage tasks, log analytics events, and are controlled via Telegram. This Node.js package ships the entire framework as a single `npm install` with a unified `cortextos` CLI.
 
 ---
 
@@ -98,7 +98,7 @@ Semantic memory via the multimodal-rag Python library (mmrag.py).
 - **`listCollections()`**: Lists all ChromaDB collections with document counts
 - **Collections**: `shared-{org}` (org-wide, all agents) and `agent-{name}` (private per-agent)
 - **Environment setup**: Auto-sets `MMRAG_DIR`, `MMRAG_CHROMADB_DIR`, `MMRAG_CONFIG` for every subprocess call
-- **Instance isolation**: KB root derived from `CTX_ROOT` basename — each cortextOS instance has its own KB
+- **Instance isolation**: KB root derived from `CTX_ROOT` basename — each SOMA instance has its own KB
 - **Auto-init**: `kb-ingest.sh` auto-calls `kb-setup.sh` if `config.json` is missing
 - **`kb-setup.sh`**: Creates venv, installs mmrag deps, writes default `config.json`
 
@@ -141,7 +141,7 @@ Structured hypothesis-test-evaluate loop for autonomous agent experimentation.
 
 | Command | Description |
 |---------|-------------|
-| `cortextos init` | Initialize a new cortextOS instance |
+| `cortextos init` | Initialize a new SOMA instance |
 | `cortextos add-agent <name> --template <type>` | Create a new agent from template |
 | `cortextos enable <name>` | Enable an agent (adds to enabled-agents.json) |
 | `cortextos start <name>` | Start an agent (via PM2) |
@@ -149,8 +149,8 @@ Structured hypothesis-test-evaluate loop for autonomous agent experimentation.
 | `cortextos status` | Show all agents' status, heartbeat age, current task |
 | `cortextos list-agents [--org <org>]` | List agents with heartbeat/role info |
 | `cortextos list-skills` | List available skills |
-| `cortextos install` | Install/configure cortextOS on this machine |
-| `cortextos uninstall [--keep-state]` | Remove cortextOS |
+| `cortextos install` | Install/configure SOMA on this machine |
+| `cortextos uninstall [--keep-state]` | Remove SOMA |
 | `cortextos doctor` | Diagnose common configuration issues |
 | `cortextos dashboard` | Start the Next.js dashboard |
 
@@ -468,7 +468,7 @@ cortextos/
 
 ---
 
-## Migration Notes (from bash cortextOS)
+## Migration Notes (from bash SOMA)
 
 The Node.js implementation is **format-compatible** with the bash reference implementation. All file formats match exactly:
 

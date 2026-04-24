@@ -21,7 +21,7 @@ import {
 // random agent) and page the operator at 3+ crashes in 15min.
 
 function mkCtxRoot(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'cortextos-crash-'));
+  const dir = mkdtempSync(join(tmpdir(), 'SOMA-crash-'));
   mkdirSync(join(dir, 'state'), { recursive: true });
   return dir;
 }
@@ -168,7 +168,7 @@ describe('writeDaemonCrashedMarkers', () => {
   });
 
   it('skips gracefully when state dir is missing', () => {
-    const empty = mkdtempSync(join(tmpdir(), 'cortextos-empty-'));
+    const empty = mkdtempSync(join(tmpdir(), 'SOMA-empty-'));
     expect(() => writeDaemonCrashedMarkers(empty)).not.toThrow();
     rmSync(empty, { recursive: true, force: true });
   });

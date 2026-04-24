@@ -46,7 +46,7 @@ describe('Hook Utilities', () => {
     const origEnv: Record<string, string | undefined> = {};
 
     beforeEach(() => {
-      testDir = mkdtempSync(join(tmpdir(), 'cortextos-hooks-'));
+      testDir = mkdtempSync(join(tmpdir(), 'SOMA-hooks-'));
       origEnv.CTX_AGENT_NAME = process.env.CTX_AGENT_NAME;
       origEnv.CTX_ROOT = process.env.CTX_ROOT;
       origEnv.CTX_AGENT_DIR = process.env.CTX_AGENT_DIR;
@@ -337,7 +337,7 @@ describe('Hook Utilities', () => {
     let testDir: string;
 
     beforeEach(() => {
-      testDir = mkdtempSync(join(tmpdir(), 'cortextos-plan-'));
+      testDir = mkdtempSync(join(tmpdir(), 'SOMA-plan-'));
     });
 
     afterEach(() => {

@@ -16,7 +16,7 @@ import { processMediaMessage } from '../telegram/media.js';
 type LogFn = (msg: string) => void;
 
 /**
- * Manages all agents in a cortextOS instance.
+ * Manages all agents in a SOMA instance.
  */
 export class AgentManager {
   private agents: Map<string, { process: AgentProcess; checker: FastChecker; poller?: TelegramPoller; activityPoller?: TelegramPoller }> = new Map();

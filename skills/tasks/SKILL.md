@@ -1,6 +1,6 @@
 ---
 name: Task System
-description: Create, manage, and complete tasks in cortextOS. Use when starting significant work, tracking progress, or completing deliverables.
+description: Create, manage, and complete tasks in SOMA. Use when starting significant work, tracking progress, or completing deliverables.
 ---
 
 # Task System

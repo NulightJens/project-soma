@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 /**
  * GET /api/kb/search?q=<question>&org=<org>&agent=<agent>&scope=<scope>&limit=<n>&threshold=<f>
  *
- * Searches the cortextOS knowledge base via kb-query.sh → mmrag.py → ChromaDB.
+ * Searches the SOMA knowledge base via kb-query.sh → mmrag.py → ChromaDB.
  *
  * Response:
  * {

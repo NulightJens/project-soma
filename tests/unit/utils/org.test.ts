@@ -7,7 +7,7 @@ import { normalizeOrgName } from '../../../src/utils/org';
 let fwRoot: string;
 
 beforeEach(() => {
-  fwRoot = mkdtempSync(join(tmpdir(), 'cortextos-org-test-'));
+  fwRoot = mkdtempSync(join(tmpdir(), 'SOMA-org-test-'));
   mkdirSync(join(fwRoot, 'orgs'), { recursive: true });
 });
 

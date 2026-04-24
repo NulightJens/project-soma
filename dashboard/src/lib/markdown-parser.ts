@@ -1,4 +1,4 @@
-// cortextOS Dashboard - Markdown parser for agent config files
+// SOMA Dashboard - Markdown parser for agent config files
 // Round-trip safe: unknown sections preserved through edit cycles
 
 import type {

@@ -2,7 +2,7 @@
 
 This is your first time running. Before starting normal operations, complete this onboarding protocol via Telegram with your user. Do not skip steps. The more context you gather, the more effective you'll be.
 
-> **Environment variables**: `CTX_ROOT`, `CTX_FRAMEWORK_ROOT`, `CTX_ORG`, `CTX_AGENT_NAME`, and `CTX_INSTANCE_ID` are automatically set by the cortextOS framework. You do not need to set them - they are available in every bash command you run.
+> **Environment variables**: `CTX_ROOT`, `CTX_FRAMEWORK_ROOT`, `CTX_ORG`, `CTX_AGENT_NAME`, and `CTX_INSTANCE_ID` are automatically set by the SOMA framework. You do not need to set them - they are available in every bash command you run.
 
 You are being onboarded as an **Analyst** - the system optimizer and health monitor for your Organization. Your job is observability, metrics, anomaly detection, and continuous improvement.
 
@@ -288,7 +288,7 @@ Write to `${CTX_AGENT_DIR}/SYSTEM.md`:
 **Timezone:** <timezone>
 **Orchestrator:** <orchestrator_name>
 **Dashboard:** http://localhost:<port>
-**Framework:** cortextOS Node.js
+**Framework:** SOMA Node.js
 
 ---
 
@@ -375,7 +375,7 @@ Proceed with the rest of the session start protocol in AGENTS.md. Crons are alre
 
 > "I can manage some automated workflows for the team. Quick yes/no for each:
 > 1. Daily git snapshots - I commit agent changes daily so nothing is lost
-> 2. Framework updates - I check for cortextOS updates and tell you what changed before applying
+> 2. Framework updates - I check for SOMA updates and tell you what changed before applying
 > 3. Community catalog - I browse for new skills weekly and recommend useful ones
 > 4. Community publishing - I can help package your custom skills to share with the community
 >
@@ -628,7 +628,7 @@ fi
 ```
 
 Deliver the system-ready message:
-> "Your cortextOS system is all set up and ready to work.
+> "Your SOMA system is all set up and ready to work.
 >
 > Here's what's running:
 > - [Orchestrator name] - coordinating your team, handling briefings and approvals

@@ -20,7 +20,7 @@ describe('BUG-035 + BUG-013: enable-agent validation', () => {
   const origPr = process.env.CTX_PROJECT_ROOT;
 
   beforeEach(() => {
-    tmpHome = mkdtempSync(join(tmpdir(), 'cortextos-batch-'));
+    tmpHome = mkdtempSync(join(tmpdir(), 'SOMA-batch-'));
     process.env.HOME = tmpHome;
     delete process.env.CTX_FRAMEWORK_ROOT;
     delete process.env.CTX_PROJECT_ROOT;
@@ -49,13 +49,13 @@ describe('BUG-035 + BUG-013: enable-agent validation', () => {
 
     it('discovers ~/cortextos when both env vars are unset and the canonical install exists', () => {
       // Create a fake ~/cortextos with an orgs/ dir (the canonical marker)
-      mkdirSync(join(tmpHome, 'cortextos', 'orgs'), { recursive: true });
-      expect(discoverProjectRoot()).toBe(join(tmpHome, 'cortextos'));
+      mkdirSync(join(tmpHome, 'SOMA', 'orgs'), { recursive: true });
+      expect(discoverProjectRoot()).toBe(join(tmpHome, 'SOMA'));
     });
 
     it('also recognizes ~/cortextos via legacy agents/ dir', () => {
-      mkdirSync(join(tmpHome, 'cortextos', 'agents'), { recursive: true });
-      expect(discoverProjectRoot()).toBe(join(tmpHome, 'cortextos'));
+      mkdirSync(join(tmpHome, 'SOMA', 'agents'), { recursive: true });
+      expect(discoverProjectRoot()).toBe(join(tmpHome, 'SOMA'));
     });
 
     it('falls back to process.cwd() when nothing else applies (legacy behavior preserved)', () => {

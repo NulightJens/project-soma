@@ -8,7 +8,7 @@ import type { OrgContext } from '../types/index.js';
 export const initCommand = new Command('init')
   .argument('<org-name>', 'Organization name')
   .option('--instance <id>', 'Instance ID', 'default')
-  .description('Create a new cortextOS organization')
+  .description('Create a new SOMA organization')
   .action(async (orgName: string, options: { instance: string }) => {
     const instanceId = options.instance;
     const ctxRoot = join(homedir(), '.cortextos', instanceId);
@@ -21,7 +21,7 @@ export const initCommand = new Command('init')
       console.log('  Existing files will NOT be overwritten. Only missing files will be created.\n');
     }
 
-    console.log(`\nInitializing cortextOS organization: ${orgName}`);
+    console.log(`\nInitializing SOMA organization: ${orgName}`);
     console.log(`  Instance: ${instanceId}`);
     console.log(`  State: ${ctxRoot}`);
     console.log(`  Project: ${projectRoot}\n`);
@@ -100,7 +100,7 @@ export const initCommand = new Command('init')
     const secretsPath = join(orgDir, 'secrets.env');
     if (!existsSync(secretsPath)) {
       writeFileSync(secretsPath, [
-        '# cortextOS secrets for ' + orgName,
+        '# SOMA secrets for ' + orgName,
         '# Add your Telegram bot token and other secrets here',
         'BOT_TOKEN=',
         'CHAT_ID=',
@@ -157,7 +157,7 @@ export const initCommand = new Command('init')
               `**Dashboard:** ${ctx.dashboard_url || '(not configured)'}`,
               `**Communication Style:** ${ctx.communication_style || 'casual'}`,
               `**Day Mode:** ${ctx.day_mode_start || '08:00'} - ${ctx.day_mode_end || '00:00'}`,
-              '**Framework:** cortextOS Node.js',
+              '**Framework:** SOMA Node.js',
               '',
               '---',
               '',
@@ -201,7 +201,7 @@ export const initCommand = new Command('init')
 function findOrgTemplateDir(projectRoot: string): string | null {
   const candidates = [
     join(projectRoot, 'templates', 'org'),
-    join(projectRoot, 'node_modules', 'cortextos', 'templates', 'org'),
+    join(projectRoot, 'node_modules', 'SOMA', 'templates', 'org'),
     join(__dirname, '..', '..', 'templates', 'org'),
   ];
   for (const dir of candidates) {

@@ -1,4 +1,4 @@
-// cortextOS Dashboard - NextAuth v5 configuration
+// SOMA Dashboard - NextAuth v5 configuration
 // Credentials provider backed by SQLite users table
 
 import NextAuth from 'next-auth';
@@ -136,7 +136,7 @@ export async function seedAdminUser(): Promise<void> {
   if (!password) {
     throw new Error('ADMIN_PASSWORD environment variable is required but not set.');
   }
-  const KNOWN_DEFAULTS = ['cortextos', 'password', 'admin', 'changeme'];
+  const KNOWN_DEFAULTS = ['SOMA', 'password', 'admin', 'changeme'];
   if (process.env.NODE_ENV === 'production' && KNOWN_DEFAULTS.includes(password)) {
     throw new Error('ADMIN_PASSWORD is a known default. Set a strong password in .env.local');
   }

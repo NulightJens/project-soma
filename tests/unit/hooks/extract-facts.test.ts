@@ -12,9 +12,9 @@ describe('extractKeywords', () => {
   });
 
   it('extracts repeated meaningful words', () => {
-    const text = 'cortextos cortextos cortextos agent agent agent task task task heartbeat heartbeat';
+    const text = 'SOMA SOMA SOMA agent agent agent task task task heartbeat heartbeat';
     const keywords = extractKeywords(text);
-    expect(keywords).toContain('cortextos');
+    expect(keywords).toContain('SOMA');
     expect(keywords).toContain('agent');
     expect(keywords).toContain('task');
   });
@@ -44,9 +44,9 @@ describe('extractKeywords', () => {
   });
 
   it('is case-insensitive', () => {
-    const text = 'Cortextos CORTEXTOS cortextos Agent AGENT agent';
+    const text = 'Cortextos CORTEXTOS SOMA Agent AGENT agent';
     const keywords = extractKeywords(text);
-    expect(keywords).toContain('cortextos');
+    expect(keywords).toContain('SOMA');
     expect(keywords).toContain('agent');
   });
 });

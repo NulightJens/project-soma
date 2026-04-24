@@ -16,7 +16,7 @@ export interface IPCResponse {
 
 function getIpcPath(instanceId: string = 'default'): string {
   if (process.platform === 'win32') {
-    return `\\\\.\\pipe\\cortextos-${instanceId}`;
+    return `\\\\.\\pipe\\SOMA-${instanceId}`;
   }
   return join(homedir(), '.cortextos', instanceId, 'daemon.sock');
 }

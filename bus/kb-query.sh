@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# kb-query.sh — Query the cortextOS knowledge base
+# kb-query.sh — Query the SOMA knowledge base
 #
 # Usage:
 #   bash bus/kb-query.sh "<question>" [options]

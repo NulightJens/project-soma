@@ -219,9 +219,9 @@ export async function runCliAction(
   const { execFile } = await import('child_process');
   const { promisify } = await import('util');
   const run = promisify(execFile);
-  const cliPath = join(getCTXRoot(), '..', '..', 'cortextos', 'dist', 'cli.js');
+  const cliPath = join(getCTXRoot(), '..', '..', 'SOMA', 'dist', 'cli.js');
   // Fall back to PATH if the local dist doesn't exist.
-  const bin = existsSync(cliPath) ? cliPath : 'cortextos';
+  const bin = existsSync(cliPath) ? cliPath : 'SOMA';
   const argv = existsSync(cliPath)
     ? ['jobs', action, String(id)]
     : ['jobs', action, String(id)];
