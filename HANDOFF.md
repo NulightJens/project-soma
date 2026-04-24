@@ -17,7 +17,7 @@
 
 - **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS; absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
-- **Last commit:** (to land this session) — "soma: port MinionWorker (worker.ts) + queue worker-support helpers"
+- **Last commit:** `4835323` — "soma: port MinionWorker (worker.ts) + queue worker-support helpers"
 - **Green signals:** 52 Minions vitest cases passing (engine 7 + queue 34 + worker 11); `npx tsc --noEmit` clean; dashboard runs at `localhost:3000` in full monochrome; `cortextOS` daemon running a single enabled agent (`system`) via PM2.
 - **Red signals:** none right now. Phase 1 scope is still ~65% done — attachments/protected-names/handlers/CLI pending.
 - **Do not:** ingest any Solo Scale handoff content (ADR-009). Build SOMA fully agnostic first.
@@ -153,7 +153,7 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 ## Commit timeline (SOMA work)
 
 ```
-(next)   soma: port MinionWorker (worker.ts) + queue worker-support helpers
+4835323  soma: port MinionWorker (worker.ts) + queue worker-support helpers
 d1e5c88  soma: handoff system — HANDOFF.md + docs/handoffs/ + CLAUDE.md updates
 608bfdd  soma: port MinionQueue class (queue.ts) with full state-machine coverage
 2a328e2  soma: adopt claudecode-harness for CLAUDE.md; ADR-013
