@@ -17,9 +17,9 @@
 
 - **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS; absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
-- **Last commit:** `6c5ae0f` — "soma: cortextos jobs CLI + built-in handlers + PM2 jobs-worker"
-- **Green signals:** 91 Minions+CLI vitest cases passing (engine 7 + queue 34 + worker 11 + attachments 19 + protected-names 13 + job-handlers 7); `npx tsc --noEmit` clean; `cortextos jobs submit echo … ; jobs work … ; jobs get` loop verified end-to-end against a temp DB; dashboard runs at `localhost:3000`; `cortextos-daemon` online via PM2.
-- **Red signals:** none. Phase 1 scope is ~85% done — dashboard Queue page + handlers/shell + unified runner + SIGKILL-rescue regression remain.
+- **Last commit:** (to land this session) — "soma: dashboard Jobs page (ADR-014 progressive disclosure)"
+- **Green signals:** 91 Minions+CLI vitest cases passing; `npx tsc --noEmit` clean across both the SOMA package AND the `dashboard/` package; `cortextos jobs` CLI verified end-to-end; dashboard `/jobs` route live at `localhost:3000/jobs` with plain-language summaries + progressive-disclosure raw-JSON toggle per ADR-014; `cortextos-daemon` online via PM2.
+- **Red signals:** none. Phase 1 scope is ~90% done — handlers/shell (HITL-gated) + unified runner + SIGKILL-rescue regression remain.
 - **Do not:** ingest any Solo Scale handoff content (ADR-009). Build SOMA fully agnostic first.
 
 ---
@@ -43,7 +43,7 @@ If any of the above fails, see §9 Environment + §10 Gotchas before proceeding.
 ## Where you are on the roadmap
 
 Phase 0 — fork + foundation ........ **DONE**
-Phase 1 — Minions queue ............ **~85% done** ← you are here
+Phase 1 — Minions queue ............ **~90% done** ← you are here
 Phase 2 — Worktree isolation ....... not started
 Phase 3 — Claude-subprocess worker . not started
 Phase 4 — Orchestrator rewrite ..... not started
@@ -67,8 +67,8 @@ Phase 1 breakdown — what's done vs. what's next:
 | `protected-names.ts` gate | ✓ done | `src/minions/protected-names.ts`, gate wired into `MinionQueue.add()` |
 | `cortextos jobs` CLI | ✓ done | `src/cli/jobs.ts` + `src/cli/job-handlers.ts`. Subcommands: submit/list/get/cancel/retry/stats/work. Trusted submitter — `--trusted` flag sets `{allowProtectedSubmit: true}`. |
 | Daemon integration (PM2 jobs-worker entry) | ✓ done | `src/cli/ecosystem.ts` emits a `cortextos-jobs-worker` PM2 app alongside the daemon. Env: `SOMA_MINIONS_DB`, `SOMA_WORKER_QUEUE`, `SOMA_WORKER_CONCURRENCY`, `SOMA_WORKER_HANDLERS`. |
-| Dashboard Queue page | **next** | `dashboard/src/app/(dashboard)/jobs/page.tsx`. Plain-language primary view per ADR-014; raw JSON behind progressive disclosure. |
-| `handlers/shell.ts` | after dashboard | — |
+| Dashboard Jobs page | ✓ done | `dashboard/src/app/(dashboard)/jobs/page.tsx` + `api/jobs` route + `lib/data/minions.ts`. Primary view is plain-language summaries (ADR-014). Progressive disclosure via "Show raw JSON" toggle in the detail sheet. Cancel/retry shell out to `cortextos jobs` CLI so state-machine logic stays in queue.ts. |
+| `handlers/shell.ts` | **next** (HITL-gated) | — |
 | `handlers/runner.ts` — unified subscription + API per ADR-008/012 | next | — |
 | `cortextos jobs` CLI | next | `src/cli/` |
 | `jobs smoke --sigkill-rescue` regression test | next | `tests/` |
@@ -129,6 +129,10 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 | `src/minions/protected-names.ts` | 40 | Pure constant module. `PROTECTED_JOB_NAMES = {shell, subagent, subagent_aggregator}`. `isProtectedJobName(name)` — trim + membership check. |
 | `src/cli/jobs.ts` | 360 | `cortextos jobs` — 7 subcommands (submit / list / get / cancel / retry / stats / work). Plain-language output by default; `--json` for raw. Trusted submitter: `--trusted` sets `allowProtectedSubmit`. |
 | `src/cli/job-handlers.ts` | 65 | Built-in handlers: `echo`, `noop`, `sleep`. Minimum set to exercise the queue → worker → result loop end-to-end without shell/subagent risk. |
+| `dashboard/src/lib/data/minions.ts` | 195 | Dashboard data layer. Opens Minions SQLite read-only; `listJobs`, `getJob`, `getQueueStats`, and `runCliAction` (shells out to `cortextos jobs` CLI for cancel/retry so state-machine logic stays in `queue.ts`). |
+| `dashboard/src/app/api/jobs/route.ts` | 40 | GET /api/jobs — validated filters, 100-default/500-max limit. |
+| `dashboard/src/app/api/jobs/[id]/route.ts` | 50 | GET /api/jobs/[id] + POST with `{action: 'cancel' \| 'retry'}`. |
+| `dashboard/src/app/(dashboard)/jobs/page.tsx` | 415 | Jobs route. Status-filter pills, auto-refresh every 5s, plain-language one-line summaries per job, detail sheet with progressive-disclosure "Show raw JSON" toggle per ADR-014. Cancel/retry actions. |
 | `src/minions/backoff.ts` | 34 | Exponential + fixed backoff with jitter |
 | `src/minions/stagger.ts` | 33 | FNV-1a deterministic offset for same-cron decorrelation |
 | `src/minions/quiet-hours.ts` | 86 | IANA-tz claim-time window gate |
@@ -163,6 +167,8 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 ## Commit timeline (SOMA work)
 
 ```
+(next)   soma: dashboard Jobs page (ADR-014 progressive disclosure)
+d55ada3  docs(handoff): fill in 6c5ae0f commit hash for CLI/handlers/PM2 cluster
 6c5ae0f  soma: cortextos jobs CLI + built-in handlers + PM2 jobs-worker
 b461ef0  soma: add resume-prompt template + ~500K context handoff protocol
 e8852c6  soma: thread Hermes adaptability constraints into phases 1/2/5
@@ -226,36 +232,41 @@ Full text in `PROJECT_SOMA.md` §10. Quick reference:
 
 ## Next moves (ranked)
 
-1. **Dashboard Queue page.** New Next.js route `dashboard/src/app/(dashboard)/jobs/page.tsx`. Lists jobs with filter by status/queue/name/priority. Per-job detail drawer with transcript, attachments, inbox. Cancel/retry/pause actions. Uses SOMA monochrome from day one. **Per ADR-014:** plain-language job summaries in primary views; raw JSON / stacktrace / internal IDs stay behind progressive disclosure. Submit UI accepts freeform phrases routed through an intent parser first; structured form is a fallback, not the primary path. The dashboard is an **untrusted** submitter — never sets `allowProtectedSubmit`; if a user's freeform intent maps to `shell`/`subagent`, the intent parser surfaces it as an approval step, not a direct submit.
+1. **Port `handlers/shell.ts`** (~311 LOC from `/tmp/gbrain/src/core/minions/handlers/shell.ts`). Env-allowlist subprocess handler. SIGTERM → 5s → SIGKILL via `ctx.shutdownSignal`. Rename env gate `GBRAIN_ALLOW_SHELL_JOBS` → `SOMA_ALLOW_SHELL_JOBS`. Register with worker via `worker.register('shell', shellHandler)` and add to `BUILTIN_HANDLERS` in `src/cli/job-handlers.ts` so `--handlers` exposes it. **CLAUDE.md §3 HITL: requires Human-in-the-Loop review before landing (RCE surface).**
 
-2. **Port `handlers/shell.ts`** (~311 LOC from `/tmp/gbrain/src/core/minions/handlers/shell.ts`). Env-allowlist subprocess handler. SIGTERM → 5s → SIGKILL via `ctx.shutdownSignal`. Rename env gate `GBRAIN_ALLOW_SHELL_JOBS` → `SOMA_ALLOW_SHELL_JOBS`. Register with worker via `worker.register('shell', shellHandler)` and add to `BUILTIN_HANDLERS` in `src/cli/job-handlers.ts` so `--handlers` exposes it. **CLAUDE.md §3 HITL: requires Human-in-the-Loop review before landing (RCE surface).**
+2. **Port `handlers/subagent.ts`** (~710 LOC, gbrain's Anthropic SDK path) + **gstack `claude -p` NDJSON pattern** into a single **unified `handlers/runner.ts`** per ADR-012. Engine selection: `subscription` (default, subprocess) vs `api` (Anthropic SDK, two-phase tool ledger). Shared code: transcript persistence, turn budgeting, cache discipline. Register under the protected names `subagent` + `subagent_aggregator`. **Hermes adaptability (Open threads row):** implement engine selection as an open registry (`registerEngine(name, impl)`), not a closed `'subscription' | 'api'` union, so Hermes drops in later as a third engine without touching the existing two. The output parser (stream → transcript / tokens / tool calls) is a per-engine seam, not hardcoded to `claude -p` NDJSON.
 
-3. **Port `handlers/subagent.ts`** (~710 LOC, gbrain's Anthropic SDK path) + **gstack `claude -p` NDJSON pattern** into a single **unified `handlers/runner.ts`** per ADR-012. Engine selection: `subscription` (default, subprocess) vs `api` (Anthropic SDK, two-phase tool ledger). Shared code: transcript persistence, turn budgeting, cache discipline. Register under the protected names `subagent` + `subagent_aggregator`. **Hermes adaptability (Open threads row):** implement engine selection as an open registry (`registerEngine(name, impl)`), not a closed `'subscription' | 'api'` union, so Hermes drops in later as a third engine without touching the existing two. The output parser (stream → transcript / tokens / tool calls) is a per-engine seam, not hardcoded to `claude -p` NDJSON.
+3. **`jobs smoke --sigkill-rescue`** regression test against a real subprocess worker. The in-process stall-rescue smoke in `tests/minions-worker.test.ts` covers the state-machine path; this one exercises a spawned `cortextos jobs work` child killed with SIGKILL.
 
-4. **`jobs smoke --sigkill-rescue`** regression test against a real subprocess worker. The in-process stall-rescue smoke in `tests/minions-worker.test.ts` covers the state-machine path; this one exercises a spawned `cortextos jobs work` child killed with SIGKILL.
+4. **Dashboard: submit UI + intent parser** (new slot, was folded into the Queue-page slot). Per ADR-014: freeform phrases routed through a language-model intent parser that emits structured `queue.add(...)` calls. Structured form is a fallback behind an "Advanced" toggle, not the primary path. Dashboard is an **untrusted** submitter — never sets `allowProtectedSubmit`; intents resolving to `shell`/`subagent` surface as an approval step, not a direct submit.
 
 ### Starter commands
 
 ```bash
-# Resume at next move #1 — dashboard Queue page
+# Resume at next move #1 — shell handler (HITL-gated)
 cd ~/cortextos
-ls dashboard/src/app/                                # scan existing routes
-# Create dashboard/src/app/(dashboard)/jobs/page.tsx as a server component
-# that opens the Minions SQLite DB directly via openSqliteEngine + MinionQueue.
-# Primary view = plain-language summaries (ADR-014). Detail drawer shows raw
-# JSON behind a toggle. Actions: cancel, retry → server actions that call
-# the queue methods. No submit form in this slot — freeform-intent parsing
-# lands as its own slot (needs ADR-014's intent router).
+cat /tmp/gbrain/src/core/minions/handlers/shell.ts   # read first (~311 LOC)
+# Port to src/minions/handlers/shell.ts. Subprocess via child_process.spawn
+# with env-allowlist. SIGTERM → 5s grace → SIGKILL via ctx.shutdownSignal.
+# Gate behind env SOMA_ALLOW_SHELL_JOBS=1 (rename from GBRAIN_ALLOW_...).
+# Register in src/cli/job-handlers.ts BUILTIN_HANDLERS. Update
+# ecosystem.ts default --handlers to include shell once the env gate
+# is documented. HITL review REQUIRED — this is an RCE surface.
 
-# Exercise end-to-end (already works):
+# End-to-end smoke (works today, with or without shell):
 TMPDB=$(mktemp -d)/smoke.db
 node dist/cli.js jobs submit echo --data '{"msg":"hi"}' --db "$TMPDB"
 node dist/cli.js jobs work --db "$TMPDB" --handlers echo --poll-interval 500 &
 sleep 2 && kill %1
 node dist/cli.js jobs get 1 --db "$TMPDB"
 
+# Dashboard exercise (auth-gated):
+curl -sI http://localhost:3000/jobs
+# 307 → /login?callbackUrl=/jobs  (expected)
+
 # Discipline:
 npx vitest run tests/minions-*.test.ts tests/cli-*.test.ts
+(cd dashboard && npx tsc --noEmit)
 npx tsc --noEmit
 git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-minions
 ```
@@ -361,4 +372,4 @@ git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-min
 
 ---
 
-*Last updated: 2026-04-23 (late night) after the CLI + handlers + daemon-integration cluster. First "usable" moment reached — queue can now be driven end-to-end via `cortextos jobs` under PM2. Next update expected after dashboard Queue page lands.*
+*Last updated: 2026-04-23 (late night) after the dashboard Jobs page landed. First full usable loop: submit via `cortextos jobs`, worker drains via PM2, inspect/cancel/retry via `/jobs` in the dashboard. Next update expected after `handlers/shell.ts` (HITL-gated).*

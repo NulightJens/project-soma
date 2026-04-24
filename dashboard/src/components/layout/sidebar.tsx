@@ -18,6 +18,7 @@ import {
   IconClock,
   IconTarget,
   IconMessages,
+  IconStack2,
 } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +37,7 @@ const navItems: NavItem[] = [
   { label: 'Overview', href: '/', icon: IconLayoutDashboard, section: 'core' },
   { label: 'Agents', href: '/agents', icon: IconRobot, section: 'core' },
   { label: 'Tasks', href: '/tasks', icon: IconListCheck, section: 'core' },
+  { label: 'Jobs', href: '/jobs', icon: IconStack2, section: 'core' },
   { label: 'Activity', href: '/activity', icon: IconActivity, section: 'core' },
 
   // Operations

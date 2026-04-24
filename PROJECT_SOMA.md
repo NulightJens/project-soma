@@ -668,3 +668,20 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **Test coverage:** `tests/cli-job-handlers.test.ts` — 7 vitest cases. Echo returns + logs; noop returns empty; sleep duration + negative-ms rejection; AbortSignal wiring exercised directly (avoiding the timing-sensitive claim-then-cancel race).
 - **91/91 Minions+CLI tests pass** (up from 84: added 7 handler cases). `tsc --noEmit` clean repo-wide.
 - **Next up:** dashboard Queue page. Then shell handler (HITL-gated). Then unified runner (open engine-registry; Hermes-ready).
+
+### 2026-04-23 (late night) — Dashboard Jobs page lands (ADR-014 progressive disclosure in practice)
+- **`dashboard/src/app/(dashboard)/jobs/page.tsx` ships.** Auto-refreshing every 5s, status-filter pills across the top (All / Waiting / Active / Completed / Failed / Delayed / Dead / Cancelled), plain-language one-line summaries per job, click-to-open detail sheet.
+- **ADR-014 fully realised in the UI:**
+  - Primary row per job is a human sentence: `"echo completed 3m ago — echoed: {msg:hello}"` rather than `{id:42, status:"completed", ...}`.
+  - Detail sheet leads with an "At a glance" key/value list (status, queue, priority, attempts, created/started/finished ages).
+  - Last error rendered as a scoped text block, not a stacktrace-in-primary-view.
+  - Result object pretty-printed in its own section.
+  - Transcript (stacktrace array) rendered as a mini log.
+  - "Show raw JSON" toggle at the bottom of the sheet reveals the full structured record — the technical operator's on-ramp, not the default.
+- **Untrusted-submitter role preserved:** this surface never sets `allowProtectedSubmit`. Cancel/retry actions route through `cortextos jobs cancel|retry <id>` via `runCliAction`, which keeps the authoritative state-machine logic (recursive-CTE cancel cascade, parent rollup, `child_done` inbox post, retry-status-gate) in a single place (`queue.ts`).
+- **Data layer (`dashboard/src/lib/data/minions.ts`):** opens Minions SQLite read-only via better-sqlite3 (already a dashboard dep). Graceful-empty fallback — returns `[]` if the DB file doesn't exist yet, so a fresh install shows "No jobs match this filter" with a tip telling the operator how to submit their first one.
+- **API layer:** `/api/jobs` GET (list + stats), `/api/jobs/[id]` GET + POST (actions). Input validation: status whitelist, id integer-check, action whitelist. Auth-gated via the existing `(dashboard)` layout.
+- **Sidebar nav** picked up a "Jobs" entry (tabler `IconStack2`) in the "core" section between Tasks and Activity.
+- **Dashboard `tsc --noEmit` clean.** Route verified live: `curl -sI localhost:3000/jobs` returns `307 → /login?callbackUrl=/jobs` — the auth gate is working.
+- **Submit-via-dashboard deferred** to a later slot. Per ADR-014 it's not just a form — it's a freeform-phrase intent parser (LLM-routed) with a structured-form fallback behind an "Advanced" toggle. Designing + shipping the intent router is a slot in its own right, and it shouldn't block the read-only dashboard from landing.
+- **Phase 1 scope at ~90%.** Remaining: shell handler (HITL), unified runner, sigkill-rescue regression, dashboard submit UI.
