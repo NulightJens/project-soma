@@ -413,5 +413,18 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - Researched graphify (Safi Shamsi): promising codebase-cartography tool but too young to depend on structurally; adopt as skill, not platform.
 - User named the project **SOMA**.
 - Decided to fork + evolve cortextos rather than start fresh.
-- Blocked on `gh auth login` for fork.
-- This document created.
+- `gh auth login` completed as `NulightJens`.
+- Forked grandamenium/cortextos → NulightJens/cortextos. Remotes: `origin` = fork, `upstream` = original.
+- Rebased local branch onto upstream `main`, picked up 5 upstream fixes (telegram validation, cron gap detection, HTML parse mode, cron boot, IPC hard-restart).
+- Committed PROJECT_SOMA.md to `main` (commit `8fba559`).
+- Started branch `soma/phase-1-minions`.
+- **Design system adopted.** User supplied Jens personal monochrome brand (`brand-jens-monochrome.css` + `03-brand-jens-personal.md`). Visual tokens only — brand/voice rules explicitly excluded per user direction. Decision: add SOMA tokens as a parallel namespace (`--soma-*`) alongside the existing cortextOS gold theme so new SOMA UI can adopt immediately without restyling the legacy dashboard. Full theme cut-over deferred to a dedicated commit when enough SOMA UI exists to justify the churn.
+  - `dashboard/src/app/soma-tokens.css` added — light + dark `--soma-*` palette, `.soma` wrapper class with `var(--font-manrope)`, surface/CTA data-attribute helpers.
+  - Manrope wired into `dashboard/src/app/layout.tsx` alongside existing Sora + JetBrains_Mono.
+- **Phase 1 scaffold.** `src/minions/` created with port plan, types, schema, engine interface.
+  - `src/minions/README.md` — port status table file-by-file, backend matrix, list of adaptations from gbrain (Date→number, JSONB→TEXT, advisory lock→BEGIN IMMEDIATE, subagent handler split into `claude-subprocess`).
+  - `src/minions/types.ts` — core job/inbox/attachment/context types. Anthropic-specific subagent/tool types deliberately omitted; SOMA's subprocess handler will have its own types.
+  - `src/minions/schema.sql` — SQLite DDL for `minion_jobs`, `minion_inbox`, `minion_attachments`, `minion_rate_leases`, plus claim/stall/parent/idempotency indexes and an `updated_at` refresh trigger.
+  - `src/minions/engine.ts` — `QueueEngine` interface (`sqlite | pglite | postgres | d1`). Phase 1 ships SQLite impl only; other adapters fill the interface later.
+- `tsc --noEmit` clean for whole repo.
+- **Next up:** port `queue.ts` + `worker.ts` + `backoff.ts` + `quiet-hours.ts` into the SQLite engine, wire `cortextos jobs` CLI, port `jobs smoke --sigkill-rescue` as regression test.

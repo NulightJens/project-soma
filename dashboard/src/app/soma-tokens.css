@@ -1,0 +1,96 @@
+/*
+ * SOMA Design System — Jens Personal Monochrome
+ * Source: assets/brand-jens-monochrome.css (handoff 2026-04-23)
+ *
+ * Purpose: provide the SOMA design tokens as a parallel namespace
+ * (`--soma-*`) alongside the existing cortextOS gold theme. SOMA-native
+ * UI (Phase 1+ queue dashboard, worker status, memory search, etc.)
+ * consumes these tokens directly. A future commit will rebind shadcn's
+ * `--primary`/`--accent`/etc. to `--soma-*` for a full restyle.
+ *
+ * Hard rules (from 03-brand-jens-personal.md):
+ *   - Monochrome. No chromatic accents. `--soma-danger` is the only exception.
+ *   - No gradients. No glow. Shadows are whisper-quiet.
+ *   - Border radius max 16px; utility interfaces 2–8px.
+ *   - Icons in `currentColor` only.
+ *   - Typography: Manrope 400/500/600/700/800, no secondary family.
+ */
+
+:root {
+  --soma-background: #ffffff;
+  --soma-surface: #f9fafb;
+  --soma-surface-hover: #f3f4f6;
+  --soma-border: #e5e7eb;
+  --soma-border-strong: #d1d5db;
+  --soma-text-primary: #15171a;
+  --soma-text-secondary: #666666;
+  --soma-text-muted: #999999;
+  --soma-accent: #15171a;
+  --soma-accent-hover: #000000;
+  --soma-accent-soft: #f3f4f6;
+  --soma-accent-text: #ffffff;
+  --soma-cta: #15171a;
+  --soma-cta-text: #ffffff;
+  --soma-danger: #ef4444;
+  --soma-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --soma-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.dark {
+  --soma-background: #0a0a0a;
+  --soma-surface: #111111;
+  --soma-surface-hover: #1a1a1a;
+  --soma-border: #1f1f1f;
+  --soma-border-strong: #2a2a2a;
+  --soma-text-primary: #fafafa;
+  --soma-text-secondary: #a0a0a0;
+  --soma-text-muted: #666666;
+  --soma-accent: #fafafa;
+  --soma-accent-hover: #ffffff;
+  --soma-accent-soft: #1a1a1a;
+  --soma-accent-text: #0a0a0a;
+  --soma-cta: #fafafa;
+  --soma-cta-text: #0a0a0a;
+  --soma-danger: #f87171;
+  --soma-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --soma-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/*
+ * SOMA-scoped utility class. Wrap any SOMA-native view in a
+ * `<div class="soma">` to inherit monochrome surface + text defaults
+ * without touching the global cortextOS theme.
+ */
+.soma {
+  background-color: var(--soma-background);
+  color: var(--soma-text-primary);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+}
+
+.soma [data-soma-surface] {
+  background-color: var(--soma-surface);
+  border: 1px solid var(--soma-border);
+}
+
+.soma [data-soma-surface]:hover {
+  background-color: var(--soma-surface-hover);
+}
+
+.soma [data-soma-cta] {
+  background-color: var(--soma-cta);
+  color: var(--soma-cta-text);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: background-color 120ms ease;
+}
+
+.soma [data-soma-cta]:hover {
+  background-color: var(--soma-accent-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .soma [data-soma-cta] {
+    transition: none;
+  }
+}
