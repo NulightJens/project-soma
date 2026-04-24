@@ -20,3 +20,9 @@ export {
 } from './quiet-hours.js';
 export { MinionQueue, type TrustedSubmitOpts } from './queue.js';
 export { MinionWorker } from './worker.js';
+export {
+  validateAttachment,
+  type AttachmentValidationOpts,
+  type NormalizedAttachment,
+  type ValidationResult,
+} from './attachments.js';

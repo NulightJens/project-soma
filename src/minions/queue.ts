@@ -38,6 +38,8 @@
 
 import type { QueueEngine } from './engine.js';
 import type {
+  Attachment,
+  AttachmentInput,
   MinionJob,
   MinionJobInput,
   MinionJobStatus,
@@ -46,7 +48,8 @@ import type {
   MinionQueueOpts,
   ChildDoneMessage,
 } from './types.js';
-import { rowToMinionJob, rowToInboxMessage } from './types.js';
+import { rowToAttachment, rowToMinionJob, rowToInboxMessage } from './types.js';
+import { validateAttachment } from './attachments.js';
 
 /**
  * Opt-in trust flag for submitting protected job names ('shell' today).
@@ -1212,11 +1215,108 @@ export class MinionQueue {
   }
 
   // ---------------------------------------------------------------------------
-  // Attachments — TODO (next pass, needs attachments.ts helper)
+  // Attachments
   // ---------------------------------------------------------------------------
 
-  // addAttachment / listAttachments / getAttachment / deleteAttachment
-  // are not yet ported. See README.md port-status matrix.
+  /**
+   * Attach a file to a job. Validates size, base64, filename safety, and
+   * duplicate filename. Returns the persisted attachment metadata (bytes
+   * are not echoed back — use getAttachment to fetch).
+   *
+   * The DB `UNIQUE (job_id, filename)` constraint is the authoritative
+   * duplicate fence; the in-memory pre-check just gives a faster, clearer
+   * error before the round-trip.
+   *
+   * SOMA: `content BLOB` column added in schema (gbrain's original column
+   * name kept). better-sqlite3 accepts a Buffer directly and returns one
+   * on read; no driver-side encoding required.
+   */
+  async addAttachment(jobId: number, input: AttachmentInput): Promise<Attachment> {
+    const exists = await this.engine.one<{ id: number }>(
+      `SELECT id FROM minion_jobs WHERE id = ?`,
+      [jobId],
+    );
+    if (!exists) {
+      throw new Error(`job ${jobId} not found`);
+    }
+
+    const existingRows = await this.engine.all<{ filename: string }>(
+      `SELECT filename FROM minion_attachments WHERE job_id = ?`,
+      [jobId],
+    );
+    const existingFilenames = new Set(existingRows.map((r) => r.filename));
+
+    const result = validateAttachment(input, {
+      maxBytes: this.maxAttachmentBytes,
+      existingFilenames,
+    });
+    if (!result.ok) {
+      throw new Error(`attachment validation failed: ${result.error}`);
+    }
+    const { filename, content_type, bytes, size_bytes, sha256 } = result.normalized;
+
+    const rows = await this.engine.all<Record<string, unknown>>(
+      `INSERT INTO minion_attachments
+         (job_id, filename, content_type, content, size_bytes, sha256)
+       VALUES (?, ?, ?, ?, ?, ?)
+       RETURNING id, job_id, filename, content_type, storage_uri, size_bytes, sha256, created_at`,
+      [jobId, filename, content_type, bytes, size_bytes, sha256],
+    );
+    return rowToAttachment(rows[0]);
+  }
+
+  /** List attachments for a job (metadata only, no bytes). */
+  async listAttachments(jobId: number): Promise<Attachment[]> {
+    const rows = await this.engine.all<Record<string, unknown>>(
+      `SELECT id, job_id, filename, content_type, storage_uri, size_bytes, sha256, created_at
+         FROM minion_attachments
+        WHERE job_id = ?
+        ORDER BY created_at ASC, id ASC`,
+      [jobId],
+    );
+    return rows.map(rowToAttachment);
+  }
+
+  /**
+   * Fetch a single attachment with bytes. Returns null if not found.
+   * Bytes are returned as a Buffer regardless of how the driver spells
+   * the BLOB column on the way out.
+   */
+  async getAttachment(
+    jobId: number,
+    filename: string,
+  ): Promise<{ meta: Attachment; bytes: Buffer } | null> {
+    const row = await this.engine.one<Record<string, unknown>>(
+      `SELECT id, job_id, filename, content_type, storage_uri, size_bytes, sha256, created_at, content
+         FROM minion_attachments
+        WHERE job_id = ? AND filename = ?`,
+      [jobId, filename],
+    );
+    if (!row) return null;
+
+    const meta = rowToAttachment(row);
+    const raw = row.content;
+    let bytes: Buffer;
+    if (raw == null) {
+      bytes = Buffer.alloc(0);
+    } else if (Buffer.isBuffer(raw)) {
+      bytes = raw;
+    } else if (raw instanceof Uint8Array) {
+      bytes = Buffer.from(raw);
+    } else {
+      bytes = Buffer.from(raw as ArrayBuffer);
+    }
+    return { meta, bytes };
+  }
+
+  /** Delete an attachment by job + filename. Returns true if a row was removed. */
+  async deleteAttachment(jobId: number, filename: string): Promise<boolean> {
+    const { changes } = await this.engine.exec(
+      `DELETE FROM minion_attachments WHERE job_id = ? AND filename = ?`,
+      [jobId, filename],
+    );
+    return changes > 0;
+  }
 
   // ---------------------------------------------------------------------------
   // Shared internals

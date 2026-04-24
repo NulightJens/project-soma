@@ -132,9 +132,13 @@ CREATE TABLE IF NOT EXISTS minion_attachments (
   filename     TEXT NOT NULL,
   content_type TEXT NOT NULL,
   storage_uri  TEXT,                                         -- 'file://...' | 'r2://...'
+  content      BLOB,                                         -- inline bytes (NULL when storage_uri is set)
   size_bytes   INTEGER NOT NULL,
   sha256       TEXT NOT NULL,
-  created_at   INTEGER NOT NULL DEFAULT (unixepoch('subsec') * 1000)
+  created_at   INTEGER NOT NULL DEFAULT (unixepoch('subsec') * 1000),
+  -- Authoritative duplicate fence. Queue-side pre-check gives a clearer
+  -- error; this is the one that holds under concurrent writers.
+  UNIQUE (job_id, filename)
 );
 
 CREATE INDEX IF NOT EXISTS minion_attachments_job_idx

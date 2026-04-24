@@ -628,3 +628,14 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **52/52 Minions tests pass** (up from 41: engine 7 + queue 34 + worker 11). `tsc --noEmit` clean repo-wide.
 - **`MinionWorker` exported** via `src/minions/index.ts` barrel.
 - **Next up:** port `attachments.ts` + extend `minion_attachments` schema with `content BLOB` + `UNIQUE (job_id, filename)`, wire CRUD onto MinionQueue. Then `protected-names.ts` gate, then handlers.
+
+### 2026-04-23 (night) — Attachments port lands
+- **`src/minions/attachments.ts` ported verbatim** from gbrain (pure `validateAttachment` — filename safety, content-type regex, strict base64, size cap, in-flight duplicate pre-check, sha256 + bytes normalization). Only deviation from the original: `.ts` import → `.js` per repo moduleResolution: bundler.
+- **Schema extended:** `minion_attachments` gained a `content BLOB` column (nullable — `storage_uri` stays an alternative) and a `UNIQUE (job_id, filename)` constraint. The UNIQUE constraint is the authoritative duplicate fence; the in-memory pre-check just gives a faster, clearer error before the round-trip.
+- **CRUD wired onto `MinionQueue`:** `addAttachment / listAttachments / getAttachment / deleteAttachment`. better-sqlite3 accepts Buffer for BLOB natively (no base64 layer in the driver). `getAttachment` normalises the driver's BLOB return (Buffer | Uint8Array | ArrayBuffer) into a Buffer for handler callers.
+- **Test coverage:** `tests/minions-attachments.test.ts` — 19 vitest cases split into two layers.
+  - **Pure validation (7):** sha256 + size computation on happy path; 6 filename rejection cases (empty, whitespace, path traversal, separators, null byte); malformed content_type; empty / non-base64 content; oversize; in-flight duplicate.
+  - **Queue CRUD (12):** add → get round-trip preserves raw bytes (including high-bit binary); list orders by created_at asc and excludes bytes; getAttachment returns null for unknown filename; delete removes one and leaves siblings; duplicate-filename pre-check throws; oversize throws at queue boundary; unknown job throws; FK cascade — `minion_attachments` rows disappear after parent `minion_jobs` row is removed (cancel → remove since removeJob requires a terminal status).
+- **71/71 Minions tests pass** (up from 52: engine 7 + queue 34 + worker 11 + attachments 19). `tsc --noEmit` clean repo-wide.
+- **`validateAttachment` + types exported** via `src/minions/index.ts` barrel so dashboard/CLI submit paths can pre-validate before the queue round-trip.
+- **Next up:** `protected-names.ts` gate (trivial 28 LOC, wires into `MinionQueue.add()`'s existing `_trusted` placeholder). Then handlers.
