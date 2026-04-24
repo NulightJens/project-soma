@@ -17,7 +17,7 @@
 
 - **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS; absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
-- **Last commit:** (to land this session) — "soma: `cortextos jobs` CLI + built-in handlers + PM2 jobs-worker"
+- **Last commit:** `6c5ae0f` — "soma: cortextos jobs CLI + built-in handlers + PM2 jobs-worker"
 - **Green signals:** 91 Minions+CLI vitest cases passing (engine 7 + queue 34 + worker 11 + attachments 19 + protected-names 13 + job-handlers 7); `npx tsc --noEmit` clean; `cortextos jobs submit echo … ; jobs work … ; jobs get` loop verified end-to-end against a temp DB; dashboard runs at `localhost:3000`; `cortextos-daemon` online via PM2.
 - **Red signals:** none. Phase 1 scope is ~85% done — dashboard Queue page + handlers/shell + unified runner + SIGKILL-rescue regression remain.
 - **Do not:** ingest any Solo Scale handoff content (ADR-009). Build SOMA fully agnostic first.
@@ -163,7 +163,7 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 ## Commit timeline (SOMA work)
 
 ```
-(next)   soma: `cortextos jobs` CLI + built-in handlers + PM2 jobs-worker
+6c5ae0f  soma: cortextos jobs CLI + built-in handlers + PM2 jobs-worker
 b461ef0  soma: add resume-prompt template + ~500K context handoff protocol
 e8852c6  soma: thread Hermes adaptability constraints into phases 1/2/5
 50a1bff  docs(handoff): fill in 2218d65 commit hash for protected-names port
