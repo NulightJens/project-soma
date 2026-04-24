@@ -17,9 +17,9 @@
 
 - **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS; absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
-- **Last commit:** `17eb305` — "soma: dashboard Jobs page (ADR-014 progressive disclosure)"
-- **Green signals:** 91 Minions+CLI vitest cases passing; `npx tsc --noEmit` clean across both the SOMA package AND the `dashboard/` package; `cortextos jobs` CLI verified end-to-end; dashboard `/jobs` route live at `localhost:3000/jobs` with plain-language summaries + progressive-disclosure raw-JSON toggle per ADR-014; `cortextos-daemon` online via PM2.
-- **Red signals:** none. Phase 1 scope is ~90% done — handlers/shell (HITL-gated) + unified runner + SIGKILL-rescue regression remain.
+- **Last commit:** (to land this session) — "soma: SIGKILL-rescue regression against real subprocess worker"
+- **Green signals:** 92 Minions+CLI+regression vitest cases passing (92 includes a real-subprocess SIGKILL-rescue regression); `npx tsc --noEmit` clean across both the SOMA package AND the `dashboard/` package; `cortextos jobs` CLI verified end-to-end; dashboard `/jobs` route live at `localhost:3000/jobs` with plain-language summaries + progressive-disclosure raw-JSON toggle per ADR-014; `cortextos-daemon` online via PM2.
+- **Red signals:** none. Phase 1 scope is ~92% done — handlers/shell (HITL-gated) + unified runner (also needs HITL review for OAuth/API-key handling) remain, plus the later dashboard submit-UI (intent-parser) slot.
 - **Do not:** ingest any Solo Scale handoff content (ADR-009). Build SOMA fully agnostic first.
 
 ---
@@ -31,7 +31,7 @@ cd ~/cortextos
 git status                                               # should be clean
 git log --oneline -3                                     # confirm at latest worker-port commit
 npx tsc --noEmit                                         # silent = pass
-npx vitest run tests/minions-*.test.ts tests/cli-*.test.ts  # 91 passed (engine 7 + queue 34 + worker 11 + attachments 19 + protected 13 + handlers 7)
+npx vitest run tests/minions-*.test.ts tests/cli-*.test.ts  # 92 passed (incl. real-subprocess SIGKILL-rescue regression)
 pm2 list                                                 # cortextos-daemon online
 curl -sI http://localhost:3000/login                     # HTTP/1.1 200 OK
 ```
@@ -43,7 +43,7 @@ If any of the above fails, see §9 Environment + §10 Gotchas before proceeding.
 ## Where you are on the roadmap
 
 Phase 0 — fork + foundation ........ **DONE**
-Phase 1 — Minions queue ............ **~90% done** ← you are here
+Phase 1 — Minions queue ............ **~92% done** ← you are here
 Phase 2 — Worktree isolation ....... not started
 Phase 3 — Claude-subprocess worker . not started
 Phase 4 — Orchestrator rewrite ..... not started
@@ -143,6 +143,7 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 | `tests/minions-attachments.test.ts` | 295 | 19 vitest cases — pure validation (7) + queue CRUD round-trip (12) including BLOB round-trip, UNIQUE fence, FK cascade on job removal |
 | `tests/minions-protected-names.test.ts` | 160 | 13 vitest cases — pure module membership (6) + queue gate (7) including trim-evasion, `allowProtectedSubmit: false` block, opts-spread cannot smuggle trust flag |
 | `tests/cli-job-handlers.test.ts` | 135 | 7 vitest cases — echo result + log, noop, sleep duration + negative-ms rejection + direct-drive AbortSignal path |
+| `tests/cli-jobs-sigkill-rescue.test.ts` | 135 | 1 regression case — spawns `cortextos jobs work`, waits for claim, `SIGKILL`s the worker, verifies a second worker's stall sweep requeues the orphaned lock (stalled_counter ≥ 1). Complements the in-process stall-rescue test. |
 
 ### Dashboard
 | File | Purpose |
@@ -167,6 +168,8 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 ## Commit timeline (SOMA work)
 
 ```
+(next)   soma: SIGKILL-rescue regression against real subprocess worker
+75726b3  docs(handoff): fill in 17eb305 commit hash for dashboard Jobs page
 17eb305  soma: dashboard Jobs page (ADR-014 progressive disclosure)
 d55ada3  docs(handoff): fill in 6c5ae0f commit hash for CLI/handlers/PM2 cluster
 6c5ae0f  soma: cortextos jobs CLI + built-in handlers + PM2 jobs-worker
@@ -236,9 +239,7 @@ Full text in `PROJECT_SOMA.md` §10. Quick reference:
 
 2. **Port `handlers/subagent.ts`** (~710 LOC, gbrain's Anthropic SDK path) + **gstack `claude -p` NDJSON pattern** into a single **unified `handlers/runner.ts`** per ADR-012. Engine selection: `subscription` (default, subprocess) vs `api` (Anthropic SDK, two-phase tool ledger). Shared code: transcript persistence, turn budgeting, cache discipline. Register under the protected names `subagent` + `subagent_aggregator`. **Hermes adaptability (Open threads row):** implement engine selection as an open registry (`registerEngine(name, impl)`), not a closed `'subscription' | 'api'` union, so Hermes drops in later as a third engine without touching the existing two. The output parser (stream → transcript / tokens / tool calls) is a per-engine seam, not hardcoded to `claude -p` NDJSON.
 
-3. **`jobs smoke --sigkill-rescue`** regression test against a real subprocess worker. The in-process stall-rescue smoke in `tests/minions-worker.test.ts` covers the state-machine path; this one exercises a spawned `cortextos jobs work` child killed with SIGKILL.
-
-4. **Dashboard: submit UI + intent parser** (new slot, was folded into the Queue-page slot). Per ADR-014: freeform phrases routed through a language-model intent parser that emits structured `queue.add(...)` calls. Structured form is a fallback behind an "Advanced" toggle, not the primary path. Dashboard is an **untrusted** submitter — never sets `allowProtectedSubmit`; intents resolving to `shell`/`subagent` surface as an approval step, not a direct submit.
+3. **Dashboard: submit UI + intent parser** (new slot, was folded into the Queue-page slot). Per ADR-014: freeform phrases routed through a language-model intent parser that emits structured `queue.add(...)` calls. Structured form is a fallback behind an "Advanced" toggle, not the primary path. Dashboard is an **untrusted** submitter — never sets `allowProtectedSubmit`; intents resolving to `shell`/`subagent` surface as an approval step, not a direct submit.
 
 ### Starter commands
 
@@ -372,4 +373,4 @@ git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-min
 
 ---
 
-*Last updated: 2026-04-23 (late night) after the dashboard Jobs page landed. First full usable loop: submit via `cortextos jobs`, worker drains via PM2, inspect/cancel/retry via `/jobs` in the dashboard. Next update expected after `handlers/shell.ts` (HITL-gated).*
+*Last updated: 2026-04-23 (late night) after the SIGKILL-rescue regression test landed. Phase 1 at ~92% and session is approaching a natural pause — next two slots (shell handler + unified runner) are HITL-gated per CLAUDE.md §3 and §6. Next update expected after HITL review + resume on either slot.*
