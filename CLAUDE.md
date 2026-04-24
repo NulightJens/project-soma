@@ -101,6 +101,7 @@ These stop agent-drift.
   6. Run the verify block from HANDOFF.md §2 to confirm nothing's drifted
   7. THEN respond to the user
 - **When a non-trivial session ends:** update `HANDOFF.md` per its §10 "How to update this file" checklist, snapshot to `docs/handoffs/YYYY-MM-DD-NN-<topic>.md` at milestones, append to `PROJECT_SOMA.md` §13 chronicle, update the `project_*` memory file.
+- **When approaching ~500K context mid-session:** prepare a resume-prompt bundle before the window exhausts. Fill in `docs/handoffs/TEMPLATE-resume-prompt.md`, make sure HANDOFF.md + §13 chronicle reflect current state, land a clean commit if mid-slot, then hand the filled-in prompt block to the user so they can paste it into a fresh session. Clearing earlier (at ~500K) is cheaper than scraping state from a dying context — re-reading HANDOFF.md + CLAUDE.md + §13 + memory is ~30 seconds for a fresh session.
 
 ## 9. Database & Timezone Rules
 
