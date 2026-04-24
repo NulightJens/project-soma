@@ -424,6 +424,20 @@ Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is
 **Rationale:** "Full UI" means full UI. Partial token-layer work leaves the dashboard speaking two visual languages, which violates the brand's monochrome rule.
 **Consequences:** Known visual-regression risks (flagged by the sweep agent): `category-badge.tsx` categories now differ by label only; `fleet-health.tsx` mid-tier stability reads similarly to healthy; `goal-item.tsx` amber progress bars now look like any filled bar; `bottleneck-section.tsx` visual prominence reduced. Addressable iteratively if felt in real use.
 
+### ADR-013: Adopt claudecode-harness pattern for SOMA's CLAUDE.md
+**Date:** 2026-04-23
+**Context:** User surfaced `github.com/anothervibecoder-s/claudecode-harness` — a published CLAUDE.md template for running Claude Code on high-stakes SaaS work without quota hits or hallucinated success. Nine numbered sections (platform + ownership + hard limits + deployment + data discipline + security + hub-spoke + memory/retros + DB rules) — distils principles SOMA was going to invent anyway.
+**Decision:** Adopt the harness structure for SOMA's repo-root `CLAUDE.md`. Fill each placeholder with SOMA-specific content (stack, ownership zones, verify commands, memory paths, ADR pointer). The harness becomes part of SOMA's own working discipline (how Claude Code works on the SOMA codebase) AND, later, the template SOMA generates for every user org via `cortextos init` (§8 agnostic distribution).
+**Rationale:**
+  - Zero-cost adoption of a battle-tested operational pattern.
+  - Harness principles map 1:1 onto SOMA concepts we already have: Hub & Spoke → orchestrator + subagents; ownership matrix → department routing; memory/retros → Memory pillar + chronicle; hard limits → job-size gates in Minions.
+  - Gives every Claude Code session that opens this repo the same operating context without re-deriving rules each time.
+**Consequences:**
+  - `CLAUDE.md` (previously a short contributing stub — content preserved in `CONTRIBUTING.md`) is replaced with the full harness.
+  - Future: `templates/claude-md/` will ship a parameterizable harness template that `cortextos init` writes into every new org. Users get the harness pattern for their own business out of the box.
+  - Multi-Model Consensus (harness §7) becomes a Phase 7 `consensus` Minion handler.
+  - Retro habit formalized — every non-trivial session appends a chronicle entry in PROJECT_SOMA.md §13 AND updates the auto-memory `project_*` file.
+
 ### ADR-012: Synergy not silos — integrate overlapping capabilities
 **Date:** 2026-04-23
 **Context:** Clarification on ADR-011 after risk of over-literal interpretation. "Don't dumb down" meant preserve full capability; it did not mean ship parallel redundant implementations. Ports must harmonize, not sit as disconnected silos competing for the same role.
@@ -527,3 +541,21 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
   - Flagged visual-regression risks (category badges, mid-tier stability, progress bars, bottleneck section) documented in ADR-010.
 - **Research ingestion complete.** All 9 handoff files read + brand tokens inspected. Twin Principle (§01) confirmed as conceptual alignment with SOMA's "brain = files, body = process" metaphor — the name SOMA maps directly onto the handoff's thesis. No handoff content ingested into code or memory per ADR-009.
 - **Phase 1 port in progress** under expanded scope. Full gbrain Minions package + both handler paths + supporting modules + queue dashboard page.
+
+### 2026-04-23 (evening) — Phase 1 foundation + harness adoption
+- **ADR-012 added** — synergy-not-silos clarification of ADR-011. Ports must integrate overlapping capabilities into single coherent implementations. Concrete integration plan documented for runner handlers (unified with engine selection), memory (learnings as typed edges), scheduled work (Minion jobs not parallel cron), skill format (shared gbrain/gstack SKILL.md adopted verbatim), file bus vs queue (different purposes, cleanly separated), worktree + shell handler (composed primitives).
+- **better-sqlite3 + @types** added to root package.json for Minions SQLite engine.
+- **Small Minion modules ported verbatim from gbrain** (MIT © Garry Tan): `backoff.ts`, `stagger.ts`, `quiet-hours.ts`. All under 100 LOC each, clean ports with only the Date→number boundary note in quiet-hours.
+- **SOMA's first SQLite engine implementation** — `src/minions/engine-sqlite.ts`:
+  - `better-sqlite3` backing the `QueueEngine` contract
+  - Schema bootstrap from `schema.sql` on open
+  - Connection PRAGMAs: WAL + NORMAL sync + FK on + 5s busy_timeout
+  - Advisory locks via `BEGIN IMMEDIATE` + sentinel rows in `minion_rate_leases` with NULL `owner_job` (schema updated to allow this)
+  - LIKE-pattern scope matching with proper ESCAPE for safe lock keys
+  - Prepared-statement cache
+  - Tx wrapper with rollback-on-throw / commit-on-resolve
+- **Schema fix:** `minion_rate_leases.owner_job` made nullable so the table can serve both job-owned rate leases (FK to minion_jobs) and engine-owned advisory locks (NULL owner_job).
+- **Public API barrel** — `src/minions/index.ts` — consumers import from this, not submodules directly.
+- **Test suite** — `tests/minions-engine.test.ts` — 7 vitest cases: schema bootstrap, CRUD, idempotency uniqueness, lock acquire/release, lock contention timeout, tx rollback, tx commit, updated_at trigger. All 7 pass. `tsc --noEmit` clean across repo.
+- **ADR-013 added** — harness adoption from `anothervibecoder-s/claudecode-harness`. Repo root `CLAUDE.md` replaced with full SOMA-filled harness (stack, ownership matrix, hard limits, local-first rules, data discipline, env/security, hub-spoke, memory/retros, DB/timezone rules, ADR habit). Old CLAUDE.md content was a short contributing stub — preserved in `CONTRIBUTING.md` unchanged.
+- **Next up:** port `queue.ts` (~1150 LOC) — the big one. Will cover `add()`, `claim()`, `complete()`, `fail()`, `cancel()`, child DAG, cascade cancel, idempotency dedup, stall sweep.
