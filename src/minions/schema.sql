@@ -146,11 +146,13 @@ CREATE INDEX IF NOT EXISTS minion_attachments_job_idx
 
 CREATE TABLE IF NOT EXISTS minion_rate_leases (
   id          INTEGER PRIMARY KEY,
-  scope       TEXT NOT NULL,                                 -- e.g. 'anthropic:opus'
-  owner_job   INTEGER NOT NULL REFERENCES minion_jobs(id) ON DELETE CASCADE,
+  scope       TEXT NOT NULL,                                 -- e.g. 'anthropic:opus' or '__lock__:claim'
+  owner_job   INTEGER REFERENCES minion_jobs(id) ON DELETE CASCADE,
   acquired_at INTEGER NOT NULL DEFAULT (unixepoch('subsec') * 1000),
   released_at INTEGER
 );
+-- owner_job is NULLable: NULL = engine-owned advisory lock; non-NULL = job-owned rate lease.
+-- FK cascade still fires when owner_job points to a real job.
 
 CREATE INDEX IF NOT EXISTS minion_rate_leases_live_idx
   ON minion_rate_leases (scope)

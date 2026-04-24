@@ -424,6 +424,20 @@ Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is
 **Rationale:** "Full UI" means full UI. Partial token-layer work leaves the dashboard speaking two visual languages, which violates the brand's monochrome rule.
 **Consequences:** Known visual-regression risks (flagged by the sweep agent): `category-badge.tsx` categories now differ by label only; `fleet-health.tsx` mid-tier stability reads similarly to healthy; `goal-item.tsx` amber progress bars now look like any filled bar; `bottleneck-section.tsx` visual prominence reduced. Addressable iteratively if felt in real use.
 
+### ADR-012: Synergy not silos — integrate overlapping capabilities
+**Date:** 2026-04-23
+**Context:** Clarification on ADR-011 after risk of over-literal interpretation. "Don't dumb down" meant preserve full capability; it did not mean ship parallel redundant implementations. Ports must harmonize, not sit as disconnected silos competing for the same role.
+**Decision:** Where donor systems have overlapping capabilities, **integrate into a single coherent implementation** that preserves the full capability surface of each. No parallel-but-separate ports of the same concept. Concrete integrations:
+  - **LLM execution handlers.** gbrain's `anthropic-subagent` (SDK + two-phase tool ledger) and gstack's `claude -p` subprocess pattern both run LLM reasoning. Integrate into **one unified `runner` handler** with engine selection (`subscription` default, `api` opt-in per ADR-008). Shared code: tool ledger durability, transcript persistence, turn budgeting, cache discipline. Engine-specific code: process spawn vs. SDK call.
+  - **Persistent memory.** gbrain's page-of-record + typed graph and gstack's `learnings.jsonl` are both long-term memory. Integrate: learnings become typed edges (`learned_from` relation) in the unified brain graph. No separate JSONL sidecar.
+  - **Scheduled work.** gbrain's `runCycle` + `cron-scheduler` skill and cortextOS's existing cron primitives are both scheduled execution. Integrate: `runCycle` phases become normal Minion jobs scheduled via cron-generator; cortextOS's existing cron entries migrate to Minions rows. One scheduler, not two.
+  - **Skill format.** gbrain and gstack already share the `SKILL.md` + frontmatter convention (Garry Tan authored both). Adopt verbatim — no translation layer.
+  - **Graph enrichment.** graphify's tree-sitter AST + Leiden clustering and gbrain's entity-extraction subagents are both graph writers. Integrate behind one `BrainEnricher` interface writing into gbrain's storage (per revised ADR-004).
+  - **File bus vs. queue.** cortextOS's file bus carries *messages* (events, heartbeats, telemetry — lightweight pub/sub). Minions carries *work items* (durable tasks with priority, DAG, retry). Different purposes, cleanly separated. No overlap to integrate.
+  - **Worktree + shell handler.** gstack's `WorktreeManager` and gbrain's shell-handler env allowlist combine: the worker allocates a worktree per job, the shell handler executes inside it with the scrubbed env. One pipeline, two primitives composed.
+**Rationale:** Parallel implementations of the same concept produce silo conflicts, dilute the mental model, and force consumers to understand both. Integrated implementations preserve every capability while presenting a single coherent API.
+**Consequences:** Every port proposal must answer: *is there an existing concept in SOMA that overlaps with this?* If yes, integrate. If no, introduce cleanly. "Is there overlap?" is a required ADR-012 check before any new module lands.
+
 ### ADR-011: Don't dumb down — preserve the finesse of every donor system
 **Date:** 2026-04-23
 **Context:** Load-bearing directive from user: *"do not reduce functionality of the system to match the narrative, effectively do not make the system dumber to adhere to intended narrative."*
