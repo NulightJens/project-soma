@@ -18,3 +18,4 @@ export {
   type QuietHoursConfig,
   type QuietHoursVerdict,
 } from './quiet-hours.js';
+export { MinionQueue, type TrustedSubmitOpts } from './queue.js';

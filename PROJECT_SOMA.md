@@ -559,3 +559,23 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **Test suite** — `tests/minions-engine.test.ts` — 7 vitest cases: schema bootstrap, CRUD, idempotency uniqueness, lock acquire/release, lock contention timeout, tx rollback, tx commit, updated_at trigger. All 7 pass. `tsc --noEmit` clean across repo.
 - **ADR-013 added** — harness adoption from `anothervibecoder-s/claudecode-harness`. Repo root `CLAUDE.md` replaced with full SOMA-filled harness (stack, ownership matrix, hard limits, local-first rules, data discipline, env/security, hub-spoke, memory/retros, DB/timezone rules, ADR habit). Old CLAUDE.md content was a short contributing stub — preserved in `CONTRIBUTING.md` unchanged.
 - **Next up:** port `queue.ts` (~1150 LOC) — the big one. Will cover `add()`, `claim()`, `complete()`, `fail()`, `cancel()`, child DAG, cascade cancel, idempotency dedup, stall sweep.
+
+### 2026-04-23 (late evening) — queue.ts port lands
+- **`src/minions/queue.ts` ported** from gbrain's `queue.ts` (1152 LOC → ~920 LOC SOMA-adapted). All core state-machine methods present:
+  - `add()` with idempotency fast-path + parent depth/cap validation + ON CONFLICT race catch
+  - `getJob()` / `getJobs()` / `removeJob()`
+  - `claim()` — priority-ordered, name-filtered, token-fenced. SOMA adaptation: Postgres `FOR UPDATE SKIP LOCKED` dropped — `engine.tx()` opens `BEGIN IMMEDIATE` which serializes writers at the DB level for single-writer SOMA. Postgres engine (Phase 7) will restore SKIP LOCKED.
+  - `completeJob()` / `failJob()` — atomic token-fenced transitions with parent token-rollup + `child_done` inbox post + parent resolve + `remove_on_*` cleanup all inside one tx. No crash window between complete and parent resolve.
+  - `handleStalled()` — rewritten to two-pass query + UPDATE since SQLite doesn't support UPDATE inside a CTE. Same stall-counter + dead-letter semantics.
+  - `handleTimeouts()` — dead-letters active jobs past `timeout_at` with proper `lock_until > now` guard to avoid racing `handleStalled`.
+  - `promoteDelayed()`, `cancelJob()` with recursive CTE cascade, `retryJob()`, `replayJob()`.
+  - `resolveParent()`, `failParent()`, `removeChildDependency()`.
+  - `pauseJob()` / `resumeJob()`.
+  - `sendMessage()` / `readInbox()` / `readChildCompletions()` (uses SQLite JSON1 `json_extract` instead of Postgres `->>'type'`).
+  - `renewLock()`, `updateProgress()`, `updateTokens()`.
+  - `prune()`, `getStats()`.
+- **Deferred to next pass:** attachment CRUD + `protected-names.ts` gate. Present as TODO in queue.ts docblock — requires `attachments.ts` helper port first.
+- **Schema fix for SQLite ON CONFLICT:** `ON CONFLICT (idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING` — SQLite requires the partial-index predicate in the target; Postgres tolerated the bare form.
+- **Test coverage:** `tests/minions-queue.test.ts` — 27 vitest cases covering add + idempotency + parent DAG + max_children + maxSpawnDepth; claim priority + name filter + timeout_at; complete + token-fence + parent resolve + child_done; fail + delayed retry + dead + fail_parent + remove_dep; stall rescue + timeout handling + delayed promotion; cancel cascade; pause / resume / retry / replay; inbox read/write; renewLock token-fence; updateTokens accumulate; prune + stats. 34/34 pass (up from 7 in the engine-only suite → 41 total Minions tests green). `tsc --noEmit` clean repo-wide.
+- **MinionQueue exported** via `src/minions/index.ts` barrel.
+- **Next up:** port `worker.ts` (main loop, lock renewal, handler registry, SIGTERM → shutdown signal) + port `attachments.ts` + wire `cortextos jobs` CLI + regression test for `--sigkill-rescue`.
