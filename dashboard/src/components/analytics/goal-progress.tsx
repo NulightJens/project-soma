@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProgressBar } from '@/components/charts/progress-bar';
 import { CHART_GOLD } from '@/components/charts/chart-theme';
+import { IconCircleCheck, IconAlertTriangle, IconAlertCircle } from '@tabler/icons-react';
 import type { Goal } from '@/lib/types';
 
 interface GoalWithStaleness extends Goal {
@@ -38,13 +39,16 @@ export function GoalProgress({ goals }: GoalProgressProps) {
                     <span className="font-medium truncate">{goal.title}</span>
                     {goal.stalenessStatus && (
                       <span className={`inline-flex items-center gap-1 text-[10px] shrink-0 ${
-                        goal.stalenessStatus === 'fresh' ? 'text-green-600' :
-                        goal.stalenessStatus === 'stale' ? 'text-amber-600' : 'text-red-600'
+                        goal.stalenessStatus === 'fresh' ? 'text-foreground' :
+                        goal.stalenessStatus === 'stale' ? 'text-muted-foreground italic' : 'text-destructive'
                       }`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${
-                          goal.stalenessStatus === 'fresh' ? 'bg-green-500' :
-                          goal.stalenessStatus === 'stale' ? 'bg-amber-500' : 'bg-red-500'
-                        }`} />
+                        {goal.stalenessStatus === 'fresh' ? (
+                          <IconCircleCheck size={11} />
+                        ) : goal.stalenessStatus === 'stale' ? (
+                          <IconAlertTriangle size={11} />
+                        ) : (
+                          <IconAlertCircle size={11} />
+                        )}
                         {goal.stalenessStatus === 'fresh' ? 'Fresh' :
                          `${goal.stalenessHours}h stale`}
                       </span>

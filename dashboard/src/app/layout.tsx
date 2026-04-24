@@ -23,13 +23,13 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "cortextOS Dashboard",
-  description: "cortextOS agent orchestration dashboard",
+  title: "SOMA",
+  description: "Persistent agent OS. Forked from cortextOS.",
   viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "cortextOS",
+    title: "SOMA",
   },
 };
 

@@ -278,12 +278,20 @@ Implementation:
 - [ ] Commit + push SOMA doc to `main` or `soma/phase-0` branch
 - [ ] Open tracking issues for phases 1–7
 
-### Phase 1 — Minions queue (1–2 weeks)
-- [ ] Add `src/minions/` directory. Port `queue.ts`, `worker.ts`, `handlers/` from gbrain, swap Postgres for SQLite via `better-sqlite3`.
-- [ ] Define `QueueEngine` interface; SQLite impl first, PGLite adapter second.
-- [ ] CLI: `cortextos jobs submit | list | work | cancel | replay | smoke`.
-- [ ] Port `jobs smoke --sigkill-rescue` as regression test.
-- [ ] Integrate with daemon: daemon boots a `jobs work` process under PM2.
+### Phase 1 — Minions queue + full handler suite (expanded per ADR-011)
+- [x] Add `src/minions/` directory scaffold (README, types, schema, engine interface).
+- [ ] **QueueEngine** — SQLite impl via `better-sqlite3` first; PGLite adapter second; Postgres and D1 stubs so the contract is exercised.
+- [ ] **Port `queue.ts`** (~1150 LOC) — full status machine, priority claim, idempotency dedup, stall detection, cascade cancel, parent-child DAG, inbox, attachments, rate-leases, quiet-hours, stagger, backoff.
+- [ ] **Port `worker.ts`** (~415 LOC) — concurrency-bounded claim loop, graceful SIGTERM → `ctx.shutdownSignal`, lock renewal, stalled sweep.
+- [ ] **Port `handlers/shell.ts`** — env allowlist, SIGTERM → 5s → SIGKILL sequence, `GBRAIN_ALLOW_SHELL_JOBS` → `SOMA_ALLOW_SHELL_JOBS`.
+- [ ] **Port `handlers/subagent.ts`** (710 LOC) — Anthropic SDK subagent with two-phase tool ledger, durable replay, prompt-cache discipline. Gated behind explicit opt-in per ADR-008.
+- [ ] **Port `handlers/subagent-aggregator.ts`** — claims after all children resolve, synthesizes aggregate output.
+- [ ] **New `handlers/claude-subprocess.ts`** (default per ADR-008) — spawns `claude -p --output-format stream-json --verbose` in allocated worktree; NDJSON parser lifted from `gstack/test/helpers/session-runner.ts`.
+- [ ] **Port supporting modules** — `backoff.ts`, `quiet-hours.ts`, `stagger.ts`, `transcript.ts`, `attachments.ts`, `rate-leases.ts` (advisory lock → `BEGIN IMMEDIATE` on SQLite).
+- [ ] CLI: `cortextos jobs submit | list | work | cancel | replay | smoke | prune | attach`.
+- [ ] **Port `jobs smoke --sigkill-rescue`** as regression test.
+- [ ] Integrate with daemon: daemon boots a `jobs work` process under PM2; existing `bus/tasks/*.json` migrator deprecates the file-based task system.
+- [ ] Dashboard: new Queue page — job list with filtering by status/pillar/department/queue name, per-job detail (transcript, attachments, inbox), cancel/retry/pause actions. Uses SOMA monochrome from day one.
 
 ### Phase 2 — Worktree isolation (1 week)
 - [ ] Copy `gstack/lib/worktree.ts` verbatim (with attribution); swap log sink.
@@ -347,12 +355,18 @@ Implementation:
 **Rationale:** Flat-rate cost scales better for a 24/7 system. Cheap API models (Haiku) are still useful for routing/classification only — not for bulk reasoning.
 **Consequences:** Distribution must document Keychain (Mac) + `CLAUDE_CODE_OAUTH_TOKEN` (headless) paths. Rate limits are per-account and will eventually bite; we mitigate with rate-leases.
 
-### ADR-004: Graphify is a skill, not a memory backend
-**Date:** 2026-04-23
-**Context:** Graphify was suggested as a graph memory layer. Research shows it's a static codebase-cartography tool with weaker storage (JSON files) than gbrain.
-**Decision:** Adopt graphify as an optional per-worktree skill. Do not adopt as memory platform. Lift two ideas (confidence tags, tree-sitter AST extraction) into the brain layer.
-**Rationale:** Graphify is pre-1.0 (v0.5.0, first commit 2026-04-03), single-maintainer, and Python-only — structurally risky to depend on. Its feature set is a subset of gbrain's plus multimodal ingest.
-**Consequences:** Graphify gets a `skills/graphify/SKILL.md` entry and optional MCP proxy, but SOMA's memory is gbrain-derived.
+### ADR-004 (revised 2026-04-23): Graphify as enrichment pipeline, gbrain as storage backbone
+**Date:** 2026-04-23 (revision of original "skill, not backend" decision after "don't dumb down" directive)
+**Context:** Graphify was first scoped as an optional skill to avoid coupling to a pre-1.0 tool. On reflection — per the "preserve finesse" directive (ADR-011) — that under-adopted its real capabilities.
+**Decision:** Treat graphify as a set of **first-class enrichment pipelines** that write into gbrain's graph storage:
+  - Tree-sitter AST extraction for 25 languages → typed call-graph nodes in the brain
+  - Leiden community detection → cluster labels on the brain's graph
+  - Multimodal ingest (PDF / image / video / Whisper) → typed nodes with provenance
+  - God-node analytics + GRAPH_REPORT.md → surfaced as a memory view
+  - Interactive HTML graph viz → dashboard integration
+Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is never the backend; its pipelines are first-class writers into the gbrain schema.
+**Rationale:** Graphify's extraction + clustering capabilities are real gaps in gbrain. Treating them as skills would waste them. The structural risk (pre-1.0, Python-only) is mitigated by pinning a tag, vendoring behind a `brain-enricher` interface, and keeping storage under gbrain.
+**Consequences:** SOMA's brain layer has a pluggable `EnrichmentPipeline` interface. Graphify is one pipeline. SOMA can add its own first-party enrichers (e.g., TypeScript-specific, org-memory-specific) behind the same interface. A `brain-enricher` directory at `src/brain/enrichers/` holds them.
 
 ### ADR-005: Keep "SOMA" as codename, defer rename
 **Date:** 2026-04-23
@@ -367,6 +381,59 @@ Implementation:
 **Decision:** SOMA runs fully local by default. Cloudflare (Tunnel, Workers, R2, D1) are opt-in adapters behind pluggable interfaces.
 **Rationale:** Keeping local-first preserves the solo-founder / personal-KB use case. Cloud adapters add reach without coupling.
 **Consequences:** Engine interfaces (QueueEngine, HarvestSink, MemoryStore, IngressAdapter) must be thoughtful from day one.
+
+### ADR-007: "Orchestrator" preserved as internal term; Twin is the conceptual intent
+**Date:** 2026-04-23
+**Context:** Handoff's "Twin Principle" (§01) names the top-level AI layer a "digital twin" and explicitly says it IS the orchestrator reading the packet. User confirmed that the Twin naming is the conceptual intent but the codebase should keep "orchestrator" for internal reference to avoid a big-bang rename.
+**Decision:** Code, configs, logs, APIs, and agent templates use `orchestrator`. External-facing documentation (PROJECT_SOMA.md §1–3, future user-facing copy) explains that the orchestrator IS the twin — same entity, two names for two audiences.
+**Rationale:** Stable internal vocabulary across phases; avoid churn in every file that references the orchestrator role.
+**Consequences:** Every developer-facing surface uses "orchestrator." Every business-facing surface (installer prompts, onboarding UX, handoff ingestion) says "twin" or "your business's twin." Both names refer to the same runtime process.
+
+### ADR-008: Subscription-first execution; API is opt-in backup
+**Date:** 2026-04-23
+**Context:** Directive from user: prioritize the Claude Code subscription path first; the Anthropic API is a backup or opt-in choice.
+**Decision:**
+  - **Default worker handler** spawns `claude -p --output-format stream-json --verbose` subprocesses in the allocated worktree (gstack pattern). No API key required.
+  - **API handler** (gbrain's Anthropic SDK subagent with two-phase tool ledger, 710 LOC) is **ported in full** — but gated behind an explicit opt-in: per-job flag `engine: 'api'`, per-org default `SOMA_DEFAULT_ENGINE=api`, or CLI flag `--engine api`.
+  - Routing rule: if no explicit engine is specified, every job runs via subprocess. The API handler is never silently used.
+  - Rate-leases (gbrain's concurrency cap primitive) apply to both handlers — subscription has per-account rate limits too.
+**Rationale:** Supersedes ADR-003's softer "secondary" framing. API is not just "second-preference" — it is off-by-default and requires an explicit opt-in. Preserves the full API handler's capabilities (two-phase tool ledger, durable replay, etc.) without making it a stealth default that burns tokens.
+**Consequences:** Installer asks once: "subscription or API?" Default is subscription. Per-job opt-in is surfaced in the CLI and dashboard. Documentation leads with subscription; API is a "power user" section.
+
+### ADR-009: Solo Scale instantiation deferred; build the agnostic platform first
+**Date:** 2026-04-23
+**Context:** The user wants two SOMA deployments: (a) a private one modeled on the Solo Scale handoff, and (b) a public, sterile agnostic distribution. Direct instruction: "Do not ingest or build anything for solo scale right now, We just need to build the SOMA project first and then modify to solo scale."
+**Decision:**
+  - All Phase 1–5 work happens on the public `NulightJens/cortextos` fork with **zero Solo Scale content**.
+  - No handoff ingestion, no 6-canonical-department wiring, no pdf-generator / skool-agent / motion-canvas / solo-scale-writer integration, no brand-solo-scale tokens.
+  - The handoff files stay at `~/Downloads/solo-scale-handoff-2026-04-23` as reference material; PROJECT_SOMA.md does not ingest them.
+  - Solo Scale instantiation becomes its own project, started **after** SOMA Phase 5 (orchestrator rewrite) lands. At that point a private repo (e.g., `solo-scale-twin`) consumes SOMA as a submodule and layers in the handoff.
+**Rationale:** Keeps the platform honest: anything that gets built into SOMA must be useful to *any* twin-shaped business, not just Solo Scale. Enforces the agnostic-distribution goal at the code level. Prevents accidental entanglement.
+**Consequences:** PROJECT_SOMA.md's roadmap and §8 agnostic-distribution section are the contract until SOMA Phase 5. The private Solo Scale repo is a downstream concern, not a SOMA concern.
+
+### ADR-010: Full monochrome dashboard restyle (not token-only)
+**Date:** 2026-04-23
+**Context:** User directive: "modify Cortexos Full UI into the monochrome system that was given." Initial scope was token-layer only; this was insufficient — 67 chromatic Tailwind utilities across 23 component files + 3 inline hex values + 1 chart palette file all needed conversion.
+**Decision:** Full restyle in one pass:
+  - `globals.css` — OKLCH gold/mustard tokens → hex monochrome tokens bound to the shadcn contract. Destructive red is the one chromatic exception.
+  - `soma-tokens.css` — parallel `--soma-*` namespace (still present for explicit SOMA-wrapped surfaces).
+  - `layout.tsx` — body font default swapped Sora → Manrope; metadata title cortextOS → SOMA.
+  - All 25 component files swept: success/warning/info/category → monochrome + icon + label; destructive retained.
+  - `chart-theme.ts` — gold/blue/purple/pink/green palette → monochrome ramp `[#15171a, #4b4d52, #808286, #b4b5b8, #e5e7eb, #999999]`; severity `error` kept as `#ef4444`.
+  - 3 lingering inline hex values (urgent badge, markdown link color, cost-tracking chart) all converted.
+**Rationale:** "Full UI" means full UI. Partial token-layer work leaves the dashboard speaking two visual languages, which violates the brand's monochrome rule.
+**Consequences:** Known visual-regression risks (flagged by the sweep agent): `category-badge.tsx` categories now differ by label only; `fleet-health.tsx` mid-tier stability reads similarly to healthy; `goal-item.tsx` amber progress bars now look like any filled bar; `bottleneck-section.tsx` visual prominence reduced. Addressable iteratively if felt in real use.
+
+### ADR-011: Don't dumb down — preserve the finesse of every donor system
+**Date:** 2026-04-23
+**Context:** Load-bearing directive from user: *"do not reduce functionality of the system to match the narrative, effectively do not make the system dumber to adhere to intended narrative."*
+**Decision:** Every capability from every donor system ports **in full**, not as a subset. Narrative-driven simplification is banned. Specifically:
+  - gbrain: port the entire Minions package (queue, worker, all handlers including the 710-LOC subagent handler with two-phase tool ledger, aggregator, transcript, rate-leases, quiet-hours, stagger, backoff), `runCycle` with `yieldBetweenPhases`, `fail-improve` loop, page-of-record + timeline format, typed graph with confidence tags, pgvector hybrid search.
+  - gstack: port `WorktreeManager`, `session-runner` NDJSON parser, `{{PREAMBLE}}` template pipeline, `gen-skill-docs`, continuous-checkpoint `WIP:` commits, learnings JSONL, `/freeze` + `/guard` + `/careful` scope locks, sidebar-agent, pair-agent ref system (`@e1`/`@c1`), cross-model second opinions, intent classifier.
+  - graphify: elevated to first-class enrichment pipeline (see revised ADR-004) — tree-sitter AST, Leiden clustering, multimodal ingest, god-nodes.
+  - cortextOS: PM2 daemon + crash recovery + 71-hour rotation + file bus + Telegram poller all preserved.
+**Rationale:** The Twin Principle is the organizing narrative. It is not a ceiling on capability. A dumber twin is a worse twin. Every donor system solves a real problem; discarding capabilities to fit a cleaner story compounds into a weaker platform.
+**Consequences:** Phase-level scope expands. Phase 1 alone now includes the full gbrain subagent handler (gated per ADR-008 but ported in full). Phase 6 (brain) is larger than initially sketched. Phase lengths in §9 are indicative — real work expands to match capability preservation.
 
 ---
 
@@ -428,3 +495,21 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
   - `src/minions/engine.ts` — `QueueEngine` interface (`sqlite | pglite | postgres | d1`). Phase 1 ships SQLite impl only; other adapters fill the interface later.
 - `tsc --noEmit` clean for whole repo.
 - **Next up:** port `queue.ts` + `worker.ts` + `backoff.ts` + `quiet-hours.ts` into the SQLite engine, wire `cortextos jobs` CLI, port `jobs smoke --sigkill-rescue` as regression test.
+
+### 2026-04-23 (afternoon) — Directive recalibration + full dashboard monochrome
+- **User directive: "do not reduce functionality of the system to match the narrative."** Captured as ADR-011. Every donor system's capabilities now port in full; narrative-driven simplification is banned. Phase 1 scope expanded accordingly: full gbrain subagent handler (710 LOC) ports alongside `claude-subprocess` handler per ADR-008.
+- **ADR-004 revised.** Graphify elevated from "optional skill" to first-class enrichment pipeline writing into gbrain storage. Tree-sitter AST (25 languages), Leiden clustering, multimodal ingest, god-node analytics.
+- **ADR-007 added.** `orchestrator` is the internal term; `twin` is the conceptual intent. Dev-facing surfaces use `orchestrator`; business-facing surfaces use `twin`.
+- **ADR-008 added** (supersedes ADR-003's framing). Subscription-first, API **opt-in only** — default worker handler spawns `claude -p`. API subagent is ported in full but gated behind explicit `--engine api` / `SOMA_DEFAULT_ENGINE=api` / per-job flag.
+- **ADR-009 added.** Solo Scale instantiation deferred. SOMA built fully agnostic on `NulightJens/cortextos`; no handoff ingestion, no 6-department wiring, no Solo Scale content. Private repo (future `solo-scale-twin`) consumes SOMA after Phase 5 lands.
+- **ADR-010 added.** Full dashboard monochrome restyle executed (not token-only):
+  - `globals.css` — OKLCH gold/mustard → hex monochrome bound to shadcn contract.
+  - `soma-tokens.css` — parallel `--soma-*` namespace preserved.
+  - `layout.tsx` — body font Sora → Manrope; metadata cortextOS → SOMA.
+  - 25 component files swept (67 chromatic utilities replaced with monochrome + icons + labels, semantic meaning preserved via `IconCheck` / `IconAlertTriangle` / `IconAlertCircle` / shape variation for status dots).
+  - `chart-theme.ts` — chromatic palette → monochrome ramp; `severity.error` kept as `#ef4444` per ADR.
+  - 3 inline hex values (urgent badge, markdown link color, cost-tracking chart) all converted.
+  - `tsc --noEmit` clean.
+  - Flagged visual-regression risks (category badges, mid-tier stability, progress bars, bottleneck section) documented in ADR-010.
+- **Research ingestion complete.** All 9 handoff files read + brand tokens inspected. Twin Principle (§01) confirmed as conceptual alignment with SOMA's "brain = files, body = process" metaphor — the name SOMA maps directly onto the handoff's thesis. No handoff content ingested into code or memory per ADR-009.
+- **Phase 1 port in progress** under expanded scope. Full gbrain Minions package + both handler paths + supporting modules + queue dashboard page.

@@ -125,7 +125,9 @@ export function EventFeed({ initialEvents, filters }: EventFeedProps) {
       <div className="flex items-center gap-2 pb-2 text-xs text-muted-foreground">
         <span
           className={`inline-block h-2 w-2 rounded-full ${
-            isConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'
+            isConnected
+              ? 'bg-foreground animate-pulse'
+              : 'ring-2 ring-foreground ring-offset-1 ring-offset-background bg-transparent'
           }`}
         />
         {isConnected ? 'Live' : 'Reconnecting...'}

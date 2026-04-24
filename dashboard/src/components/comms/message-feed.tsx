@@ -46,7 +46,7 @@ export function MessageFeed({ messages, onAgentClick, onMessageClick }: MessageF
             <IconArrowRight size={12} className="text-muted-foreground/40" />
             <span className="text-sm font-semibold text-foreground">{msg.to}</span>
             {msg.priority === 'urgent' && (
-              <Badge className="text-[9px] h-4 px-1.5 font-semibold border-0" style={{ backgroundColor: 'rgba(142,20,41,0.12)', color: '#8E1429' }}>
+              <Badge className="text-[9px] h-4 px-1.5 font-semibold border-0 bg-destructive/10 text-destructive">
                 urgent
               </Badge>
             )}

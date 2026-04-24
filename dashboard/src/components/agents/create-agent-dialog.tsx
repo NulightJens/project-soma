@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { IconLoader2 } from '@tabler/icons-react';
+import { IconLoader2, IconCheck } from '@tabler/icons-react';
 
 interface CreateAgentDialogProps {
   open: boolean;
@@ -201,7 +201,10 @@ export function CreateAgentDialog({
             <p className="text-sm text-destructive">{error}</p>
           )}
           {success && (
-            <p className="text-sm text-green-600">Agent created!</p>
+            <p className="inline-flex items-center gap-1 text-sm text-foreground">
+              <IconCheck className="h-4 w-4" />
+              Agent created!
+            </p>
           )}
 
           <DialogFooter>

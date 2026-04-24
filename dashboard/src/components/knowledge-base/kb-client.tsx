@@ -120,7 +120,7 @@ export function KnowledgeBaseClient({ org, markdownContent, filePath }: Knowledg
     }
     if (collections.length === 0) {
       return (
-        <span className="flex items-center gap-1 text-[11px] text-amber-500">
+        <span className="flex items-center gap-1 text-[11px] text-muted-foreground italic">
           <IconAlertCircle size={11} />
           No collections
         </span>

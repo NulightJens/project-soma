@@ -74,7 +74,7 @@ export function GoalItem({ goal, onUpdate, onDelete }: GoalItemProps) {
       <div
         ref={setNodeRef}
         style={style}
-        className="rounded-lg border border-amber-500/30 bg-card p-4 space-y-3"
+        className="rounded-lg border border-border bg-card p-4 space-y-3"
       >
         <Input
           value={editTitle}
@@ -98,7 +98,7 @@ export function GoalItem({ goal, onUpdate, onDelete }: GoalItemProps) {
             max={100}
             value={editProgress}
             onChange={(e) => setEditProgress(Number(e.target.value))}
-            className="flex-1 h-1.5 accent-amber-500 cursor-pointer"
+            className="flex-1 h-1.5 accent-foreground cursor-pointer"
           />
         </div>
         <div className="flex gap-2">
@@ -143,7 +143,7 @@ export function GoalItem({ goal, onUpdate, onDelete }: GoalItemProps) {
         </div>
         <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
           <div
-            className="h-full rounded-full bg-amber-500 transition-all duration-300"
+            className="h-full rounded-full bg-foreground transition-all duration-300"
             style={{ width: `${goal.progress}%` }}
           />
         </div>
@@ -163,12 +163,12 @@ export function GoalItem({ goal, onUpdate, onDelete }: GoalItemProps) {
           size="sm"
           variant="ghost"
           onClick={handleDelete}
-          className={`h-7 w-7 p-0 ${confirmDelete ? 'text-red-400 hover:text-red-300' : ''}`}
+          className={`h-7 w-7 p-0 ${confirmDelete ? 'text-destructive hover:text-destructive' : ''}`}
         >
           <IconTrash className="h-3.5 w-3.5" />
         </Button>
         {confirmDelete && (
-          <span className="text-xs text-red-400 animate-pulse">Click again</span>
+          <span className="text-xs text-destructive animate-pulse">Click again</span>
         )}
       </div>
     </div>

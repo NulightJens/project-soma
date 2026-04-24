@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { IconAlertTriangle, IconCheck } from '@tabler/icons-react';
 import { Textarea } from '@/components/ui/textarea';
 import { updateBottleneck } from '@/lib/actions/goals';
 import { TimeAgo } from '@/components/shared/time-ago';
@@ -49,23 +50,27 @@ export function BottleneckSection({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border-2 border-amber-500/40 bg-amber-500/5 p-6">
+      <div className="rounded-xl border-2 border-dashed border-border bg-muted/40 p-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-amber-700 dark:text-amber-200">
-            Current Bottleneck
+          <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-foreground">
+            <IconAlertTriangle className="h-5 w-5" />
+            Current bottleneck
           </h2>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-muted-foreground tabular-nums">
               {charCount}/{charLimit}
             </span>
             {saveStatus === 'saving' && (
-              <span className="text-amber-400 animate-pulse">Saving...</span>
+              <span className="text-muted-foreground animate-pulse">Saving...</span>
             )}
             {saveStatus === 'saved' && (
-              <span className="text-green-600 dark:text-green-400">Saved</span>
+              <span className="inline-flex items-center gap-1 text-foreground">
+                <IconCheck className="h-3.5 w-3.5" />
+                Saved
+              </span>
             )}
             {saveStatus === 'error' && (
-              <span className="text-red-400">Error saving</span>
+              <span className="text-destructive">Error saving</span>
             )}
           </div>
         </div>
@@ -74,7 +79,7 @@ export function BottleneckSection({
           onChange={(e) => setValue(e.target.value.slice(0, charLimit))}
           onBlur={handleSave}
           placeholder="What is the current bottleneck for your team?"
-          className="min-h-24 text-lg border-amber-500/20 bg-transparent focus-visible:border-amber-500/50 focus-visible:ring-amber-500/20 resize-none"
+          className="min-h-24 text-lg border-border bg-transparent focus-visible:border-foreground/50 focus-visible:ring-ring/20 resize-none"
         />
       </div>
 
@@ -90,7 +95,7 @@ export function BottleneckSection({
                 key={`${entry.timestamp}-${i}`}
                 className="flex items-start gap-2 text-sm text-muted-foreground"
               >
-                <span className="shrink-0 mt-0.5 h-1.5 w-1.5 rounded-full bg-amber-500/50" />
+                <span className="shrink-0 mt-0.5 h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
                 <span className="flex-1 line-clamp-1">{entry.change}</span>
                 <TimeAgo
                   date={entry.timestamp}

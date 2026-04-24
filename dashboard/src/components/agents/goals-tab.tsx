@@ -151,7 +151,7 @@ export function GoalsTab({ agentName, org }: GoalsTabProps) {
           <p className="text-xs text-muted-foreground italic">{updatedLabel}</p>
 
           {message && (
-            <div className={`rounded-md px-3 py-2 text-xs ${message.type === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+            <div className={`rounded-md px-3 py-2 text-xs ${message.type === 'success' ? 'bg-muted text-foreground' : 'bg-destructive/10 text-destructive'}`}>
               {message.text}
             </div>
           )}

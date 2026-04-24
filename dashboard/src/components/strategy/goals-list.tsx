@@ -129,7 +129,7 @@ export function GoalsList({ goals: initialGoals, org, onRefresh }: GoalsListProp
           <Button
             onClick={() => setIsAdding(true)}
             variant="outline"
-            className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+            className="border-border text-foreground hover:bg-muted"
           >
             <IconPlus className="h-4 w-4 mr-1.5" />
             Add your first goal
@@ -161,7 +161,7 @@ export function GoalsList({ goals: initialGoals, org, onRefresh }: GoalsListProp
 
           {/* Add goal inline form */}
           {isAdding ? (
-            <div className="rounded-lg border border-amber-500/30 bg-card p-4 space-y-3">
+            <div className="rounded-lg border border-border bg-card p-4 space-y-3">
               <Input
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
@@ -202,7 +202,7 @@ export function GoalsList({ goals: initialGoals, org, onRefresh }: GoalsListProp
               onClick={() => setIsAdding(true)}
               variant="outline"
               size="sm"
-              className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+              className="border-border text-foreground hover:bg-muted"
             >
               <IconPlus className="h-3.5 w-3.5 mr-1.5" />
               Add Goal

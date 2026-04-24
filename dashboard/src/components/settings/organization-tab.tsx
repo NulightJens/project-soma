@@ -273,7 +273,7 @@ export function OrganizationTab() {
               </p>
             )}
             {goalsMessage && (
-              <div className={`rounded-md px-3 py-2 text-xs ${goalsMessage.type === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+              <div className={`rounded-md px-3 py-2 text-xs ${goalsMessage.type === 'success' ? 'bg-muted text-foreground' : 'bg-destructive/10 text-destructive'}`}>
                 {goalsMessage.text}
               </div>
             )}
@@ -376,7 +376,7 @@ export function OrganizationTab() {
                 </div>
 
                 {opMessage && (
-                  <div className={`rounded-md px-3 py-2 text-xs ${opMessage.type === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                  <div className={`rounded-md px-3 py-2 text-xs ${opMessage.type === 'success' ? 'bg-muted text-foreground' : 'bg-destructive/10 text-destructive'}`}>
                     {opMessage.text}
                   </div>
                 )}

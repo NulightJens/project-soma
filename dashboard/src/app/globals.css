@@ -5,12 +5,31 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * SOMA dashboard theme — Jens personal monochrome.
+ * Canonical tokens live in `soma-tokens.css` as `--soma-*`. This file
+ * binds the shadcn contract (`--primary`, `--accent`, etc.) to those
+ * tokens so every shadcn primitive inherits the monochrome palette
+ * without per-component rework.
+ *
+ * Hard rules (03-brand-jens-personal.md):
+ *   - Monochrome. `--destructive` is the ONLY chromatic exception.
+ *   - No gradients. No glow. Shadows whisper-quiet.
+ *   - Content radii ≤ 16px; utility 2–8px.
+ *   - Icons in `currentColor`.
+ *   - One typeface: Manrope 400/500/600/700/800.
+ *
+ * Success / warning states intentionally collapse to monochrome — meaning
+ * is carried by icon + label, not by chromatic fill. Destructive is red
+ * because it is a safety signal, not a brand accent.
+ */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sora), system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), "JetBrains Mono", monospace;
-  --font-heading: var(--font-sora), system-ui, sans-serif;
+  --font-sans: var(--font-manrope), var(--font-sora), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
+  --font-heading: var(--font-manrope), var(--font-sora), system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -44,20 +63,19 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-3xl: 14px;
+  --radius-4xl: 16px;
 }
 
 /* ============================================
-   Micro-interactions & Polish
+   Micro-interactions — quiet, monochrome
    ============================================ */
 
-/* Smooth page transitions */
 main {
   animation: fadeIn 0.2s ease-out;
 }
@@ -67,20 +85,17 @@ main {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Card hover lift effect */
 [data-slot="card"] {
   transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 [data-slot="card"]:hover {
-  box-shadow: 0 4px 12px -2px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-md);
 }
 
-/* Sidebar nav item transitions */
 aside a {
   transition: all 0.15s ease;
 }
 
-/* Badge pulse for urgent items */
 @keyframes badgePulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
@@ -89,28 +104,26 @@ aside a {
   animation: badgePulse 2s ease-in-out infinite;
 }
 
-/* Button press effect */
 button:active:not(:disabled) {
   transform: scale(0.97);
 }
 
-/* Input focus glow */
-input:focus, textarea:focus {
-  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
+/* Monochrome focus — 1px accent outline offset, no chromatic glow. */
+input:focus, textarea:focus, select:focus {
+  outline: 1px solid var(--ring);
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
-/* Smooth accordion expand */
 [data-slot="accordion-content"] {
   transition: height 0.2s ease-out;
 }
 
-/* Status dot pulse */
 @keyframes statusPulse {
   0%, 100% { box-shadow: 0 0 0 0 currentColor; }
   50% { box-shadow: 0 0 0 4px transparent; }
 }
 
-/* Sheet slide-in enhancement */
 [data-slot="sheet-content"] {
   animation: sheetSlideIn 0.25s ease-out;
 }
@@ -119,7 +132,6 @@ input:focus, textarea:focus {
   to { transform: translateX(0); opacity: 1; }
 }
 
-/* Dialog scale-in */
 [role="dialog"] {
   animation: dialogScaleIn 0.2s ease-out;
 }
@@ -128,7 +140,6 @@ input:focus, textarea:focus {
   to { transform: scale(1); opacity: 1; }
 }
 
-/* Table row hover */
 tr:hover td {
   background-color: rgba(0,0,0,0.02);
 }
@@ -136,7 +147,6 @@ tr:hover td {
   background-color: rgba(255,255,255,0.02);
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -158,96 +168,121 @@ tr:hover td {
   background: rgba(255,255,255,0.25);
 }
 
-/* ============================================
-   Mobile safe area for bottom nav bar
-   ============================================ */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ============================================
-   cortextOS Gold/Mustard Theme - Light Mode
+   SOMA Monochrome — Light Mode
    ============================================ */
 :root {
-  --background: oklch(1 0 0);                    /* #FFFFFF */
-  --foreground: oklch(0.187 0 0);                /* #1A1A1A */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.187 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.187 0 0);
-  --primary: oklch(0.618 0.13 75);               /* #B8860B - dark goldenrod */
-  --primary-foreground: oklch(1 0 0);            /* white */
-  --secondary: oklch(0.975 0.005 80);            /* #F8F7F4 */
-  --secondary-foreground: oklch(0.187 0 0);
-  --muted: oklch(0.975 0.005 80);               /* #F8F7F4 */
-  --muted-foreground: oklch(0.478 0 0);          /* #666666 */
-  --accent: oklch(0.762 0.125 82);               /* #D4AF37 - gold accent */
-  --accent-foreground: oklch(0.187 0 0);
-  --destructive: oklch(0.577 0.245 27.325);      /* #DC2626 */
-  --destructive-foreground: oklch(1 0 0);
-  --success: oklch(0.555 0.17 145);              /* #16A34A */
-  --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.72 0.17 75);                /* #F59E0B */
-  --warning-foreground: oklch(0.187 0 0);
-  --border: oklch(0.905 0.01 70);                /* #E5E0D8 */
-  --input: oklch(0.905 0.01 70);
-  --ring: oklch(0.618 0.13 75);                  /* matches primary */
-  --chart-1: oklch(0.762 0.125 82);              /* gold */
-  --chart-2: oklch(0.546 0.2 262);               /* blue */
-  --chart-3: oklch(0.507 0.22 293);              /* purple */
-  --chart-4: oklch(0.543 0.22 340);              /* pink */
-  --chart-5: oklch(0.555 0.17 160);              /* green */
-  --radius: 0.5rem;
-  --sidebar: oklch(0.975 0.005 80);
-  --sidebar-foreground: oklch(0.187 0 0);
-  --sidebar-primary: oklch(0.618 0.13 75);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.762 0.125 82);
-  --sidebar-accent-foreground: oklch(0.187 0 0);
-  --sidebar-border: oklch(0.905 0.01 70);
-  --sidebar-ring: oklch(0.618 0.13 75);
+  /* Base surfaces */
+  --background: #ffffff;
+  --foreground: #15171a;
+  --card: #ffffff;
+  --card-foreground: #15171a;
+  --popover: #ffffff;
+  --popover-foreground: #15171a;
+
+  /* Accent is the near-black. "The accent IS the near-black." */
+  --primary: #15171a;
+  --primary-foreground: #ffffff;
+  --secondary: #f9fafb;
+  --secondary-foreground: #15171a;
+  --muted: #f3f4f6;
+  --muted-foreground: #666666;
+  --accent: #f3f4f6;
+  --accent-foreground: #15171a;
+
+  /* Destructive — the ONE chromatic exception. Safety signal. */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  /* Success / warning collapse to monochrome — meaning carried by icon + label. */
+  --success: #15171a;
+  --success-foreground: #ffffff;
+  --warning: #15171a;
+  --warning-foreground: #ffffff;
+
+  /* Borders + fields */
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #15171a;
+
+  /* Chart ramp — monochrome descending weight */
+  --chart-1: #15171a;   /* accent */
+  --chart-2: #4b4d52;
+  --chart-3: #808286;
+  --chart-4: #b4b5b8;
+  --chart-5: #e5e7eb;
+
+  /* Radius cap: 8px content default. Tailwind radius-4xl is 16px ceiling. */
+  --radius: 8px;
+
+  /* Sidebar — slight surface lift */
+  --sidebar: #f9fafb;
+  --sidebar-foreground: #15171a;
+  --sidebar-primary: #15171a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f4f6;
+  --sidebar-accent-foreground: #15171a;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #15171a;
+
+  /* Whisper-quiet shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
 }
 
 /* ============================================
-   cortextOS Gold/Mustard Theme - Dark Mode
+   SOMA Monochrome — Dark Mode (true inversion)
    ============================================ */
 .dark {
-  --background: oklch(0.145 0 0);               /* #0F0F0F */
-  --foreground: oklch(0.975 0.005 80);           /* #F8F7F4 */
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.975 0.005 80);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.975 0.005 80);
-  --primary: oklch(0.762 0.125 82);              /* #D4AF37 - gold for dark mode */
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.187 0 0);                 /* #1A1A1A */
-  --secondary-foreground: oklch(0.975 0.005 80);
-  --muted: oklch(0.187 0 0);                    /* #1A1A1A */
-  --muted-foreground: oklch(0.6 0 0);
-  --accent: oklch(0.618 0.13 75);               /* #B8860B */
-  --accent-foreground: oklch(0.975 0.005 80);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(1 0 0);
-  --success: oklch(0.555 0.17 145);
-  --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.72 0.17 75);
-  --warning-foreground: oklch(0.187 0 0);
-  --border: oklch(0.25 0.015 60);               /* #2A2520 */
-  --input: oklch(0.25 0.015 60);
-  --ring: oklch(0.762 0.125 82);
-  --chart-1: oklch(0.762 0.125 82);
-  --chart-2: oklch(0.546 0.2 262);
-  --chart-3: oklch(0.507 0.22 293);
-  --chart-4: oklch(0.543 0.22 340);
-  --chart-5: oklch(0.555 0.17 160);
-  --sidebar: oklch(0.187 0 0);
-  --sidebar-foreground: oklch(0.975 0.005 80);
-  --sidebar-primary: oklch(0.762 0.125 82);
-  --sidebar-primary-foreground: oklch(0.975 0.005 80);
-  --sidebar-accent: oklch(0.25 0.015 60);
-  --sidebar-accent-foreground: oklch(0.975 0.005 80);
-  --sidebar-border: oklch(0.25 0.015 60);
-  --sidebar-ring: oklch(0.762 0.125 82);
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #111111;
+  --card-foreground: #fafafa;
+  --popover: #111111;
+  --popover-foreground: #fafafa;
+
+  --primary: #fafafa;
+  --primary-foreground: #0a0a0a;
+  --secondary: #111111;
+  --secondary-foreground: #fafafa;
+  --muted: #1a1a1a;
+  --muted-foreground: #a0a0a0;
+  --accent: #1a1a1a;
+  --accent-foreground: #fafafa;
+
+  --destructive: #f87171;
+  --destructive-foreground: #0a0a0a;
+
+  --success: #fafafa;
+  --success-foreground: #0a0a0a;
+  --warning: #fafafa;
+  --warning-foreground: #0a0a0a;
+
+  --border: #1f1f1f;
+  --input: #1f1f1f;
+  --ring: #fafafa;
+
+  --chart-1: #fafafa;
+  --chart-2: #b4b5b8;
+  --chart-3: #808286;
+  --chart-4: #4b4d52;
+  --chart-5: #1f1f1f;
+
+  --sidebar: #111111;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #fafafa;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #1f1f1f;
+  --sidebar-ring: #fafafa;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
 }
 
 @keyframes pulse-dot {
@@ -262,9 +297,16 @@ tr:hover td {
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-sora), system-ui, sans-serif;
+    font-family: var(--font-manrope), var(--font-sora), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html {
     @apply font-sans;
+  }
+  /* Sentence case headings by default — brand rule. */
+  h1, h2, h3, h4, h5, h6 {
+    text-transform: none;
+    letter-spacing: -0.01em;
   }
 }

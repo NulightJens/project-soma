@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart } from '@/components/charts/area-chart';
 import { BarChart } from '@/components/charts/bar-chart';
-import { CHART_GOLD, MODEL_COLORS } from '@/components/charts/chart-theme';
+import { CHART_GOLD, CHART_COLORS, MODEL_COLORS } from '@/components/charts/chart-theme';
 
 interface PlanUsageData {
   session: { used_pct: number; resets: string };
@@ -29,7 +29,12 @@ interface CostTrackingProps {
 }
 
 function UsageBar({ pct, label, sublabel }: { pct: number; label: string; sublabel?: string }) {
-  const color = pct < 50 ? 'bg-green-500' : pct < 80 ? 'bg-amber-500' : 'bg-red-500';
+  const color =
+    pct < 50
+      ? 'bg-foreground'
+      : pct < 80
+        ? 'bg-muted-foreground'
+        : 'bg-destructive';
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-sm">
@@ -124,7 +129,7 @@ export function CostTracking({
               })}
               xKey="date"
               yKeys={['Weekly %', 'Session %']}
-              colors={[CHART_GOLD, '#2563EB']}
+              colors={[CHART_COLORS[0], CHART_COLORS[1]]}
               height={200}
               showLegend
             />

@@ -24,6 +24,7 @@ import {
   IconRefresh,
   IconTrash,
   IconLoader2,
+  IconCheck,
 } from '@tabler/icons-react';
 import type { HealthStatus } from '@/lib/types';
 
@@ -160,10 +161,11 @@ export function AgentActions({
       {/* Feedback toast-like display */}
       {feedback && (
         <span
-          className={`absolute -bottom-6 right-0 z-10 whitespace-nowrap text-xs ${
-            feedback.type === 'success' ? 'text-green-600' : 'text-destructive'
+          className={`absolute -bottom-6 right-0 z-10 inline-flex items-center gap-1 whitespace-nowrap text-xs ${
+            feedback.type === 'success' ? 'text-foreground' : 'text-destructive'
           }`}
         >
+          {feedback.type === 'success' && <IconCheck className="h-3 w-3" />}
           {feedback.message}
         </span>
       )}

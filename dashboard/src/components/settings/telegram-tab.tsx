@@ -144,7 +144,7 @@ export function TelegramTab() {
                             title="Copy bot token"
                           >
                             {copiedField === `${c.org}/${c.agent}/botToken` ? (
-                              <IconCheck className="h-3.5 w-3.5 text-green-600" />
+                              <IconCheck className="h-3.5 w-3.5 text-foreground" />
                             ) : (
                               <IconCopy className="h-3.5 w-3.5 text-muted-foreground" />
                             )}
@@ -178,7 +178,7 @@ export function TelegramTab() {
                             title="Copy chat ID"
                           >
                             {copiedField === `${c.org}/${c.agent}/chatId` ? (
-                              <IconCheck className="h-3.5 w-3.5 text-green-600" />
+                              <IconCheck className="h-3.5 w-3.5 text-foreground" />
                             ) : (
                               <IconCopy className="h-3.5 w-3.5 text-muted-foreground" />
                             )}
@@ -200,7 +200,7 @@ export function TelegramTab() {
                               disabled={editing.saving}
                               title="Save"
                             >
-                              <IconCheck className="h-4 w-4 text-green-600" />
+                              <IconCheck className="h-4 w-4 text-foreground" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -225,7 +225,10 @@ export function TelegramTab() {
                           </Button>
                         )}
                         {rowSaveStatus?.status === 'saved' && (
-                          <span className="text-xs text-green-600">Saved</span>
+                          <span className="inline-flex items-center gap-1 text-xs text-foreground">
+                            <IconCheck className="h-3 w-3" />
+                            Saved
+                          </span>
                         )}
                         {rowSaveStatus?.status === 'error' && (
                           <span className="text-xs text-destructive">{rowSaveStatus.message ?? 'Error'}</span>

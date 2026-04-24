@@ -126,14 +126,14 @@ function decisionBadge(decision: string | null) {
   if (!decision) return null;
   if (decision === 'keep') {
     return (
-      <Badge variant="outline" className="gap-1 text-[11px] border-green-500/30 text-green-600 dark:text-green-400">
+      <Badge variant="outline" className="gap-1 text-[11px] border-border text-foreground">
         <IconCheck size={12} />
         kept
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="gap-1 text-[11px] border-red-500/30 text-red-600 dark:text-red-400">
+    <Badge variant="outline" className="gap-1 text-[11px] border-destructive text-destructive">
       <IconX size={12} />
       discarded
     </Badge>
@@ -145,7 +145,7 @@ function metricDelta(exp: Experiment) {
   const delta = exp.result_value - exp.baseline_value;
   const positive = exp.direction === 'higher' ? delta > 0 : delta < 0;
   return (
-    <span className={positive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+    <span className={positive ? 'text-foreground font-semibold' : 'text-destructive'}>
       {delta > 0 ? '+' : ''}{delta.toFixed(1)}
     </span>
   );
@@ -217,7 +217,7 @@ export default function ExperimentsPage() {
           <Card>
             <CardContent className="pt-4 pb-3">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Running</p>
-              <p className="text-2xl font-semibold mt-1 text-green-600 dark:text-green-400">{summary.running}</p>
+              <p className="text-2xl font-semibold mt-1 text-foreground">{summary.running}</p>
             </CardContent>
           </Card>
           <Card>
@@ -436,7 +436,7 @@ export default function ExperimentsPage() {
                                 </div>
                                 {exp.learning && (
                                   <p className="text-xs text-muted-foreground border-t pt-1.5 mt-1">
-                                    <IconBulb size={12} className="inline mr-1 text-amber-500" />
+                                    <IconBulb size={12} className="inline mr-1 text-foreground" />
                                     {exp.learning}
                                   </p>
                                 )}
@@ -470,16 +470,16 @@ export default function ExperimentsPage() {
                   >
                     <div className="shrink-0">
                       {exp.decision === 'keep' ? (
-                        <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                          <IconCheck size={16} className="text-green-500" />
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                          <IconCheck size={16} className="text-foreground" />
                         </div>
                       ) : exp.decision === 'discard' ? (
-                        <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
-                          <IconX size={16} className="text-red-500" />
+                        <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                          <IconX size={16} className="text-destructive" />
                         </div>
                       ) : exp.status === 'running' ? (
-                        <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                          <IconPlayerPlay size={16} className="text-blue-500" />
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                          <IconPlayerPlay size={16} className="text-foreground" />
                         </div>
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">

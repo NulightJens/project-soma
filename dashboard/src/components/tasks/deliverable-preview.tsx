@@ -342,7 +342,7 @@ const MD_STYLES = `
 .md-preview code { background: rgba(0,0,0,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
 .md-preview pre { background: rgba(0,0,0,0.06); padding: 16px; border-radius: 8px; overflow-x: auto; }
 .md-preview pre code { background: none; padding: 0; }
-.md-preview a { color: #2563eb; }
+.md-preview a { color: var(--foreground); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
 .md-preview table { border-collapse: collapse; width: 100%; margin: 1em 0; }
 .md-preview th, .md-preview td { border: 1px solid rgba(0,0,0,0.15); padding: 8px 12px; text-align: left; }
 .md-preview th { background: rgba(0,0,0,0.04); font-weight: 600; }

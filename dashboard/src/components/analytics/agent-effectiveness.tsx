@@ -58,8 +58,8 @@ export function AgentEffectiveness({ agents }: AgentEffectivenessProps) {
                       <span>{(agent.tokensToday / 1000).toFixed(0)}K tokens</span>
                       {agent.tokensPerTask !== undefined && (
                         <span className={
-                          agent.tokensPerTask < 15000 ? 'text-green-600' :
-                          agent.tokensPerTask < 40000 ? 'text-amber-600' : 'text-red-600'
+                          agent.tokensPerTask < 15000 ? 'text-foreground' :
+                          agent.tokensPerTask < 40000 ? 'text-muted-foreground' : 'text-destructive'
                         }>
                           {(agent.tokensPerTask / 1000).toFixed(1)}K/task
                         </span>

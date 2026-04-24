@@ -34,7 +34,7 @@ export function GoalHistory({ events }: GoalHistoryProps) {
           {visible.map((event, i) => (
             <div key={`${event.timestamp}-${i}`} className="relative flex items-start gap-3">
               {/* Timeline dot */}
-              <div className="absolute -left-4 top-1.5 h-2 w-2 rounded-full bg-amber-500/60 ring-2 ring-background" />
+              <div className="absolute -left-4 top-1.5 h-2 w-2 rounded-full bg-muted-foreground/60 ring-2 ring-background" />
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-foreground/80 line-clamp-2">

@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { IconCheck, IconAlertTriangle } from '@tabler/icons-react';
 import { fetchAllowedRoots, addAllowedRoot, removeAllowedRoot } from '@/lib/actions/settings';
 
 interface AllowedRootEntry {
@@ -98,9 +99,15 @@ export function AllowedRootsTab() {
                   <TableCell className="font-mono text-xs">{entry.path}</TableCell>
                   <TableCell>
                     {entry.exists ? (
-                      <span className="text-xs text-green-600">exists</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-foreground">
+                        <IconCheck className="h-3 w-3" />
+                        exists
+                      </span>
                     ) : (
-                      <span className="text-xs text-amber-600">missing</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground italic">
+                        <IconAlertTriangle className="h-3 w-3" />
+                        missing
+                      </span>
                     )}
                   </TableCell>
                   <TableCell>

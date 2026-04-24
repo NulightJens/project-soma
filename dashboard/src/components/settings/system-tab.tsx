@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { IconCheck } from '@tabler/icons-react';
 import { fetchSystemConfig, saveSystemConfig } from '@/lib/actions/settings';
 import type { SystemConfig } from '@/lib/actions/settings';
 
@@ -119,7 +120,10 @@ export function SystemTab() {
             {saving ? 'Saving...' : 'Save'}
           </Button>
           {status === 'saved' && (
-            <span className="text-sm text-green-600">Settings saved.</span>
+            <span className="inline-flex items-center gap-1 text-sm text-foreground">
+              <IconCheck className="h-4 w-4" />
+              Settings saved.
+            </span>
           )}
           {status === 'error' && (
             <span className="text-sm text-destructive">{errorMsg}</span>

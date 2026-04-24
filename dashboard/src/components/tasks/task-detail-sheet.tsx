@@ -27,7 +27,7 @@ import {
   OrgBadge,
   TimeAgo,
 } from '@/components/shared';
-import { IconPencil, IconFile, IconPhoto, IconFileText, IconCode } from '@tabler/icons-react';
+import { IconPencil, IconFile, IconPhoto, IconFileText, IconCode, IconAlertTriangle } from '@tabler/icons-react';
 import { DeliverablePreview } from '@/components/tasks/deliverable-preview';
 import type { Task, TaskOutput, TaskStatus, TaskPriority } from '@/lib/types';
 
@@ -230,7 +230,8 @@ export function TaskDetailSheet({
             )}
             <OrgBadge org={task.org} />
             {task.needs_approval && (
-              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground italic">
+                <IconAlertTriangle className="h-3 w-3" />
                 Needs Approval
               </span>
             )}

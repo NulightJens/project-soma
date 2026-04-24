@@ -332,7 +332,7 @@ export default function WorkflowsPage() {
               <CardContent className="pt-0 space-y-3">
                 {/* Error banner */}
                 {agent.error && (
-                  <div className="rounded-md bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm text-red-600 dark:text-red-400 flex items-center justify-between">
+                  <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive flex items-center justify-between">
                     <span>{agent.error}</span>
                     <button
                       onClick={() =>
@@ -445,7 +445,7 @@ export default function WorkflowsPage() {
                             <IconEdit size={16} />
                           </button>
                           <button
-                            className="p-1.5 rounded hover:bg-red-500/10 text-red-500"
+                            className="p-1.5 rounded hover:bg-destructive/10 text-destructive"
                             title="Delete"
                             onClick={(e) => {
                               e.stopPropagation();
