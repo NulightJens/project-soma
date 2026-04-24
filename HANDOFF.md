@@ -17,7 +17,7 @@
 
 - **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS; absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
-- **Last commit:** (to land this session) — "soma: port protected-names gate (shell + subagent + subagent_aggregator)"
+- **Last commit:** `2218d65` — "soma: port protected-names gate (shell + subagent + subagent_aggregator)"
 - **Green signals:** 84 Minions vitest cases passing (engine 7 + queue 34 + worker 11 + attachments 19 + protected-names 13); `npx tsc --noEmit` clean; dashboard runs at `localhost:3000` in full monochrome; `cortextOS` daemon running a single enabled agent (`system`) via PM2.
 - **Red signals:** none right now. Phase 1 scope is ~75% done — handlers/CLI/daemon-integration/dashboard page pending.
 - **Do not:** ingest any Solo Scale handoff content (ADR-009). Build SOMA fully agnostic first.
@@ -157,7 +157,7 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 ## Commit timeline (SOMA work)
 
 ```
-(next)   soma: port protected-names gate (shell + subagent + subagent_aggregator)
+2218d65  soma: port protected-names gate (shell + subagent + subagent_aggregator)
 bad585c  docs(handoff): fill in 6638568 commit hash for attachments port
 6638568  soma: port attachments (validation + CRUD + schema + tests)
 bf5165d  soma: ADR-014 — user-facing edge filters both directions
