@@ -298,6 +298,7 @@ Implementation:
 - [ ] Add `worktree_allocate` handler: creates `~/.cortextos/<instance>/worktrees/<job_id>` on branch `soma/job/<job_id>`.
 - [ ] Patch harvester: diff base → head, content-SHA dedup to `~/.cortextos/<instance>/harvests/`.
 - [ ] `/freeze` skill equivalent as a job flag.
+- [ ] **Hermes adaptability:** keep the worktree spawn contract body-agnostic — signature is `spawn(cmd, args, env, cwd)` rather than `spawnClaude(...)`. Any future `hermes`-body type (or other) substitutes without changing the worktree manager.
 
 ### Phase 3 — claude-subprocess worker (1 week)
 - [ ] `claude-subprocess` handler spawns `claude -p --output-format stream-json --verbose` in worktree `cwd`.
@@ -316,6 +317,7 @@ Implementation:
 - [ ] Port `gen-skill-docs` with `{{PREAMBLE}}` + `{{BRAIN_CONTEXT_LOAD}}` injection.
 - [ ] Migrate existing `templates/` (agent, orchestrator, analyst) to new format.
 - [ ] CI: diff-exit-code guard on generated skills.
+- [ ] **Hermes adaptability:** scan `~/.hermes/hermes-agent/hermes_cli/skills_hub.py` + any associated schema BEFORE locking SOMA's unified schema. If Hermes' skills-hub format has fields our schema doesn't, decide at that point whether to (a) extend SOMA's schema to accept them, (b) ship a Hermes → SOMA converter, or (c) live with a two-way port. Locking a schema without this check creates a permanent Hermes-skill incompatibility.
 
 ### Phase 6 — Brain layer (2–3 weeks)
 - [ ] Port gbrain page-of-record format + directory layout.
