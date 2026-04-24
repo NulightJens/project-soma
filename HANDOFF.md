@@ -17,7 +17,7 @@
 
 - **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS; absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
-- **Last commit:** (to land this session) — "soma: dashboard Jobs page (ADR-014 progressive disclosure)"
+- **Last commit:** `17eb305` — "soma: dashboard Jobs page (ADR-014 progressive disclosure)"
 - **Green signals:** 91 Minions+CLI vitest cases passing; `npx tsc --noEmit` clean across both the SOMA package AND the `dashboard/` package; `cortextos jobs` CLI verified end-to-end; dashboard `/jobs` route live at `localhost:3000/jobs` with plain-language summaries + progressive-disclosure raw-JSON toggle per ADR-014; `cortextos-daemon` online via PM2.
 - **Red signals:** none. Phase 1 scope is ~90% done — handlers/shell (HITL-gated) + unified runner + SIGKILL-rescue regression remain.
 - **Do not:** ingest any Solo Scale handoff content (ADR-009). Build SOMA fully agnostic first.
@@ -167,7 +167,7 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 ## Commit timeline (SOMA work)
 
 ```
-(next)   soma: dashboard Jobs page (ADR-014 progressive disclosure)
+17eb305  soma: dashboard Jobs page (ADR-014 progressive disclosure)
 d55ada3  docs(handoff): fill in 6c5ae0f commit hash for CLI/handlers/PM2 cluster
 6c5ae0f  soma: cortextos jobs CLI + built-in handlers + PM2 jobs-worker
 b461ef0  soma: add resume-prompt template + ~500K context handoff protocol
