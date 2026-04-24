@@ -17,9 +17,9 @@
 
 - **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS (upstream); absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
-- **Last commit:** `408de8f` — "soma: port handlers/shell.ts behind SOMA_ALLOW_SHELL_JOBS env gate"
-- **Green signals:** 110 Minions+CLI+shell-handler vitest cases passing (was 92; +15 shell handler + 3 env-gate); `npx tsc --noEmit` clean across both the SOMA package AND the `dashboard/` package; `cortextos jobs` CLI verified end-to-end; dashboard `/jobs` route live at `localhost:3000/jobs` with plain-language summaries + progressive-disclosure raw-JSON toggle per ADR-014; `cortextos-daemon` online via PM2. Display surface rebranded to Project SOMA per ADR-015 (npm name → `soma`; CLI binary / state dir / PM2 app names deferred to a later migration slot).
-- **Red signals:** none. Phase 1 scope is ~95% done — unified runner (HITL-required for OAuth/API-key handling) remains, plus the dashboard submit-UI (intent-parser) slot.
+- **Last commit:** `78987cf` — "soma: unified runner handler + subscription engine (ADR-008, ADR-012)"
+- **Green signals:** 136 Minions+CLI+runner vitest cases passing (was 110; +23 runner + 3 env-gate); `npx tsc --noEmit` clean across both the SOMA package AND the `dashboard/` package; `cortextos jobs` CLI verified end-to-end; dashboard `/jobs` route live at `localhost:3000/jobs` with plain-language summaries + progressive-disclosure raw-JSON toggle per ADR-014; `cortextos-daemon` online via PM2. Display surface rebranded to Project SOMA per ADR-015 (npm name → `soma`; CLI binary / state dir / PM2 app names deferred to a later migration slot). Unified runner is live behind `SOMA_ALLOW_SUBAGENT_JOBS=1` — subscription engine ships; API-engine body is a stub until a follow-up slot.
+- **Red signals:** none. Phase 1 scope is ~97% done — API-engine body (needs schema + SDK + tool registry) and dashboard submit-UI (intent-parser) slot remain.
 - **Do not:** ingest any Solo Scale handoff content (ADR-009). Build SOMA fully agnostic first.
 
 ---
@@ -29,9 +29,9 @@
 ```bash
 cd ~/cortextos
 git status                                               # should be clean
-git log --oneline -3                                     # confirm at latest shell-handler commit
+git log --oneline -3                                     # confirm at latest runner commit
 npx tsc --noEmit                                         # silent = pass
-npx vitest run tests/minions-*.test.ts tests/cli-*.test.ts  # 110 passed (incl. shell handler + SIGKILL-rescue regression)
+npx vitest run tests/minions-*.test.ts tests/cli-*.test.ts  # 136 passed (incl. runner + shell + SIGKILL-rescue regression)
 pm2 list                                                 # cortextos-daemon online
 curl -sI http://localhost:3000/login                     # HTTP/1.1 200 OK
 ```
@@ -43,7 +43,7 @@ If any of the above fails, see §9 Environment + §10 Gotchas before proceeding.
 ## Where you are on the roadmap
 
 Phase 0 — fork + foundation ........ **DONE**
-Phase 1 — Minions queue ............ **~95% done** ← you are here
+Phase 1 — Minions queue ............ **~97% done** ← you are here
 Phase 2 — Worktree isolation ....... not started
 Phase 3 — Claude-subprocess worker . not started
 Phase 4 — Orchestrator rewrite ..... not started
@@ -69,8 +69,9 @@ Phase 1 breakdown — what's done vs. what's next:
 | Daemon integration (PM2 jobs-worker entry) | ✓ done | `src/cli/ecosystem.ts` emits a `cortextos-jobs-worker` PM2 app alongside the daemon. Env: `SOMA_MINIONS_DB`, `SOMA_WORKER_QUEUE`, `SOMA_WORKER_CONCURRENCY`, `SOMA_WORKER_HANDLERS`. |
 | Dashboard Jobs page | ✓ done | `dashboard/src/app/(dashboard)/jobs/page.tsx` + `api/jobs` route + `lib/data/minions.ts`. Primary view is plain-language summaries (ADR-014). Progressive disclosure via "Show raw JSON" toggle in the detail sheet. Cancel/retry shell out to `cortextos jobs` CLI so state-machine logic stays in queue.ts. |
 | `handlers/shell.ts` | ✓ done | `src/minions/handlers/shell.ts` + `tests/minions-shell-handler.test.ts`. Dual-gated: `SOMA_ALLOW_SHELL_JOBS=1` env flag + protected-names trust check. `resolveBuiltinHandlers()` in `src/cli/job-handlers.ts` is the CLI entry point. |
-| `handlers/runner.ts` — unified subscription + API per ADR-008/012 | next (HITL-gated for OAuth/API-key handling) | — |
-| Dashboard submit-UI + intent parser (ADR-014) | next | `dashboard/` — freeform freeform-phrase intent parser emitting structured `queue.add()` calls; structured form behind an "Advanced" toggle. Dashboard is an untrusted submitter. |
+| Unified `handlers/runner.ts` + `engines/subscription.ts` | ✓ done | Open engine registry (`registerEngine`/`getEngine` in `registry.ts` — leaf module to dodge ESM TDZ). Default `subscription` engine spawns `claude -p --output-format stream-json --verbose`; pure `ingestNDJSONLine` parser + kill ladder on BOTH `ctx.signal` AND `ctx.shutdownSignal`. Registered under `subagent` + `subagent_aggregator` behind `SOMA_ALLOW_SUBAGENT_JOBS=1`. |
+| `engines/api.ts` — Anthropic SDK path with crash-resumable replay | stub only; follow-up slot | `src/minions/handlers/engines/api.ts` registers the name and throws `UnrecoverableError` explaining the deferral. Needs new schema (`minion_subagent_messages` + `minion_subagent_tool_executions`), Anthropic SDK dep, tool registry, separate HITL on ANTHROPIC_API_KEY surface. |
+| Dashboard submit-UI + intent parser (ADR-014) | next | `dashboard/` — freeform-phrase intent parser emitting structured `queue.add()` calls; structured form behind an "Advanced" toggle. Dashboard is an untrusted submitter. |
 
 ---
 
@@ -143,6 +144,11 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 | `tests/cli-jobs-sigkill-rescue.test.ts` | 135 | 1 regression case — spawns `cortextos jobs work`, waits for claim, `SIGKILL`s the worker, verifies a second worker's stall sweep requeues the orphaned lock (stalled_counter ≥ 1). Complements the in-process stall-rescue test. |
 | `src/minions/handlers/shell.ts` | 311 | Shell subprocess handler (ported from gbrain MIT © Garry Tan). Env allowlist `[PATH, HOME, USER, LANG, TZ, NODE_ENV]` + caller override. `/bin/sh -c` absolute path. UTF-8-safe `TailBuffer` for 64KB stdout / 16KB stderr tails. SIGTERM → 5s grace → SIGKILL wired to BOTH `ctx.signal` (timeout/cancel/lock-loss) AND `ctx.shutdownSignal` (worker SIGTERM/SIGINT). |
 | `tests/minions-shell-handler.test.ts` | ~165 | 15 vitest cases — validation (7: missing/both cmd-argv, non-string argv, missing/relative cwd, non-object env, non-string env value) + execution (6: cmd happy path, argv happy path, non-zero exit, env-allowlist blocks `process.env` secrets, caller `env` override reaches child, stdout truncation with `[truncated N bytes]` marker) + abort (2: `ctx.signal` + `ctx.shutdownSignal` each trigger kill ladder + throw `aborted:` Error). |
+| `src/minions/handlers/registry.ts` | ~80 | Pure engine registry. `register`/`get`/`list`/`resetForTests`. All shared runner types (`RunnerEngine`, `RunnerResult`, `RunnerTokens`, `RunnerToolCall`, `RunnerEngineParams`) live here so engines never import from `runner.ts` (would be a circular-import ESM TDZ). |
+| `src/minions/handlers/runner.ts` | ~95 | Unified handler. Validates `data.prompt`, dispatches to engine via `data.engine` → `SOMA_DEFAULT_ENGINE` → `'subscription'` (ADR-008 default). Re-exports registry API. Imports `./engines/*` at the bottom so side-effect auto-registration happens when any consumer imports `runnerHandler`. |
+| `src/minions/handlers/engines/subscription.ts` | ~350 | `claude -p --output-format stream-json --verbose --dangerously-skip-permissions` spawn. Prompt via stdin (no shell escaping). Env allowlist mirrors `src/pty/agent-pty.ts` keepVars + `CLAUDE_CODE_OAUTH_TOKEN`. Pure `ingestNDJSONLine(acc, line)` parser + `buildClaudeArgs(params)` CLI-arg builder (both testable without subprocess). Per-turn `ctx.log({type:'llm_turn',...})` + `ctx.log({type:'tool_call',...})` + running `ctx.updateTokens`. SIGTERM→5s→SIGKILL kill ladder wired to both `ctx.signal` and `ctx.shutdownSignal`. Auto-registers via `makeSubscriptionEngine()` at module load. |
+| `src/minions/handlers/engines/api.ts` | 30 | Stub. Registers the name `'api'` so the engine-selection seam is live; throws `UnrecoverableError` pointing operators at subscription + the follow-up slot. |
+| `tests/minions-runner.test.ts` | ~320 | 23 vitest cases — engine registry (5: register/get/duplicate-rejection/list-sorted/unknown-name UnrecoverableError), production defaults (1: subscription + api both registered on load), handler validation + dispatch (5: missing prompt, empty prompt, api stub throws, `data.engine='api'` routes through, `SOMA_DEFAULT_ENGINE` fallback), pure `ingestNDJSONLine` (4: skip malformed, assistant+tool_use+tokens, result event, multi-turn token accumulation), pure `buildClaudeArgs` (4: defaults, allowed_tools, system, no-system), subscription e2e via fake `claude` shell script (4: happy path with cost + tokens, error_max_turns classification, non-zero exit without result, ctx.signal abort kill-ladder). |
 
 ### Dashboard
 | File | Purpose |
@@ -167,6 +173,8 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 ## Commit timeline (SOMA work)
 
 ```
+78987cf  soma: unified runner handler + subscription engine (ADR-008, ADR-012)
+4e64183  docs(handoff): fill in 89b3631 + 408de8f commits (rename + shell)
 408de8f  soma: port handlers/shell.ts behind SOMA_ALLOW_SHELL_JOBS env gate
 89b3631  soma: rebrand display surface to Project SOMA (ADR-015)
 f5b9ef6  docs(handoffs): snapshot HANDOFF.md after Phase 1 usable-loop milestone
@@ -239,7 +247,7 @@ Full text in `PROJECT_SOMA.md` §10. Quick reference:
 
 ## Next moves (ranked)
 
-1. **Port unified `handlers/runner.ts`** (~710 LOC gbrain `handlers/subagent.ts` Anthropic SDK path + gstack `claude -p` NDJSON pattern) per ADR-012. Engine selection: `subscription` (default, subprocess) vs `api` (Anthropic SDK, two-phase tool ledger). Shared code: transcript persistence, turn budgeting, cache discipline. Register under protected names `subagent` + `subagent_aggregator`. **Hermes adaptability:** implement engine selection as an open registry (`registerEngine(name, impl)`), not a closed `'subscription' | 'api'` union, so Hermes drops in later as a third engine without touching the existing two. Output parser (stream → transcript / tokens / tool calls) is a per-engine seam, not hardcoded to `claude -p` NDJSON. **CLAUDE.md §6 HITL: requires review — OAuth/API-key handling.**
+1. **Port API engine body** (follow-up to the unified runner). `src/minions/handlers/engines/api.ts` is a stub today; the body ports gbrain's 710-LOC `handlers/subagent.ts` with: crash-resumable replay (new schema: `minion_subagent_messages` + `minion_subagent_tool_executions`), Anthropic SDK as a dep, `ANTHROPIC_API_KEY` handling, two-phase tool ledger, rate leases via our existing `engine.acquireLock`, tool registry (port or simplify `buildBrainTools`/`filterAllowedTools`). **CLAUDE.md §6 HITL: requires review — ANTHROPIC_API_KEY surface + schema change.** Hermes adaptability preserved: the engine registry is open so Hermes drops in as a third engine without touching subscription/api.
 
 2. **Dashboard: submit UI + intent parser** (new slot). Per ADR-014: freeform phrases routed through a language-model intent parser that emits structured `queue.add(...)` calls. Structured form is a fallback behind an "Advanced" toggle, not the primary path. Dashboard is an **untrusted** submitter — never sets `allowProtectedSubmit`; intents resolving to `shell`/`subagent` surface as an approval step, not a direct submit.
 
@@ -248,14 +256,20 @@ Full text in `PROJECT_SOMA.md` §10. Quick reference:
 ### Starter commands
 
 ```bash
-# Resume at next move #1 — unified runner (HITL-gated)
+# End-to-end subscription-engine smoke (requires `claude` CLI installed + OAuth'd):
 cd ~/cortextos
-cat /tmp/gbrain/src/core/minions/handlers/subagent.ts  # read first (~710 LOC, API path)
-cat /tmp/gstack/test/helpers/session-runner.ts         # read too (subscription/NDJSON pattern)
-# Port to src/minions/handlers/runner.ts as a unified entry point with an
-# open engine registry. Register under 'subagent' + 'subagent_aggregator'.
+npm run build   # if you haven't rebuilt since the runner landed
+export SOMA_ALLOW_SUBAGENT_JOBS=1
+TMPDB=$(mktemp -d)/smoke.db
+node dist/cli.js jobs submit subagent --trusted \
+  --data '{"prompt":"say hi in one word","max_turns":1}' --db "$TMPDB"
+node dist/cli.js jobs work --db "$TMPDB" --handlers subagent --poll-interval 500 &
+sleep 30 && kill %1
+node dist/cli.js jobs get 1 --db "$TMPDB"
+# Expect a completed job with a RunnerResult in `result`: engine, result text,
+# tool_calls, cost_usd, tokens, turns_used, exit_reason: 'success'.
 
-# End-to-end shell smoke (now works with the gate):
+# End-to-end shell smoke:
 export SOMA_ALLOW_SHELL_JOBS=1
 TMPDB=$(mktemp -d)/smoke.db
 node dist/cli.js jobs submit shell --trusted --data '{"cmd":"echo hi","cwd":"/tmp"}' --db "$TMPDB"
@@ -268,7 +282,7 @@ curl -sI http://localhost:3000/jobs
 # 307 → /login?callbackUrl=/jobs  (expected)
 
 # Discipline:
-npx vitest run tests/minions-*.test.ts tests/cli-*.test.ts   # expect 110 passed
+npx vitest run tests/minions-*.test.ts tests/cli-*.test.ts   # expect 136 passed
 (cd dashboard && npx tsc --noEmit)
 npx tsc --noEmit
 git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-minions
@@ -375,4 +389,4 @@ git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-min
 
 ---
 
-*Last updated: 2026-04-23 (late night) after the rename sweep (ADR-015) and the shell handler port landed. Phase 1 at ~95% — only the unified runner (HITL-gated per CLAUDE.md §6 for OAuth/API-key handling) and the dashboard submit-UI/intent-parser slot remain to close Phase 1. SOMA infra migration (state dir / PM2 / bin alias) is a follow-up slot per ADR-015 deferrals.*
+*Last updated: 2026-04-24 after the unified runner + subscription engine landed. Phase 1 at ~97% — the API-engine body (needs new schema + Anthropic SDK dep + tool registry; separate HITL on ANTHROPIC_API_KEY) and the dashboard submit-UI/intent-parser slot remain to close Phase 1. SOMA infra migration (state dir / PM2 / bin alias) is a follow-up slot per ADR-015 deferrals.*
