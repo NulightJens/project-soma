@@ -24,4 +24,8 @@ export default defineConfig({
     js: '#!/usr/bin/env node',
   },
   external: ['node-pty'],
+  // Copy the Minions DDL alongside the bundle. engine-sqlite.ts resolves
+  // `schema.sql` via `__dirname` which, in the bundled CJS, points at
+  // `dist/` — so the file has to live there at runtime.
+  onSuccess: 'cp src/minions/schema.sql dist/schema.sql',
 });
