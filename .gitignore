@@ -43,7 +43,13 @@ knowledge-base/scripts/__pycache__/
 tests/playwright/dashboard-ui.spec.ts
 
 # Local ops docs (personal, not for public repo)
-docs/
+# Use `docs/*` instead of `docs/` so git can honor the !docs/handoffs
+# exception below — gitignore can re-include children of an ignored
+# directory only if the directory itself isn't fully excluded.
+docs/*
+# ...except SOMA handoff snapshots — part of the public project record.
+!docs/handoffs/
+!docs/handoffs/**
 
 # Internal developer/planning notes (not for public repo)
 KNOWN-ISSUES.md

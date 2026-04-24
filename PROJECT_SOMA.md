@@ -579,3 +579,12 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **Test coverage:** `tests/minions-queue.test.ts` — 27 vitest cases covering add + idempotency + parent DAG + max_children + maxSpawnDepth; claim priority + name filter + timeout_at; complete + token-fence + parent resolve + child_done; fail + delayed retry + dead + fail_parent + remove_dep; stall rescue + timeout handling + delayed promotion; cancel cascade; pause / resume / retry / replay; inbox read/write; renewLock token-fence; updateTokens accumulate; prune + stats. 34/34 pass (up from 7 in the engine-only suite → 41 total Minions tests green). `tsc --noEmit` clean repo-wide.
 - **MinionQueue exported** via `src/minions/index.ts` barrel.
 - **Next up:** port `worker.ts` (main loop, lock renewal, handler registry, SIGTERM → shutdown signal) + port `attachments.ts` + wire `cortextos jobs` CLI + regression test for `--sigkill-rescue`.
+
+### 2026-04-23 (night) — Handoff system in place
+- **`HANDOFF.md` created at repo root** — live resume-here snapshot (10 sections: 30-sec resume, verify commands, roadmap position, mental model, file map, commit timeline, ADR index, open threads, next moves ranked with starter commands, external refs, environment, gotchas, update checklist). ~470 lines, diff-friendly, no prose essays.
+- **`docs/handoffs/`** directory created for dated milestone snapshots. First snapshot: `2026-04-23-01-phase1-queue-landed.md`.
+- **`CLAUDE.md` §8 updated** to reference HANDOFF.md as the *first* thing read on resume (before this file). Added end-of-session checklist: update HANDOFF.md per its §10, snapshot at milestones, append to PROJECT_SOMA.md §13 chronicle, update the `project_*` auto-memory.
+- **Auto-memory `project_agent_infra_setup.md` rewritten** to point at HANDOFF.md as the entry point. Trimmed duplicated state — HANDOFF.md is authoritative; memory just routes.
+- **Purpose:** future sessions (any Claude Code instance opening this repo cold) get from "hi" to "I know what I'm doing" in under two minutes. No re-deriving context from commits + source code every time.
+- **No new code.** Pure docs pass. `tsc --noEmit` still clean (it's just markdown).
+- **Next up unchanged:** port `worker.ts` + attachments + protected-names gate + shell handler + unified runner + CLI + sigkill-rescue regression test + daemon integration + dashboard queue page.

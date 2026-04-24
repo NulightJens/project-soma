@@ -92,12 +92,15 @@ These stop agent-drift.
   - Already in use; the current SOMA project memory is `project_agent_infra_setup.md`.
 - **Repo-level source of truth:** `PROJECT_SOMA.md`. Every non-trivial session appends to §13 chronicle (dated entry, what changed, what's next).
 - **Retros:** when a session produces a meaningful decision (new ADR, scope shift, named directive from user), append a chronicle entry in `PROJECT_SOMA.md` §13 AND update the `project_agent_infra_setup.md` memory file. Both are required — the chronicle captures decisions in repo history; the memory carries state across chat sessions.
-- **Before resuming any SOMA session:**
-  1. Read `PROJECT_SOMA.md` §13 chronicle's last entry
-  2. Read `MEMORY.md` index + any `project_*` memories
-  3. Read this CLAUDE.md in full (you are doing that now)
-  4. Check `git log --oneline -10 soma/phase-*` for recent work
-  5. THEN respond to the user
+- **Before resuming any SOMA session** — ordered, cold-start to productive in under two minutes:
+  1. Read `HANDOFF.md` (the resume-here snapshot — 30-second orientation + next moves ranked)
+  2. Read this CLAUDE.md in full (you are doing that now — operating harness)
+  3. Read `PROJECT_SOMA.md` §13 chronicle's last entry (what the previous session did)
+  4. Read `MEMORY.md` index + any `project_*` / `feedback_*` memories
+  5. Check `git log --oneline -10 soma/phase-*` for recent commits
+  6. Run the verify block from HANDOFF.md §2 to confirm nothing's drifted
+  7. THEN respond to the user
+- **When a non-trivial session ends:** update `HANDOFF.md` per its §10 "How to update this file" checklist, snapshot to `docs/handoffs/YYYY-MM-DD-NN-<topic>.md` at milestones, append to `PROJECT_SOMA.md` §13 chronicle, update the `project_*` memory file.
 
 ## 9. Database & Timezone Rules
 
