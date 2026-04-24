@@ -17,7 +17,7 @@
 
 - **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS; absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
-- **Last commit:** (to land this session) — "soma: SIGKILL-rescue regression against real subprocess worker"
+- **Last commit:** `986102e` — "soma: SIGKILL-rescue regression against real subprocess worker"
 - **Green signals:** 92 Minions+CLI+regression vitest cases passing (92 includes a real-subprocess SIGKILL-rescue regression); `npx tsc --noEmit` clean across both the SOMA package AND the `dashboard/` package; `cortextos jobs` CLI verified end-to-end; dashboard `/jobs` route live at `localhost:3000/jobs` with plain-language summaries + progressive-disclosure raw-JSON toggle per ADR-014; `cortextos-daemon` online via PM2.
 - **Red signals:** none. Phase 1 scope is ~92% done — handlers/shell (HITL-gated) + unified runner (also needs HITL review for OAuth/API-key handling) remain, plus the later dashboard submit-UI (intent-parser) slot.
 - **Do not:** ingest any Solo Scale handoff content (ADR-009). Build SOMA fully agnostic first.
@@ -168,7 +168,7 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 ## Commit timeline (SOMA work)
 
 ```
-(next)   soma: SIGKILL-rescue regression against real subprocess worker
+986102e  soma: SIGKILL-rescue regression against real subprocess worker
 75726b3  docs(handoff): fill in 17eb305 commit hash for dashboard Jobs page
 17eb305  soma: dashboard Jobs page (ADR-014 progressive disclosure)
 d55ada3  docs(handoff): fill in 6c5ae0f commit hash for CLI/handlers/PM2 cluster
