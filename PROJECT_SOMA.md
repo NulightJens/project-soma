@@ -463,6 +463,21 @@ Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is
 **Rationale:** The Twin Principle is the organizing narrative. It is not a ceiling on capability. A dumber twin is a worse twin. Every donor system solves a real problem; discarding capabilities to fit a cleaner story compounds into a weaker platform.
 **Consequences:** Phase-level scope expands. Phase 1 alone now includes the full gbrain subagent handler (gated per ADR-008 but ported in full). Phase 6 (brain) is larger than initially sketched. Phase lengths in §9 are indicative — real work expands to match capability preservation.
 
+### ADR-014: User-facing edge filters both directions; internals stay complex
+**Date:** 2026-04-23
+**Context:** Load-bearing directive from user: *"the tools can speak complexly to itself but needs to have a proper communication filter to the user… the user is not going to be extremely experienced."* Target operator is a non-technical twin-owner running an agent against their own business, not a platform engineer.
+**Decision:** SOMA's internals (queue payloads, handler protocols, inter-agent bus messages, transcripts, logs, structured errors) stay full-fidelity and technically rich — they are the machine's language and preserving them is what keeps ADR-011 honest. At every **user-facing surface** (Next.js dashboard, Telegram bot replies, future CLI wrapper / chat pane / voice surface), a bidirectional translation filter sits at the boundary:
+  - **Input filter:** accept freeform simple phrases; map them to the correct structured backend call (job name + data shape, priority, queue, handler choice). Users are not expected to know job names, priority integers, queue identifiers, or handler schemas. An LLM-router is acceptable for intent parsing and will often be the right primitive.
+  - **Output filter:** render structured results as plain-language headlines. Internal detail — full result JSON, stacktrace, token counters, child_done rollups, job IDs — stays available via progressive disclosure (drawer, "show details," debug toggle), never shoved into the primary view.
+  - **Error surfaces:** plain-language cause + suggested next step, not a raw stack trace.
+**Rationale:** ADR-011 forbids dumbing down the *capability surface*; ADR-014 forbids dumbing down the *capability surface* by mistaking "rich internals" for "rich UX." The filter is at the human boundary, not above the state machine. This is how you ship a tool that a solo operator can actually use without having to learn Minions.
+**Consequences:**
+  - Every user-facing route in `dashboard/` ships with progressive disclosure built in from day one — plain summary first, structured detail behind a toggle. No raw JSON in primary views.
+  - Phase 1's dashboard Queue page (HANDOFF §9 slot #8) requires an input layer that parses freeform submissions into structured `queue.add()` calls. A deterministic form is the fallback; the primary path is freeform.
+  - Telegram bot message formatting inherits the same rule.
+  - Internal APIs, memory files, handler protocols, and logs are **not** affected — they stay in their native complexity.
+  - Not a conflict with ADR-011: internals preserved in full; user-facing presentation filtered separately.
+
 ---
 
 ## 11. Open questions
@@ -588,6 +603,13 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **Purpose:** future sessions (any Claude Code instance opening this repo cold) get from "hi" to "I know what I'm doing" in under two minutes. No re-deriving context from commits + source code every time.
 - **No new code.** Pure docs pass. `tsc --noEmit` still clean (it's just markdown).
 - **Next up unchanged:** port `worker.ts` + attachments + protected-names gate + shell handler + unified runner + CLI + sigkill-rescue regression test + daemon integration + dashboard queue page.
+
+### 2026-04-23 (night) — ADR-014 user-facing edge filter
+- **New directive from user:** *"the tools can speak complexly to itself but needs to have a proper communication filter to the user… the user is not going to be extremely experienced."*
+- **Captured as ADR-014** (§10): SOMA internals stay full-fidelity (preserves ADR-011); every user-facing surface — dashboard, Telegram, future CLI/chat — ships with a bidirectional translation filter. Simple freeform input → structured backend calls; rich structured output → plain-language summaries with progressive disclosure for the technical detail.
+- **Complements, does not conflict with, ADR-011:** capability surface preserved in full; presentation is filtered only at the human boundary.
+- **Inlined into HANDOFF.md §9 slot #8** (dashboard Queue page): plain-language summaries primary; JSON/stacktrace/IDs behind progressive disclosure; freeform submit UI routed through intent parser.
+- **Auto-memory `project_soma_user_facing_edge.md`** written so the directive survives across chat sessions.
 
 ### 2026-04-23 (night) — MinionWorker port lands
 - **`src/minions/worker.ts` ported** (~385 LOC) from gbrain's 415-LOC `worker.ts`. Concurrent in-process worker with per-job AbortController, lock renewal, stall/timeout sweeps on interval, SIGTERM/SIGINT graceful shutdown via a shared `shutdownAbort` controller (so shell-handler style cleanup hooks can subscribe to `ctx.shutdownSignal` without disrupting non-shell handlers).

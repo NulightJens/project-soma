@@ -186,6 +186,7 @@ Full text in `PROJECT_SOMA.md` §10. Quick reference:
 | 011 | Don't dumb down | Preserve full capability from every donor. Narrative is organizing story, not ceiling. |
 | 012 | Synergy not silos | Overlapping concepts integrate into single coherent implementations. No parallel redundant ports. |
 | 013 | Adopt claudecode-harness for CLAUDE.md | 10-section operating context template filled in for SOMA stack. |
+| 014 | User-facing edge filters both directions | Internals stay complex; human-facing surfaces translate simple input → structured calls and structured output → plain summaries. Complements ADR-011 (doesn't override). |
 
 ---
 
@@ -220,7 +221,7 @@ Full text in `PROJECT_SOMA.md` §10. Quick reference:
 
 7. **Daemon integration.** Edit `ecosystem.config.js` generator in `src/cli/ecosystem.ts` to include a `cortextos-jobs-worker` entry alongside the daemon. Worker pool size configurable per-instance.
 
-8. **Dashboard Queue page.** New Next.js route `dashboard/src/app/(dashboard)/jobs/page.tsx`. Lists jobs with filter by status/queue/name/priority. Per-job detail drawer with transcript, attachments, inbox. Cancel/retry/pause actions. Uses SOMA monochrome from day one.
+8. **Dashboard Queue page.** New Next.js route `dashboard/src/app/(dashboard)/jobs/page.tsx`. Lists jobs with filter by status/queue/name/priority. Per-job detail drawer with transcript, attachments, inbox. Cancel/retry/pause actions. Uses SOMA monochrome from day one. **Per ADR-014:** plain-language job summaries in primary views; raw JSON / stacktrace / internal IDs stay behind progressive disclosure. Submit UI accepts freeform phrases routed through an intent parser first; structured form is a fallback, not the primary path.
 
 ### Starter commands
 
