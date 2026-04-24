@@ -401,9 +401,13 @@ const workCommand = new Command('work')
       const handler = available[name];
       if (!handler) {
         const availableNames = Object.keys(available).join(', ');
-        const hint = name === 'shell' && process.env.SOMA_ALLOW_SHELL_JOBS !== '1'
-          ? ' (set SOMA_ALLOW_SHELL_JOBS=1 to enable the shell handler)'
-          : '';
+        let hint = '';
+        if (name === 'shell' && process.env.SOMA_ALLOW_SHELL_JOBS !== '1') {
+          hint = ' (set SOMA_ALLOW_SHELL_JOBS=1 to enable the shell handler)';
+        } else if ((name === 'subagent' || name === 'subagent_aggregator')
+            && process.env.SOMA_ALLOW_SUBAGENT_JOBS !== '1') {
+          hint = ' (set SOMA_ALLOW_SUBAGENT_JOBS=1 to enable the unified runner)';
+        }
         console.error(`Unknown built-in handler: "${name}"${hint}. Available: ${availableNames}`);
         process.exitCode = 1;
         await engine.close();

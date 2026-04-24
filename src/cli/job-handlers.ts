@@ -6,20 +6,25 @@
  *     by default; no RCE, no network, no secrets. Exercises the queue → worker
  *     → handler → result loop end-to-end.
  *   - resolveBuiltinHandlers(): core set PLUS any handlers gated behind an
- *     environment flag. Today that's just `shell` (gated by
- *     `SOMA_ALLOW_SHELL_JOBS=1`); the unified runner will join it later.
+ *     environment flag. Today:
+ *       - `shell` — gated by `SOMA_ALLOW_SHELL_JOBS=1` (RCE surface).
+ *       - `subagent` + `subagent_aggregator` — gated by
+ *         `SOMA_ALLOW_SUBAGENT_JOBS=1` (LLM-loop via unified runner; spawns
+ *         `claude -p` under the subscription engine by default).
  *
- * CLI `--handlers <list>` consults `resolveBuiltinHandlers()` so operators can
- * opt into `shell` with an env var, and so a helpful error surfaces if they
- * try `--handlers shell` without the gate set.
+ * CLI `--handlers <list>` consults `resolveBuiltinHandlers()` so operators
+ * opt in with env vars, and a helpful error surfaces if they try
+ * `--handlers shell` or `--handlers subagent` without the relevant gate set.
  *
  * Add a handler: define the function, export it. If it's safe to run by
- * default, add it to BUILTIN_HANDLERS. If it's RCE-adjacent or needs
- * credentials, gate it inside resolveBuiltinHandlers() behind an env check.
+ * default, add it to BUILTIN_HANDLERS. If it's RCE-adjacent, LLM-cost-bearing,
+ * or needs credentials, gate it inside resolveBuiltinHandlers() behind an
+ * env check.
  */
 
 import type { MinionHandler } from '../minions/index.js';
 import { shellHandler } from '../minions/handlers/shell.js';
+import { runnerHandler } from '../minions/handlers/runner.js';
 
 /**
  * `echo` — returns its input verbatim. Useful for proving the state
@@ -87,6 +92,14 @@ export function resolveBuiltinHandlers(): Record<string, MinionHandler> {
   const handlers: Record<string, MinionHandler> = { ...BUILTIN_HANDLERS };
   if (process.env.SOMA_ALLOW_SHELL_JOBS === '1') {
     handlers.shell = shellHandler;
+  }
+  if (process.env.SOMA_ALLOW_SUBAGENT_JOBS === '1') {
+    // Both protected names share the same runner handler — engine selection
+    // via data.engine handles subscription vs API. Aggregator semantics (fan-
+    // in over child_done) land with the API-engine port; for now the
+    // aggregator name is reserved so submission gets gated correctly.
+    handlers.subagent = runnerHandler;
+    handlers.subagent_aggregator = runnerHandler;
   }
   return handlers;
 }

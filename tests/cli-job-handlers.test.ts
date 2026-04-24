@@ -6,7 +6,7 @@
  * handler body.
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
@@ -64,37 +64,57 @@ describe('BUILTIN_HANDLERS registry', () => {
   });
 });
 
-describe('resolveBuiltinHandlers env gate', () => {
-  it('excludes shell by default', () => {
-    const prev = process.env.SOMA_ALLOW_SHELL_JOBS;
+describe('resolveBuiltinHandlers env gates', () => {
+  // Save + restore both env vars around each test so they don't leak across.
+  let prevShell: string | undefined;
+  let prevSubagent: string | undefined;
+
+  beforeEach(() => {
+    prevShell = process.env.SOMA_ALLOW_SHELL_JOBS;
+    prevSubagent = process.env.SOMA_ALLOW_SUBAGENT_JOBS;
     delete process.env.SOMA_ALLOW_SHELL_JOBS;
-    try {
-      expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(['echo', 'noop', 'sleep']);
-    } finally {
-      if (prev !== undefined) process.env.SOMA_ALLOW_SHELL_JOBS = prev;
-    }
+    delete process.env.SOMA_ALLOW_SUBAGENT_JOBS;
+  });
+
+  afterEach(() => {
+    if (prevShell === undefined) delete process.env.SOMA_ALLOW_SHELL_JOBS;
+    else process.env.SOMA_ALLOW_SHELL_JOBS = prevShell;
+    if (prevSubagent === undefined) delete process.env.SOMA_ALLOW_SUBAGENT_JOBS;
+    else process.env.SOMA_ALLOW_SUBAGENT_JOBS = prevSubagent;
+  });
+
+  it('excludes shell + subagent by default', () => {
+    expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(['echo', 'noop', 'sleep']);
   });
 
   it('includes shell when SOMA_ALLOW_SHELL_JOBS=1', () => {
-    const prev = process.env.SOMA_ALLOW_SHELL_JOBS;
     process.env.SOMA_ALLOW_SHELL_JOBS = '1';
-    try {
-      expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(['echo', 'noop', 'shell', 'sleep']);
-    } finally {
-      if (prev === undefined) delete process.env.SOMA_ALLOW_SHELL_JOBS;
-      else process.env.SOMA_ALLOW_SHELL_JOBS = prev;
-    }
+    expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(['echo', 'noop', 'shell', 'sleep']);
   });
 
-  it('ignores values other than "1"', () => {
-    const prev = process.env.SOMA_ALLOW_SHELL_JOBS;
+  it('includes subagent + subagent_aggregator when SOMA_ALLOW_SUBAGENT_JOBS=1', () => {
+    process.env.SOMA_ALLOW_SUBAGENT_JOBS = '1';
+    expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(
+      ['echo', 'noop', 'sleep', 'subagent', 'subagent_aggregator'],
+    );
+  });
+
+  it('includes all gated handlers when both flags are set', () => {
+    process.env.SOMA_ALLOW_SHELL_JOBS = '1';
+    process.env.SOMA_ALLOW_SUBAGENT_JOBS = '1';
+    expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(
+      ['echo', 'noop', 'shell', 'sleep', 'subagent', 'subagent_aggregator'],
+    );
+  });
+
+  it('ignores values other than "1" for shell flag', () => {
     process.env.SOMA_ALLOW_SHELL_JOBS = 'true';
-    try {
-      expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(['echo', 'noop', 'sleep']);
-    } finally {
-      if (prev === undefined) delete process.env.SOMA_ALLOW_SHELL_JOBS;
-      else process.env.SOMA_ALLOW_SHELL_JOBS = prev;
-    }
+    expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(['echo', 'noop', 'sleep']);
+  });
+
+  it('ignores values other than "1" for subagent flag', () => {
+    process.env.SOMA_ALLOW_SUBAGENT_JOBS = 'yes';
+    expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(['echo', 'noop', 'sleep']);
   });
 });
 
