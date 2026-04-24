@@ -17,9 +17,9 @@
 
 - **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS; absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
-- **Last commit:** `6638568` — "soma: port attachments (validation + CRUD + schema + tests)"
-- **Green signals:** 71 Minions vitest cases passing (engine 7 + queue 34 + worker 11 + attachments 19); `npx tsc --noEmit` clean; dashboard runs at `localhost:3000` in full monochrome; `cortextOS` daemon running a single enabled agent (`system`) via PM2.
-- **Red signals:** none right now. Phase 1 scope is ~70% done — protected-names/handlers/CLI/daemon-integration/dashboard page pending.
+- **Last commit:** (to land this session) — "soma: port protected-names gate (shell + subagent + subagent_aggregator)"
+- **Green signals:** 84 Minions vitest cases passing (engine 7 + queue 34 + worker 11 + attachments 19 + protected-names 13); `npx tsc --noEmit` clean; dashboard runs at `localhost:3000` in full monochrome; `cortextOS` daemon running a single enabled agent (`system`) via PM2.
+- **Red signals:** none right now. Phase 1 scope is ~75% done — handlers/CLI/daemon-integration/dashboard page pending.
 - **Do not:** ingest any Solo Scale handoff content (ADR-009). Build SOMA fully agnostic first.
 
 ---
@@ -31,7 +31,7 @@ cd ~/cortextos
 git status                                               # should be clean
 git log --oneline -3                                     # confirm at latest worker-port commit
 npx tsc --noEmit                                         # silent = pass
-npx vitest run tests/minions-*.test.ts                   # 71 passed (engine 7 + queue 34 + worker 11 + attachments 19)
+npx vitest run tests/minions-*.test.ts                   # 84 passed (engine 7 + queue 34 + worker 11 + attachments 19 + protected 13)
 pm2 list                                                 # cortextos-daemon online
 curl -sI http://localhost:3000/login                     # HTTP/1.1 200 OK
 ```
@@ -43,7 +43,7 @@ If any of the above fails, see §9 Environment + §10 Gotchas before proceeding.
 ## Where you are on the roadmap
 
 Phase 0 — fork + foundation ........ **DONE**
-Phase 1 — Minions queue ............ **~70% done** ← you are here
+Phase 1 — Minions queue ............ **~75% done** ← you are here
 Phase 2 — Worktree isolation ....... not started
 Phase 3 — Claude-subprocess worker . not started
 Phase 4 — Orchestrator rewrite ..... not started
@@ -64,8 +64,8 @@ Phase 1 breakdown — what's done vs. what's next:
 | `queue.ts` — MinionQueue class | ✓ done | `src/minions/queue.ts` |
 | `worker.ts` — main loop + handler registry + stall/timeout sweeps | ✓ done | `src/minions/worker.ts` |
 | `attachments.ts` helper + queue attachment CRUD + `content` BLOB schema + UNIQUE constraint | ✓ done | `src/minions/attachments.ts`, `src/minions/queue.ts`, `src/minions/schema.sql` |
-| `protected-names.ts` gate | **next** | — |
-| `handlers/shell.ts` | next | — |
+| `protected-names.ts` gate | ✓ done | `src/minions/protected-names.ts`, gate wired into `MinionQueue.add()` |
+| `handlers/shell.ts` | **next** | — |
 | `handlers/runner.ts` — unified subscription + API per ADR-008/012 | next | — |
 | `cortextos jobs` CLI | next | `src/cli/` |
 | `jobs smoke --sigkill-rescue` regression test | next | `tests/` |
@@ -120,17 +120,19 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 | `src/minions/schema.sql` | 173 | SQLite DDL for `minion_jobs`, `minion_inbox`, `minion_attachments`, `minion_rate_leases` + indexes + update trigger |
 | `src/minions/engine.ts` | 73 | `QueueEngine` interface — `exec/one/all/tx/acquireLock/now/close` |
 | `src/minions/engine-sqlite.ts` | 235 | `better-sqlite3` impl. WAL + NORMAL + FK + 5s busy_timeout. Advisory locks via `BEGIN IMMEDIATE` + NULL-owner-job sentinel rows. |
-| `src/minions/queue.ts` | 1370 | `MinionQueue` class. Core state-machine methods + worker-support helpers + attachment CRUD. Protected-names gate TODO. |
+| `src/minions/queue.ts` | 1380 | `MinionQueue` class. Core state-machine methods + worker-support helpers + attachment CRUD + protected-names gate in `add()`. |
 | `src/minions/worker.ts` | 385 | `MinionWorker` — concurrent in-process worker. `tick()` + `drain()` surface for tests, full `start()` loop for production. Per-job AbortController + lock renewal + stall/timeout sweeps + quiet-hours defer/skip. |
 | `src/minions/attachments.ts` | 110 | Pure `validateAttachment` — filename safety, base64, content-type, size, in-flight duplicate. Returns `NormalizedAttachment` with sha256 + bytes. |
+| `src/minions/protected-names.ts` | 40 | Pure constant module. `PROTECTED_JOB_NAMES = {shell, subagent, subagent_aggregator}`. `isProtectedJobName(name)` — trim + membership check. |
 | `src/minions/backoff.ts` | 34 | Exponential + fixed backoff with jitter |
 | `src/minions/stagger.ts` | 33 | FNV-1a deterministic offset for same-cron decorrelation |
 | `src/minions/quiet-hours.ts` | 86 | IANA-tz claim-time window gate |
-| `src/minions/index.ts` | 28 | Public API barrel — import from here, not submodules |
+| `src/minions/index.ts` | 29 | Public API barrel — import from here, not submodules |
 | `tests/minions-engine.test.ts` | 193 | 7 vitest cases — schema, CRUD, idempotency, locks, tx |
 | `tests/minions-queue.test.ts` | 507 | 34 vitest cases — every state transition, DAG, stall, timeout, pause/resume |
 | `tests/minions-worker.test.ts` | 295 | 11 vitest cases — handler registry, claim→run→complete, ctx instrumentation, retry/backoff, UnrecoverableError, SIGKILL rescue smoke |
 | `tests/minions-attachments.test.ts` | 295 | 19 vitest cases — pure validation (7) + queue CRUD round-trip (12) including BLOB round-trip, UNIQUE fence, FK cascade on job removal |
+| `tests/minions-protected-names.test.ts` | 160 | 13 vitest cases — pure module membership (6) + queue gate (7) including trim-evasion, `allowProtectedSubmit: false` block, opts-spread cannot smuggle trust flag |
 
 ### Dashboard
 | File | Purpose |
@@ -155,6 +157,8 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 ## Commit timeline (SOMA work)
 
 ```
+(next)   soma: port protected-names gate (shell + subagent + subagent_aggregator)
+bad585c  docs(handoff): fill in 6638568 commit hash for attachments port
 6638568  soma: port attachments (validation + CRUD + schema + tests)
 bf5165d  soma: ADR-014 — user-facing edge filters both directions
 1788ed8  docs(handoff): fill in 4835323 commit hash for worker.ts port
@@ -206,37 +210,34 @@ Full text in `PROJECT_SOMA.md` §10. Quick reference:
 | Dashboard visual-regression risks from monochrome sweep | acknowledged | Category badges, mid-tier stability, progress bars, bottleneck section. See ADR-010. |
 | Hermes Agent install | parked | Installed at `~/.hermes/` but not configured. Decision on whether SOMA absorbs Hermes patterns or replaces it deferred. |
 | Attachment CRUD + `attachments.ts` | landed | See `src/minions/attachments.ts` + `queue.ts` CRUD. `minion_attachments.content` BLOB + `UNIQUE (job_id, filename)` live in schema. |
-| `protected-names.ts` gate | deferred one pass | Next-up in Phase 1. Quick port. |
+| `protected-names.ts` gate | landed | See `src/minions/protected-names.ts`. Full 3-name set: `shell`, `subagent`, `subagent_aggregator`. Gate enforced in `MinionQueue.add()`. |
 
 ---
 
 ## Next moves (ranked)
 
-1. **Port `protected-names.ts` gate.** 28 LOC trivial. Wire into `MinionQueue.add()`. Default protected set: `['shell']`. Test: unauthenticated submit of `shell` rejects; trusted submit with flag allows.
+1. **Port `handlers/shell.ts`** (~311 LOC from `/tmp/gbrain/src/core/minions/handlers/shell.ts`). Env-allowlist subprocess handler. SIGTERM → 5s → SIGKILL via `ctx.shutdownSignal`. Rename env gate `GBRAIN_ALLOW_SHELL_JOBS` → `SOMA_ALLOW_SHELL_JOBS`. Register with worker via `worker.register('shell', shellHandler)` — the protected-names gate is already in place, so `queue.add('shell', …, {}, {allowProtectedSubmit: true})` is the trusted entry path.
 
-2. **Port `handlers/shell.ts`** (~311 LOC). env-allowlist subprocess handler. SIGTERM → 5s → SIGKILL. Renames env gate from `GBRAIN_ALLOW_SHELL_JOBS` → `SOMA_ALLOW_SHELL_JOBS`.
+2. **Port `handlers/subagent.ts`** (~710 LOC, gbrain's Anthropic SDK path) + **gstack `claude -p` NDJSON pattern** into a single **unified `handlers/runner.ts`** per ADR-012. Engine selection: `subscription` (default, subprocess) vs `api` (Anthropic SDK, two-phase tool ledger). Shared code: transcript persistence, turn budgeting, cache discipline. Register under the protected names `subagent` + `subagent_aggregator`.
 
-3. **Port `handlers/subagent.ts`** (~710 LOC, gbrain's Anthropic SDK path) + **gstack `claude -p` NDJSON pattern** into a single **unified `handlers/runner.ts`** per ADR-012. Engine selection: `subscription` (default, subprocess) vs `api` (Anthropic SDK, two-phase tool ledger). Shared code: transcript persistence, turn budgeting, cache discipline.
+3. **`cortextos jobs` CLI.** Subcommands: `submit | list | work | cancel | replay | smoke | prune | attach | stats`. Uses `src/cli/commander` pattern. Wire `jobs work` to PM2 ecosystem. CLI is a trusted submitter — sets `{allowProtectedSubmit: true}` when the operator explicitly names a protected job.
 
-4. **`cortextos jobs` CLI.** Subcommands: `submit | list | work | cancel | replay | smoke | prune | attach | stats`. Uses `src/cli/commander` pattern. Wire `jobs work` to PM2 ecosystem.
+4. **`jobs smoke --sigkill-rescue`** regression test against a real subprocess worker. The in-process stall-rescue smoke in `tests/minions-worker.test.ts` covers the state-machine path; this one exercises a spawned `cortextos jobs work` child killed with SIGKILL.
 
-5. **`jobs smoke --sigkill-rescue`** regression test against a real subprocess worker. The in-process stall-rescue smoke in `tests/minions-worker.test.ts` covers the state-machine path; this one exercises a spawned `cortextos jobs work` child killed with SIGKILL.
+5. **Daemon integration.** Edit `ecosystem.config.js` generator in `src/cli/ecosystem.ts` to include a `cortextos-jobs-worker` entry alongside the daemon. Worker pool size configurable per-instance.
 
-6. **Daemon integration.** Edit `ecosystem.config.js` generator in `src/cli/ecosystem.ts` to include a `cortextos-jobs-worker` entry alongside the daemon. Worker pool size configurable per-instance.
-
-7. **Dashboard Queue page.** New Next.js route `dashboard/src/app/(dashboard)/jobs/page.tsx`. Lists jobs with filter by status/queue/name/priority. Per-job detail drawer with transcript, attachments, inbox. Cancel/retry/pause actions. Uses SOMA monochrome from day one. **Per ADR-014:** plain-language job summaries in primary views; raw JSON / stacktrace / internal IDs stay behind progressive disclosure. Submit UI accepts freeform phrases routed through an intent parser first; structured form is a fallback, not the primary path.
+6. **Dashboard Queue page.** New Next.js route `dashboard/src/app/(dashboard)/jobs/page.tsx`. Lists jobs with filter by status/queue/name/priority. Per-job detail drawer with transcript, attachments, inbox. Cancel/retry/pause actions. Uses SOMA monochrome from day one. **Per ADR-014:** plain-language job summaries in primary views; raw JSON / stacktrace / internal IDs stay behind progressive disclosure. Submit UI accepts freeform phrases routed through an intent parser first; structured form is a fallback, not the primary path. The dashboard is an **untrusted** submitter — never sets `allowProtectedSubmit`; if a user's freeform intent maps to `shell`/`subagent`, the intent parser surfaces it as an approval step, not a direct submit.
 
 ### Starter commands
 
 ```bash
-# Resume at next move #1 — protected-names gate
+# Resume at next move #1 — shell handler
 cd ~/cortextos
-cat /tmp/gbrain/src/core/minions/protected-names.ts   # read first (~28 LOC)
-# Port to src/minions/protected-names.ts. Wire the gate into
-# MinionQueue.add()'s signature (the 4th-arg `_trusted` placeholder is
-# already there — replace the placeholder check). Default protected set
-# = ['shell']. Tests: unauthenticated submit of 'shell' rejects;
-# trusted={allowProtectedSubmit: true} submit allows.
+cat /tmp/gbrain/src/core/minions/handlers/shell.ts   # read first (~311 LOC)
+# Port to src/minions/handlers/shell.ts. Subprocess via child_process.spawn
+# with env-allowlist. SIGTERM → 5s grace → SIGKILL. Subscribe to
+# ctx.shutdownSignal so deploy restart gets the SIGTERM treatment too.
+# Gate behind env SOMA_ALLOW_SHELL_JOBS=1 (rename from GBRAIN_ALLOW_...).
 
 # After each port, the discipline:
 npx vitest run tests/minions-*.test.ts
@@ -345,4 +346,4 @@ git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-min
 
 ---
 
-*Last updated: 2026-04-23 (night) after the attachments port. Next update expected after `protected-names.ts` lands.*
+*Last updated: 2026-04-23 (night) after the protected-names gate port. Next update expected after `handlers/shell.ts` lands.*

@@ -26,3 +26,4 @@ export {
   type NormalizedAttachment,
   type ValidationResult,
 } from './attachments.js';
+export { PROTECTED_JOB_NAMES, isProtectedJobName } from './protected-names.js';

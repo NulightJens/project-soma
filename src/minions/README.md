@@ -23,6 +23,7 @@ Project SOMA (see `/PROJECT_SOMA.md`) needs a prioritized, sequentially-draining
 | `queue.ts` | `gbrain/src/core/minions/queue.ts` (1152 LOC) | **ported** | All core state-machine methods + worker-support helpers (isJobActive, appendLogEntry, deferForQuietHours, skipForQuietHours). Attachments / protected-names deferred. |
 | `worker.ts` | `gbrain/src/core/minions/worker.ts` (415 LOC) | **ported** | Main loop extracted into `tick()` + `drain()` so tests can drive it deterministically. All Postgres `engine.executeRaw` calls routed through MinionQueue helpers. |
 | `attachments.ts` | `gbrain/src/core/minions/attachments.ts` | **ported** | Pure validation (filename safety, base64, content-type, size, duplicate). CRUD wired onto MinionQueue. |
+| `protected-names.ts` | `gbrain/src/core/minions/protected-names.ts` | **ported** | Pure constant module. Protected set: `shell`, `subagent`, `subagent_aggregator`. Gate enforced in `MinionQueue.add()` — callers must pass `{allowProtectedSubmit: true}` as the 4th arg. |
 | `handlers/shell.ts` | `gbrain/src/core/minions/handlers/shell.ts` | **not yet** | Useful verbatim. |
 | `handlers/claude-subprocess.ts` | (new — SOMA) | **not yet** | New handler; pattern from `gstack/test/helpers/session-runner.ts`. |
 | `backoff.ts` | `gbrain/src/core/minions/backoff.ts` | **ported** | |

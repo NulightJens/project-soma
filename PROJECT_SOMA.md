@@ -639,3 +639,19 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **71/71 Minions tests pass** (up from 52: engine 7 + queue 34 + worker 11 + attachments 19). `tsc --noEmit` clean repo-wide.
 - **`validateAttachment` + types exported** via `src/minions/index.ts` barrel so dashboard/CLI submit paths can pre-validate before the queue round-trip.
 - **Next up:** `protected-names.ts` gate (trivial 28 LOC, wires into `MinionQueue.add()`'s existing `_trusted` placeholder). Then handlers.
+
+### 2026-04-23 (night) — Protected-names gate lands
+- **`src/minions/protected-names.ts` ported** from gbrain's 28-LOC module. Pure constant module — no imports from handlers, no filesystem, no env reads. Preserves ADR-011 (don't dumb down) by shipping the full 3-name protected set rather than the `['shell']`-only default I'd originally sketched in HANDOFF.md §9:
+  - `shell` — arbitrary subprocess execution; compromise = RCE.
+  - `subagent` — Anthropic API caller (gbrain's full 710-LOC handler with two-phase tool ledger, lands later in Phase 1). Pre-protecting the name means the gate ships alongside the handler, not after.
+  - `subagent_aggregator` — fan-in sibling of `subagent`. Same reasoning.
+- **Gate wired into `MinionQueue.add()`**: `_trusted` placeholder replaced with an active `trusted?: TrustedSubmitOpts` param (4th argument — deliberately NOT folded into `opts`, so a caller spreading untrusted user input via `{...userOpts}` cannot smuggle the trust flag). On protected-name submission without `trusted.allowProtectedSubmit === true`, `add()` throws a clear error pointing the caller at the correct entry path.
+- **Trust surface policy documented in `TrustedSubmitOpts` docblock:** SOMA CLI, daemon-internal planner, and in-process tests are trusted; dashboard submit form, Telegram bot, MCP/HTTP bridges, and skills running inside subagent handlers are untrusted. Threaded through HANDOFF.md §9 next-moves annotations so shell + subagent + CLI + dashboard port plans inherit the constraint.
+- **Trim-before-check preserved:** `queue.add(' shell ')` still hits the gate. Without trim-before-check, whitespace padding would evade the check and the trimmed 'shell' would then land as the insert name — exactly the class of bug gbrain's original comment flags.
+- **Case-sensitive matching preserved** (matches gbrain semantics): `'SHELL'` is not protected. Tests assert this explicitly so a future accidental `toLowerCase()` regression surfaces immediately.
+- **Test coverage:** `tests/minions-protected-names.test.ts` — 13 vitest cases split across two layers.
+  - **Pure module (6):** membership for all three names; non-member negatives; trim-before-check; case sensitivity; empty string / whitespace / hyphen / substring negatives.
+  - **Queue gate (7):** every protected name rejected untrusted; all three accepted with `{allowProtectedSubmit: true}`; trim-evasion blocked; explicit `allowProtectedSubmit: false` still blocks; trust flag cannot be smuggled via opts spread; non-protected names still pass; empty-name error fires before the protected-name check.
+- **84/84 Minions tests pass** (up from 71: engine 7 + queue 34 + worker 11 + attachments 19 + protected-names 13). `tsc --noEmit` clean repo-wide.
+- **`PROTECTED_JOB_NAMES` + `isProtectedJobName` exported** via the barrel so dashboard/CLI submit paths can pre-screen intents (e.g. the dashboard intent parser can surface "this looks like a shell command — do you really want to run that?" as an approval step rather than a direct submit that then bounces).
+- **Next up:** `handlers/shell.ts` port. The gate is now in place, so the shell handler lands with its trusted-entry path already gated.

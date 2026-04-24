@@ -50,14 +50,18 @@ import type {
 } from './types.js';
 import { rowToAttachment, rowToMinionJob, rowToInboxMessage } from './types.js';
 import { validateAttachment } from './attachments.js';
+import { isProtectedJobName } from './protected-names.js';
 
 /**
- * Opt-in trust flag for submitting protected job names ('shell' today).
- * Passed as the 4th argument to `add()` so spread-user-opts can't carry
- * it accidentally.
+ * Opt-in trust flag for submitting protected job names (see
+ * `protected-names.ts` — today: 'shell', 'subagent', 'subagent_aggregator').
  *
- * SOMA: protected-names gate not yet ported; flag preserved in the
- * signature for wire compatibility.
+ * Passed as the 4th argument to `add()` — NOT folded into `opts` — so a
+ * caller spreading untrusted user input via `{...userOpts}` can't
+ * accidentally carry the trust flag. Untrusted surfaces (dashboard
+ * submit form, Telegram bot, future MCP/HTTP bridges) must never set
+ * this; trusted surfaces (SOMA CLI, daemon-internal planner,
+ * in-process tests) may.
  */
 export interface TrustedSubmitOpts {
   allowProtectedSubmit?: boolean;
@@ -96,16 +100,21 @@ export class MinionQueue {
     name: string,
     data?: Record<string, unknown>,
     opts?: Partial<MinionJobInput>,
-    _trusted?: TrustedSubmitOpts, // SOMA: protected-names gate not yet ported
+    trusted?: TrustedSubmitOpts,
   ): Promise<MinionJob> {
+    // Normalize first so the protected-name check and the insert use the
+    // same canonical form. Without trim-before-check, `queue.add(' shell ')`
+    // would evade the guard and insert a job literally named 'shell'.
     const jobName = (name || '').trim();
     if (jobName.length === 0) {
       throw new Error('Job name cannot be empty');
     }
-    // SOMA: protected-names enforcement lands with protected-names.ts port.
-    // Current behavior: no gate. All names accepted. Existing Minions
-    // callers should continue passing `{allowProtectedSubmit: true}` on
-    // trusted paths so the signature doesn't drift.
+    if (isProtectedJobName(jobName) && !trusted?.allowProtectedSubmit) {
+      throw new Error(
+        `protected job name '${jobName}' requires a trusted submitter ` +
+          `(pass {allowProtectedSubmit: true} as the 4th arg to MinionQueue.add)`,
+      );
+    }
 
     const now = this.engine.now();
     const childStatus: MinionJobStatus = opts?.delay ? 'delayed' : 'waiting';
