@@ -20,14 +20,14 @@ Project SOMA (see `/PROJECT_SOMA.md`) needs a prioritized, sequentially-draining
 | `types.ts` | `gbrain/src/core/minions/types.ts` | **ported (scaffold)** | Kept core job + inbox + attachment types. Dropped gbrain-specific subagent/tool/Anthropic content-block types — SOMA workers spawn `claude -p` subprocesses, so those types will differ. `Date → number` (Unix ms) for SQLite portability. |
 | `schema.sql` | `gbrain/migrations/*.sql` | **ported (scaffold)** | Single-file SQLite DDL. Postgres-specific features (advisory locks, JSONB operators) will surface as interface methods on `QueueEngine`, implemented differently per backend. |
 | `engine.ts` | `gbrain/src/core/engine.ts` | **scaffolded** | `QueueEngine` interface with `kind` discriminator. SQLite impl first. |
-| `queue.ts` | `gbrain/src/core/minions/queue.ts` (1152 LOC) | **not yet** | Bulk port next. |
-| `worker.ts` | `gbrain/src/core/minions/worker.ts` (415 LOC) | **not yet** | After `queue.ts`. |
+| `queue.ts` | `gbrain/src/core/minions/queue.ts` (1152 LOC) | **ported** | All core state-machine methods + worker-support helpers (isJobActive, appendLogEntry, deferForQuietHours, skipForQuietHours). Attachments / protected-names deferred. |
+| `worker.ts` | `gbrain/src/core/minions/worker.ts` (415 LOC) | **ported** | Main loop extracted into `tick()` + `drain()` so tests can drive it deterministically. All Postgres `engine.executeRaw` calls routed through MinionQueue helpers. |
 | `handlers/shell.ts` | `gbrain/src/core/minions/handlers/shell.ts` | **not yet** | Useful verbatim. |
 | `handlers/claude-subprocess.ts` | (new — SOMA) | **not yet** | New handler; pattern from `gstack/test/helpers/session-runner.ts`. |
-| `backoff.ts` | `gbrain/src/core/minions/backoff.ts` | **not yet** | Small (~26 LOC), straight copy. |
-| `quiet-hours.ts` | `gbrain/src/core/minions/quiet-hours.ts` | **not yet** | Small, straight copy. |
+| `backoff.ts` | `gbrain/src/core/minions/backoff.ts` | **ported** | |
+| `quiet-hours.ts` | `gbrain/src/core/minions/quiet-hours.ts` | **ported** | |
 | `rate-leases.ts` | `gbrain/src/core/minions/rate-leases.ts` | **not yet** | Postgres advisory-lock rewrite to SQLite `BEGIN IMMEDIATE` tx. |
-| `stagger.ts` | `gbrain/src/core/minions/stagger.ts` | **not yet** | Small. |
+| `stagger.ts` | `gbrain/src/core/minions/stagger.ts` | **ported** | |
 | `transcript.ts` | `gbrain/src/core/minions/transcript.ts` | **not yet** | Transcript append semantics. |
 | `wait-for-completion.ts` | `gbrain/src/core/minions/wait-for-completion.ts` | **not yet** | Small. |
 

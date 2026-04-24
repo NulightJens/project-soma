@@ -588,3 +588,21 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **Purpose:** future sessions (any Claude Code instance opening this repo cold) get from "hi" to "I know what I'm doing" in under two minutes. No re-deriving context from commits + source code every time.
 - **No new code.** Pure docs pass. `tsc --noEmit` still clean (it's just markdown).
 - **Next up unchanged:** port `worker.ts` + attachments + protected-names gate + shell handler + unified runner + CLI + sigkill-rescue regression test + daemon integration + dashboard queue page.
+
+### 2026-04-23 (night) — MinionWorker port lands
+- **`src/minions/worker.ts` ported** (~385 LOC) from gbrain's 415-LOC `worker.ts`. Concurrent in-process worker with per-job AbortController, lock renewal, stall/timeout sweeps on interval, SIGTERM/SIGINT graceful shutdown via a shared `shutdownAbort` controller (so shell-handler style cleanup hooks can subscribe to `ctx.shutdownSignal` without disrupting non-shell handlers).
+- **`tick()` + `drain()` surface extracted** from gbrain's monolithic `start()` loop. The tick drives "promote delayed → claim → launch one job"; drain awaits all in-flight promises. The `start()` loop composes them with polling + stall-sweep interval. This split lets `tests/minions-worker.test.ts` drive the state machine deterministically without spinning on real `setInterval`s.
+- **All Postgres `engine.executeRaw` calls in gbrain's worker routed through new MinionQueue helpers** (per ADR-012 — concentrate SQL rewrites in queue.ts, worker stays engine-agnostic):
+  - `ctx.isActive` → `queue.isJobActive(id, lockToken)`.
+  - `ctx.log(string|TranscriptEntry)` → `queue.appendLogEntry(id, lockToken, str)`. Postgres `jsonb || to_jsonb($1::text)` rewritten as read-parse-push-write inside a `BEGIN IMMEDIATE` tx since SQLite has no JSONB append.
+  - Quiet-hours `'defer'` verdict → `queue.deferForQuietHours(id, lockToken, 15*60*1000)`. Postgres `now() + interval '15 minutes'` folded into JS ms math.
+  - Quiet-hours `'skip'` verdict → `queue.skipForQuietHours(id, lockToken)`. Releases lock, then calls `cancelJob` with `error_text='skipped_quiet_hours'` — cascade cancel on descendants + `child_done` rollup is preserved.
+- **`queue.ensureSchema()` call dropped** — SOMA's `openSqliteEngine` bootstraps DDL on open, not lazily on first worker start.
+- **Test coverage:** `tests/minions-worker.test.ts` — 11 vitest cases.
+  - Handler registration: empty-registry start() throws; `register()` + `registeredNames`; claim filter ignores jobs with no registered handler.
+  - Happy path: claim → run → complete persists result + clears lock + sets finished_at; primitive handler return wrapped in `{value: x}`; ctx.updateProgress / ctx.updateTokens / ctx.log / ctx.isActive / ctx.readInbox all persist through the token fence.
+  - Failure + retry: retryable throw → `delayed` with `delay_until` bumped by the calculated backoff; attempts exhaust → `dead`; `UnrecoverableError` → `dead` immediately regardless of attempts remaining.
+  - **SIGKILL rescue smoke:** worker A claims a never-resolving job, worker "dies" (test advances injected clock past `lock_until`), `queue.handleStalled()` requeues, worker B completes cleanly. `stalled_counter` ticks to 1.
+- **52/52 Minions tests pass** (up from 41: engine 7 + queue 34 + worker 11). `tsc --noEmit` clean repo-wide.
+- **`MinionWorker` exported** via `src/minions/index.ts` barrel.
+- **Next up:** port `attachments.ts` + extend `minion_attachments` schema with `content BLOB` + `UNIQUE (job_id, filename)`, wire CRUD onto MinionQueue. Then `protected-names.ts` gate, then handlers.

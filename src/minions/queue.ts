@@ -1100,6 +1100,118 @@ export class MinionQueue {
   }
 
   // ---------------------------------------------------------------------------
+  // Worker support — ctx.log / ctx.isActive + quiet-hours transitions
+  // ---------------------------------------------------------------------------
+  //
+  // These four helpers exist so MinionWorker can stay engine-agnostic. The
+  // SQL equivalents in gbrain's worker go through `engine.executeRaw` with
+  // Postgres-specific JSONB + INTERVAL arithmetic; SOMA concentrates the
+  // SQLite rewrites here alongside the rest of the state-machine SQL
+  // (ADR-012: one coherent implementation, not a sidecar).
+
+  /**
+   * Token-fenced liveness probe. Used by `ctx.isActive` inside handlers
+   * that want to bail out early if they've been cancelled / re-claimed.
+   */
+  async isJobActive(id: number, lockToken: string): Promise<boolean> {
+    const row = await this.engine.one<{ id: number }>(
+      `SELECT id FROM minion_jobs
+        WHERE id = ? AND status = 'active' AND lock_token = ?`,
+      [id, lockToken],
+    );
+    return row !== null;
+  }
+
+  /**
+   * Append a free-form message to the job's `stacktrace` JSON array.
+   * Token-fenced. Used by `ctx.log` from handlers for transcript lines
+   * that aren't full TranscriptEntry objects.
+   *
+   * SOMA: gbrain does this in a single Postgres statement via
+   * `stacktrace = COALESCE(stacktrace, '[]'::jsonb) || to_jsonb($1::text)`.
+   * SQLite has no JSONB append operator, so we read-parse-push-write
+   * inside a tx. BEGIN IMMEDIATE serializes the read and write against
+   * concurrent log appends.
+   */
+  async appendLogEntry(id: number, lockToken: string, message: string): Promise<boolean> {
+    return this.engine.tx(async (tx) => {
+      const current = await tx.one<{ stacktrace: string }>(
+        `SELECT stacktrace FROM minion_jobs
+          WHERE id = ? AND status = 'active' AND lock_token = ?`,
+        [id, lockToken],
+      );
+      if (!current) return false;
+
+      const prev = (() => {
+        try {
+          const parsed = JSON.parse(current.stacktrace);
+          return Array.isArray(parsed) ? (parsed as string[]) : [];
+        } catch {
+          return [];
+        }
+      })();
+      prev.push(message);
+
+      const { changes } = await tx.exec(
+        `UPDATE minion_jobs SET stacktrace = ?, updated_at = ?
+          WHERE id = ? AND status = 'active' AND lock_token = ?`,
+        [JSON.stringify(prev), this.engine.now(), id, lockToken],
+      );
+      return changes > 0;
+    });
+  }
+
+  /**
+   * Quiet-hours defer: a claimed job falls inside its quiet window.
+   * Reverse the claim transition back to 'delayed', bumping `delay_until`
+   * forward by `delayMs` so the same job doesn't immediately re-claim.
+   * Token-fenced — returns false if something else already moved the row.
+   *
+   * SOMA: gbrain uses `now() + interval '15 minutes'` inline; we compute
+   * the millisecond delta in JS and bind it.
+   */
+  async deferForQuietHours(
+    id: number,
+    lockToken: string,
+    delayMs: number,
+  ): Promise<boolean> {
+    const now = this.engine.now();
+    const { changes } = await this.engine.exec(
+      `UPDATE minion_jobs SET
+         status = 'delayed',
+         lock_token = NULL,
+         lock_until = NULL,
+         delay_until = ?,
+         updated_at = ?
+        WHERE id = ? AND status = 'active' AND lock_token = ?`,
+      [now + delayMs, now, id, lockToken],
+    );
+    return changes > 0;
+  }
+
+  /**
+   * Quiet-hours skip: the job is cancelled outright with
+   * `error_text='skipped_quiet_hours'`. Token-fenced lock release first so
+   * the following cancelJob descendant walk sees a clean state and the
+   * child_done rollup fires. Returns the cancelled job or null if the
+   * lock fence failed (another path already flipped the row).
+   */
+  async skipForQuietHours(id: number, lockToken: string): Promise<MinionJob | null> {
+    const now = this.engine.now();
+    const { changes } = await this.engine.exec(
+      `UPDATE minion_jobs SET
+         lock_token = NULL,
+         lock_until = NULL,
+         error_text = 'skipped_quiet_hours',
+         updated_at = ?
+        WHERE id = ? AND status = 'active' AND lock_token = ?`,
+      [now, id, lockToken],
+    );
+    if (changes === 0) return null;
+    return this.cancelJob(id);
+  }
+
+  // ---------------------------------------------------------------------------
   // Attachments — TODO (next pass, needs attachments.ts helper)
   // ---------------------------------------------------------------------------
 
