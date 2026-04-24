@@ -395,11 +395,16 @@ const workCommand = new Command('work')
       stalledInterval,
     });
 
+    const available = resolveBuiltinHandlers();
     const requested = (options.handlers ?? 'echo').split(',').map((s) => s.trim()).filter(Boolean);
     for (const name of requested) {
-      const handler = BUILTIN_HANDLERS[name];
+      const handler = available[name];
       if (!handler) {
-        console.error(`Unknown built-in handler: "${name}". Available: ${Object.keys(BUILTIN_HANDLERS).join(', ')}`);
+        const availableNames = Object.keys(available).join(', ');
+        const hint = name === 'shell' && process.env.SOMA_ALLOW_SHELL_JOBS !== '1'
+          ? ' (set SOMA_ALLOW_SHELL_JOBS=1 to enable the shell handler)'
+          : '';
+        console.error(`Unknown built-in handler: "${name}"${hint}. Available: ${availableNames}`);
         process.exitCode = 1;
         await engine.close();
         return;
@@ -419,7 +424,7 @@ const workCommand = new Command('work')
 // built-in handlers (slot B — trivial echo)
 // ---------------------------------------------------------------------------
 
-import { BUILTIN_HANDLERS } from './job-handlers.js';
+import { resolveBuiltinHandlers } from './job-handlers.js';
 
 // ---------------------------------------------------------------------------
 // entrypoint

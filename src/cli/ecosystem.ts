@@ -103,11 +103,14 @@ export const ecosystemCommand = new Command('ecosystem')
       : '';
 
     // SOMA: Minions worker entry. Runs `cortextos jobs work` under PM2
-    // so the queue drains even when nobody's at a terminal. Ports the
-    // built-in handlers (echo/noop/sleep today; shell/subagent/runner
-    // will land in subsequent Phase 1 slots and get added to the
-    // --handlers list here). SIGKILL of the worker triggers the Minions
-    // stall-rescue path in the queue (see tests/minions-worker.test.ts).
+    // so the queue drains even when nobody's at a terminal. Default
+    // --handlers = echo,noop,sleep (always safe). The `shell` handler is
+    // available behind the SOMA_ALLOW_SHELL_JOBS=1 env gate; to enable it
+    // in the PM2-supervised worker, add `shell` to SOMA_WORKER_HANDLERS
+    // AND set SOMA_ALLOW_SHELL_JOBS=1 in the process env. Submitting shell
+    // jobs also requires a trusted submitter (CLI --trusted flag); see
+    // src/minions/protected-names.ts. SIGKILL of the worker triggers the
+    // Minions stall-rescue path in the queue (see tests/minions-worker.test.ts).
     const cliScript = join(distDir, 'cli.js');
     const minionsDb = join(ctxRoot, 'minions.db');
     const jobsWorkerBlock = `,

@@ -13,7 +13,7 @@ import { randomUUID } from 'crypto';
 import { unlinkSync, existsSync } from 'fs';
 
 import { MinionQueue, MinionWorker, openSqliteEngine } from '../src/minions/index.js';
-import { BUILTIN_HANDLERS } from '../src/cli/job-handlers.js';
+import { BUILTIN_HANDLERS, resolveBuiltinHandlers } from '../src/cli/job-handlers.js';
 
 function tmpPath(): string {
   return join(tmpdir(), `soma-handlers-${randomUUID()}.db`);
@@ -61,6 +61,40 @@ async function runOneJob(
 describe('BUILTIN_HANDLERS registry', () => {
   it('exposes echo, noop, and sleep', () => {
     expect(Object.keys(BUILTIN_HANDLERS).sort()).toEqual(['echo', 'noop', 'sleep']);
+  });
+});
+
+describe('resolveBuiltinHandlers env gate', () => {
+  it('excludes shell by default', () => {
+    const prev = process.env.SOMA_ALLOW_SHELL_JOBS;
+    delete process.env.SOMA_ALLOW_SHELL_JOBS;
+    try {
+      expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(['echo', 'noop', 'sleep']);
+    } finally {
+      if (prev !== undefined) process.env.SOMA_ALLOW_SHELL_JOBS = prev;
+    }
+  });
+
+  it('includes shell when SOMA_ALLOW_SHELL_JOBS=1', () => {
+    const prev = process.env.SOMA_ALLOW_SHELL_JOBS;
+    process.env.SOMA_ALLOW_SHELL_JOBS = '1';
+    try {
+      expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(['echo', 'noop', 'shell', 'sleep']);
+    } finally {
+      if (prev === undefined) delete process.env.SOMA_ALLOW_SHELL_JOBS;
+      else process.env.SOMA_ALLOW_SHELL_JOBS = prev;
+    }
+  });
+
+  it('ignores values other than "1"', () => {
+    const prev = process.env.SOMA_ALLOW_SHELL_JOBS;
+    process.env.SOMA_ALLOW_SHELL_JOBS = 'true';
+    try {
+      expect(Object.keys(resolveBuiltinHandlers()).sort()).toEqual(['echo', 'noop', 'sleep']);
+    } finally {
+      if (prev === undefined) delete process.env.SOMA_ALLOW_SHELL_JOBS;
+      else process.env.SOMA_ALLOW_SHELL_JOBS = prev;
+    }
   });
 });
 

@@ -1,18 +1,25 @@
 /**
  * Built-in job handlers for `cortextos jobs work`.
  *
- * These are intentionally minimal — the real workhorse handlers (shell
- * subprocess, subagent / unified runner) land as separate ports in later
- * Phase 1 slots. The trivial set here lets the full queue → worker →
- * handler → result loop be exercised end-to-end before any RCE or API
- * surface ships.
+ * Two tiers:
+ *   - BUILTIN_HANDLERS: always-on core set (echo / noop / sleep). Safe to run
+ *     by default; no RCE, no network, no secrets. Exercises the queue → worker
+ *     → handler → result loop end-to-end.
+ *   - resolveBuiltinHandlers(): core set PLUS any handlers gated behind an
+ *     environment flag. Today that's just `shell` (gated by
+ *     `SOMA_ALLOW_SHELL_JOBS=1`); the unified runner will join it later.
  *
- * Add a handler: define the function, export it in BUILTIN_HANDLERS.
- * Callers wire their own handlers via `worker.register(name, fn)` — this
- * registry is only consulted by the CLI's `--handlers` flag.
+ * CLI `--handlers <list>` consults `resolveBuiltinHandlers()` so operators can
+ * opt into `shell` with an env var, and so a helpful error surfaces if they
+ * try `--handlers shell` without the gate set.
+ *
+ * Add a handler: define the function, export it. If it's safe to run by
+ * default, add it to BUILTIN_HANDLERS. If it's RCE-adjacent or needs
+ * credentials, gate it inside resolveBuiltinHandlers() behind an env check.
  */
 
 import type { MinionHandler } from '../minions/index.js';
+import { shellHandler } from '../minions/handlers/shell.js';
 
 /**
  * `echo` — returns its input verbatim. Useful for proving the state
@@ -62,3 +69,24 @@ export const BUILTIN_HANDLERS: Record<string, MinionHandler> = {
   noop: noopHandler,
   sleep: sleepHandler,
 };
+
+/**
+ * Return the full set of built-in handlers available for this process, which
+ * is BUILTIN_HANDLERS plus any env-gated handlers whose flag is currently set.
+ *
+ * Today: `shell` joins when `process.env.SOMA_ALLOW_SHELL_JOBS === '1'`.
+ * The gate is checked lazily on each call so tests can flip the env var
+ * mid-run without re-importing the module.
+ *
+ * The shell handler is dual-gated: this registry check keeps it off by default
+ * at the worker entry point, and MinionQueue.add()'s protected-names check
+ * (see src/minions/protected-names.ts) blocks submission from untrusted
+ * callers regardless of whether the handler is registered.
+ */
+export function resolveBuiltinHandlers(): Record<string, MinionHandler> {
+  const handlers: Record<string, MinionHandler> = { ...BUILTIN_HANDLERS };
+  if (process.env.SOMA_ALLOW_SHELL_JOBS === '1') {
+    handlers.shell = shellHandler;
+  }
+  return handlers;
+}
