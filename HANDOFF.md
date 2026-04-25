@@ -17,8 +17,8 @@
 
 - **What SOMA is:** a personal-to-organizational agent operating system. Persistent 24/7 Claude Code sessions coordinating via a durable priority queue (Minions, ported from gbrain), isolated by git worktrees (WorktreeManager, from gstack — Phase 2), surfaced through Telegram + Next.js dashboard. Forked from cortextOS (upstream); absorbing gbrain (queue + memory) and gstack (subprocess pattern + worktree isolation); graphify as an enrichment pipeline (Phase 6).
 - **Current branch:** `soma/phase-1-minions`
-- **Last commit:** `78987cf` — "soma: unified runner handler + subscription engine (ADR-008, ADR-012)"
-- **Green signals:** 136 Minions+CLI+runner vitest cases passing (was 110; +23 runner + 3 env-gate); `npx tsc --noEmit` clean across both the SOMA package AND the `dashboard/` package; `cortextos jobs` CLI verified end-to-end; dashboard `/jobs` route live at `localhost:3000/jobs` with plain-language summaries + progressive-disclosure raw-JSON toggle per ADR-014; `cortextos-daemon` online via PM2. Display surface rebranded to Project SOMA per ADR-015 (npm name → `soma`; CLI binary / state dir / PM2 app names deferred to a later migration slot). Unified runner is live behind `SOMA_ALLOW_SUBAGENT_JOBS=1` — subscription engine ships; API-engine body is a stub until a follow-up slot.
+- **Last commit:** `e8aaa2d` — "soma: infra rename — state dir to .soma, PM2 apps to soma-*, soma bin alias"
+- **Green signals:** 136 Minions+CLI+runner vitest cases passing; `npx tsc --noEmit` clean across both the SOMA package AND the `dashboard/` package; `cortextos jobs` CLI verified end-to-end; dashboard `/jobs` route live at `localhost:3000/jobs` with plain-language summaries + progressive-disclosure raw-JSON toggle per ADR-014. **Live cutover complete:** state dir migrated `~/.cortextos/` → `~/.soma/` (with backward-compat symlink); PM2 apps renamed `soma-daemon` + `SOMA-dashboard` + `soma-jobs-worker` (all online, post-cutover uptime); `soma` bin alias available alongside `cortextos`. Unified runner live behind `SOMA_ALLOW_SUBAGENT_JOBS=1`.
 - **Red signals:** none. Phase 1 scope is ~97% done — API-engine body (needs schema + SDK + tool registry) and dashboard submit-UI (intent-parser) slot remain.
 - **Do not:** ingest any Solo Scale handoff content (ADR-009). Build SOMA fully agnostic first.
 
@@ -29,11 +29,12 @@
 ```bash
 cd ~/cortextos
 git status                                               # should be clean
-git log --oneline -3                                     # confirm at latest runner commit
+git log --oneline -3                                     # confirm at latest infra-rename commit
 npx tsc --noEmit                                         # silent = pass
 npx vitest run tests/minions-*.test.ts tests/cli-*.test.ts  # 136 passed (incl. runner + shell + SIGKILL-rescue regression)
-pm2 list                                                 # cortextos-daemon online
+pm2 list                                                 # soma-daemon + SOMA-dashboard + soma-jobs-worker all online
 curl -sI http://localhost:3000/login                     # HTTP/1.1 200 OK
+ls ~/.cortextos                                          # symlink → ~/.soma (post-migration)
 ```
 
 If any of the above fails, see §9 Environment + §10 Gotchas before proceeding.
@@ -173,6 +174,8 @@ Ceiling principle (ADR-011): **don't dumb down.** Preserve every donor's full ca
 ## Commit timeline (SOMA work)
 
 ```
+e8aaa2d  soma: infra rename — state dir to .soma, PM2 apps to soma-*, soma bin alias
+32e38df  docs(handoff): fill in 78987cf commit hash for unified runner
 78987cf  soma: unified runner handler + subscription engine (ADR-008, ADR-012)
 4e64183  docs(handoff): fill in 89b3631 + 408de8f commits (rename + shell)
 408de8f  soma: port handlers/shell.ts behind SOMA_ALLOW_SHELL_JOBS env gate
@@ -251,7 +254,7 @@ Full text in `PROJECT_SOMA.md` §10. Quick reference:
 
 2. **Dashboard: submit UI + intent parser** (new slot). Per ADR-014: freeform phrases routed through a language-model intent parser that emits structured `queue.add(...)` calls. Structured form is a fallback behind an "Advanced" toggle, not the primary path. Dashboard is an **untrusted** submitter — never sets `allowProtectedSubmit`; intents resolving to `shell`/`subagent` surface as an approval step, not a direct submit.
 
-3. **SOMA infra migration slot** (follow-up from ADR-015). Rename `~/.cortextos/` state dir with symlink fallback, add `soma` bin alias alongside `cortextos`, rename PM2 app names `cortextos-daemon` / `cortextos-jobs-worker`, optionally rename local repo dir + GitHub fork. Requires an operator runbook (stop daemon, migrate state, reinstall CLI, `pm2 delete` + restart). Not blocking Phase 1 completion.
+3. **Repo dir + GitHub rename** (Tier D from ADR-015 — operator-driven). Local: `mv ~/cortextos ~/SOMA && ln -s ~/SOMA ~/cortextos`. GitHub: rename `NulightJens/cortextos` → `NulightJens/soma` in repo settings, then `git remote set-url origin git@github.com:NulightJens/soma.git`. Source code already supports both `~/SOMA` and `~/cortextos` as project root via fallback discovery, so the local rename is a no-op the moment you decide. Not blocking anything.
 
 ### Starter commands
 
@@ -389,4 +392,4 @@ git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-min
 
 ---
 
-*Last updated: 2026-04-24 after the unified runner + subscription engine landed. Phase 1 at ~97% — the API-engine body (needs new schema + Anthropic SDK dep + tool registry; separate HITL on ANTHROPIC_API_KEY) and the dashboard submit-UI/intent-parser slot remain to close Phase 1. SOMA infra migration (state dir / PM2 / bin alias) is a follow-up slot per ADR-015 deferrals.*
+*Last updated: 2026-04-25 after the ADR-015 infra rename cutover landed. State dir migrated to `~/.soma/` (with backward-compat symlink), PM2 apps renamed to `soma-*`, `soma` bin alias added. Phase 1 at ~97% — the API-engine body (needs new schema + Anthropic SDK dep + tool registry; separate HITL on ANTHROPIC_API_KEY) and the dashboard submit-UI/intent-parser slot remain to close Phase 1. Repo dir + GitHub rename (Tier D) is operator-driven; source code already supports both `~/SOMA` and `~/cortextos` as project root.*

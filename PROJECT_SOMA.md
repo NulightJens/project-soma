@@ -746,3 +746,30 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **Test coverage** — `tests/minions-runner.test.ts` (23 cases): registry (5), production defaults (1), handler validation + dispatch (5), pure `ingestNDJSONLine` (4), pure `buildClaudeArgs` (4), subscription e2e via fake `claude` shell script (4: happy path with cost + tokens, `error_max_turns` classification, non-zero exit without result, `ctx.signal` abort kill-ladder). Plus expanded env-gate tests in `tests/cli-job-handlers.test.ts` — now covers default exclusion, shell flag, subagent flag, both flags, and "value != 1 ignored" for each (6 cases, was 3).
 - **136/136 Minions+CLI+runner tests pass** (up from 110: +23 runner + 3 additional env gate). `tsc --noEmit` clean repo-wide + dashboard.
 - **Next up:** API engine body (separate HITL for ANTHROPIC_API_KEY + new schema), then dashboard submit-UI / intent-parser per ADR-014.
+
+### 2026-04-25 — ADR-015 infra-rename cutover (state dir, PM2 apps, bin alias)
+- **User directive:** *"rename the project to Project SOMA instead of CortextOS & all references"* — closes the deferred Tier B+C of ADR-015 in a single live cutover. ~30s blackout window during PM2 daemon restart.
+- **Code-side rename (commit `e8aaa2d`, 29 files, +120 / -62):**
+  - **State dir** — `src/utils/paths.ts` gains `getCtxRoot(instanceId)` with `.soma` canonical and `.cortextos` fallback (when `.soma` doesn't exist on an unmigrated install). `resolvePaths` and `getIpcPath` consume the helper. Mechanical sed across 25 src/ files migrated inline `join(homedir(), '.cortextos', ...)` to `'.soma'`. Preserves `.cortextos-env` and `.cortextos-startup.md` (internal filenames; separate rename surface deferred).
+  - **PM2 app names** — `cortextos-daemon` → `soma-daemon`, `cortextos-jobs-worker` → `soma-jobs-worker` in `src/cli/ecosystem.ts`. Updated help text in `src/cli/stop.ts` and the comment in `src/daemon/agent-manager.ts`.
+  - **CLI bin alias** — `package.json` and `package-lock.json` gain `"soma"` alongside `"cortextos"`. Both names work after `npm run build && npm link`.
+  - **Project-root discovery** — `src/cli/enable-agent.ts` and `src/cli/ecosystem.ts` now try `~/SOMA` first, fall back to `~/cortextos`. Earlier prose-rebrand sweep had left a hardcoded `~/SOMA` that broke pre-rename installs; restoring the fallback chain makes the directory rename (Tier D) operator-driven and lossless either way.
+- **Live cutover sequence executed:**
+  1. `pm2 stop cortextos-daemon` — graceful shutdown of the running 30h-uptime daemon, terminates `system` PTY.
+  2. `mv ~/.cortextos ~/.soma` — physical state-dir rename (atomic at the filesystem level since they're the same volume).
+  3. `ln -s ~/.soma ~/.cortextos` — backward-compat symlink so any external script / unmigrated code path still resolves.
+  4. `npm run build` — produces dist/ with the new path constants.
+  5. `pm2 delete cortextos-daemon` — clears the old PM2 app entry.
+  6. `node dist/cli.js ecosystem` — regenerates `ecosystem.config.js` with the new app names + paths.
+  7. `pm2 start ecosystem.config.js` — launches `soma-daemon` + `SOMA-dashboard` + `soma-jobs-worker`.
+  8. `pm2 save` — persists the config across reboots.
+- **Dashboard fight resolved.** A pre-existing `next dev` (PIDs 81087/81105/81108, started Thursday) had been running outside PM2 supervision via `cortextos dashboard`. After the cutover, PM2's new `SOMA-dashboard` app couldn't bind port 3000 because the orphan held it (15+ restart loops with `EADDRINUSE`). Killed the orphan tree; PM2's supervised dashboard claimed the port cleanly. Going forward, the dashboard runs under PM2 like the daemon does — survives reboots via `pm2 startup` / `pm2 save`.
+- **Verified end-to-end:**
+  - `soma-daemon` online (post-cutover uptime). Logs show `[system] Bootstrap complete. Beginning poll loop.` — Telegram bot reconnected to `@SoloScale_Bot`.
+  - 6 agents come up under the daemon: `system`, `analyst`, `sales`, `marketing`, `operations`, `content` (user added the last 3 mid-session before the cutover).
+  - `SOMA-dashboard` online; dashboard responds 200 OK on `/login`.
+  - `soma-jobs-worker` online; ready to drain Minions queue.
+  - `~/.cortextos` resolves as a symlink to `~/.soma`; both paths read/write the same content.
+  - `enabled-agents.json` accessible via either path.
+- **Deferred (Tier D, operator-driven):** local repo dir rename `~/cortextos` → `~/SOMA` and GitHub fork rename `NulightJens/cortextos` → `NulightJens/soma`. Source code now handles both project-root paths via fallback discovery (`enable-agent.ts` + `ecosystem.ts`), so Tier D becomes a single `mv` + symlink + GitHub-side action whenever the operator picks the moment. Not blocking anything.
+- **Phase 1 at ~97%, unchanged.** Remaining: API-engine body + dashboard submit-UI/intent-parser. The infra rename was a parallel deliverable, not a blocker on those.
