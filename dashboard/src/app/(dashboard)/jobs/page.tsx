@@ -19,6 +19,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
+  IconPlus,
   IconRefresh,
   IconCircleCheck,
   IconCircleX,
@@ -281,6 +282,14 @@ export default function JobsPage() {
           Minions queue — {stats.total} total, {stats.stalled} stalled
         </span>
         <div className="ml-auto flex items-center gap-2">
+          <Button
+            size="sm"
+            className="gap-1.5"
+            onClick={() => { window.location.href = '/jobs/submit'; }}
+          >
+            <IconPlus size={16} />
+            New job
+          </Button>
           <Button
             variant="ghost"
             size="sm"
