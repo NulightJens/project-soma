@@ -33,6 +33,7 @@ import type {
 import { UnrecoverableError } from '../../../types.js';
 import type { RunnerResult } from '../../registry.js';
 import { getProvider } from './providers/index.js';
+import { getDefaultTools } from './tools/registry.js';
 import { ProviderHttpError, type ApiToolDef, type Provider } from './types.js';
 
 // ── Defaults ────────────────────────────────────────────────
@@ -54,7 +55,12 @@ export interface ApiEngineJobData {
   max_turns?: number;
   max_tokens?: number;
   system?: string;
-  /** Optional pre-resolved tool list. Tool registry lands in commit (c). */
+  /** Per-job tool allow-list. When absent, the full registered tool set
+   *  (built via getDefaultTools) is used. Useful for narrowing the agent's
+   *  capability surface per job. */
+  allowed_tools?: string[];
+  /** Pre-resolved tool list — bypasses the registry. Tests use this; the
+   *  production path goes through getDefaultTools(allowed_tools). */
   tools?: ApiToolDef[];
 }
 
@@ -103,7 +109,9 @@ export async function runApiLoop(
   const maxTurns = data.max_turns ?? DEFAULT_MAX_TURNS;
   const maxTokens = data.max_tokens ?? DEFAULT_MAX_TOKENS;
   const system = data.system ?? DEFAULT_SYSTEM;
-  const tools: ApiToolDef[] = data.tools ?? [];
+  // Resolution order: explicit data.tools (tests / advanced) →
+  // registry's default factories filtered by allowed_tools → empty list.
+  const tools: ApiToolDef[] = data.tools ?? getDefaultTools({ allowed: data.allowed_tools });
   const leaseTimeoutMs = deps.leaseTimeoutMs ?? DEFAULT_LEASE_TIMEOUT_MS;
   const rateKey = `api:${provider.rateKey()}`;
 
@@ -328,7 +336,7 @@ export async function runApiLoop(
       });
       const argsSize = JSON.stringify(use.input ?? {}).length;
       try {
-        const output = await def.execute(use.input, { jobId: ctx.id, signal: ctx.signal });
+        const output = await def.execute(use.input, makeToolCtx(ctx));
         await subagent.markToolExecComplete({ tool_use_id: use.id, output });
         const outStr = stringify(output);
         await ctx.log({
@@ -449,7 +457,7 @@ async function reconcileTool(
     input: use.input,
   });
   try {
-    const output = await def.execute(use.input, { jobId: ctx.id, signal: ctx.signal });
+    const output = await def.execute(use.input, makeToolCtx(ctx));
     await subagent.markToolExecComplete({ tool_use_id: use.id, output });
     return { type: 'tool_result', tool_use_id: use.id, content: stringify(output) };
   } catch (e) {
@@ -463,6 +471,14 @@ async function reconcileTool(
     });
     return { type: 'tool_result', tool_use_id: use.id, content: errText, is_error: true };
   }
+}
+
+function makeToolCtx(ctx: MinionJobContext): import('./types.js').ApiToolContext {
+  return {
+    jobId: ctx.id,
+    signal: ctx.signal,
+    readOwnInbox: () => ctx.readInbox(),
+  };
 }
 
 function stringify(v: unknown): string {

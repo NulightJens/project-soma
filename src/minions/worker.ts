@@ -47,6 +47,7 @@ import { MinionQueue } from './queue.js';
 import { calculateBackoff } from './backoff.js';
 import { evaluateQuietHours, type QuietHoursConfig } from './quiet-hours.js';
 import { bindApiEngineQueue } from './handlers/engines/api.js';
+import { bindToolRegistryQueue } from './handlers/engines/api/tools/registry.js';
 
 /** Re-claim delay after a quiet-hours 'defer' verdict. 15 minutes matches gbrain. */
 const QUIET_HOURS_DEFER_MS = 15 * 60 * 1000;
@@ -111,6 +112,10 @@ export class MinionWorker {
     // Other engines don't need this because they don't touch persistence
     // outside ctx.* helpers.
     bindApiEngineQueue(engine);
+    // Bind the live MinionQueue to the API tool registry so the built-in
+    // tools (submit_minion / send_message / read_own_inbox) resolve against
+    // a real queue at execute-time.
+    bindToolRegistryQueue(this.queue);
   }
 
   /** Register a handler for a job type. */

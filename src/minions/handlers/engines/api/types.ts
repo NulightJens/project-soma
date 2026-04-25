@@ -14,6 +14,7 @@
  */
 
 import type {
+  InboxMessage,
   SubagentContentBlock,
   SubagentMessage,
 } from '../../../types.js';
@@ -44,6 +45,11 @@ export interface ApiToolDef {
 export interface ApiToolContext {
   jobId: number;
   signal: AbortSignal;
+  /**
+   * Read the calling job's inbox (token-fenced). Wired by the loop from
+   * MinionJobContext.readInbox so tools never see the lock token directly.
+   */
+  readOwnInbox(): Promise<InboxMessage[]>;
 }
 
 // ── Provider seam ───────────────────────────────────────────

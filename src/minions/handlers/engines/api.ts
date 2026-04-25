@@ -93,3 +93,11 @@ export {
   listProviders,
   resetProviderRegistryForTests,
 } from './api/providers/index.js';
+export {
+  registerToolFactory,
+  listToolFactories,
+  resetToolFactoriesForTests,
+  bindToolRegistryQueue,
+  unbindToolRegistryQueueForTests,
+  getDefaultTools,
+} from './api/tools/registry.js';
