@@ -43,7 +43,7 @@ export const dashboardCommand = new Command('dashboard')
 
     // ─── Load / generate dashboard credentials ────────────────────────────────
 
-    const ctxRoot = join(homedir(), '.cortextos', options.instance);
+    const ctxRoot = join(homedir(), '.soma', options.instance);
     const dashEnvPath = join(ctxRoot, 'dashboard.env');
 
     let dashCreds: Record<string, string> = {};

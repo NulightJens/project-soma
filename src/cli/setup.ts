@@ -203,7 +203,7 @@ export const setupCommand = new Command('setup')
   .action(async (options: { instance: string }) => {
     const instanceId = options.instance;
     const projectRoot = findProjectRoot();
-    const ctxRoot = join(homedir(), '.cortextos', instanceId);
+    const ctxRoot = join(homedir(), '.soma', instanceId);
 
     const iface = rl();
 

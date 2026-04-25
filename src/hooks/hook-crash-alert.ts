@@ -104,7 +104,7 @@ async function main(): Promise<void> {
   const instanceId = process.env.CTX_INSTANCE_ID || 'default';
   if (!agentName) return;
 
-  const ctxRoot = join(homedir(), '.cortextos', instanceId);
+  const ctxRoot = join(homedir(), '.soma', instanceId);
   const stateDir = join(ctxRoot, 'state', agentName);
   const logDir = join(ctxRoot, 'logs', agentName);
 

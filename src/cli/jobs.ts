@@ -34,7 +34,7 @@ interface SharedOpts {
 function resolveDbPath(opts: SharedOpts): string {
   if (opts.db) return opts.db;
   const instance = opts.instance || process.env.CTX_INSTANCE_ID || 'default';
-  const dir = join(homedir(), '.cortextos', instance);
+  const dir = join(homedir(), '.soma', instance);
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }

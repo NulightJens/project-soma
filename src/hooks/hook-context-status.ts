@@ -37,7 +37,7 @@ async function main(): Promise<void> {
   const agentName = process.env.CTX_AGENT_NAME;
   if (!agentName) return;
 
-  const ctxRoot = process.env.CTX_ROOT || join(homedir(), '.cortextos', 'default');
+  const ctxRoot = process.env.CTX_ROOT || join(homedir(), '.soma', 'default');
   const stateDir = join(ctxRoot, 'state', agentName);
   const outPath = join(stateDir, 'context_status.json');
 

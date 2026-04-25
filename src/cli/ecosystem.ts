@@ -10,7 +10,7 @@ export const ecosystemCommand = new Command('ecosystem')
   .option('--output <path>', 'Output file', 'ecosystem.config.js')
   .description('Generate PM2 ecosystem.config.js from agent configs')
   .action(async (options: { instance: string; org?: string; output: string }) => {
-    const ctxRoot = join(homedir(), '.cortextos', options.instance);
+    const ctxRoot = join(homedir(), '.soma', options.instance);
     // BUG-035 (companion fix): same project-root discovery as enable-agent.ts
     // so `cortextos ecosystem` works from outside ~/cortextos.
     let projectRoot: string;
@@ -19,8 +19,17 @@ export const ecosystemCommand = new Command('ecosystem')
     } else if (process.env.CTX_PROJECT_ROOT) {
       projectRoot = process.env.CTX_PROJECT_ROOT;
     } else {
-      const canonical = join(homedir(), 'SOMA');
-      projectRoot = existsSync(join(canonical, 'orgs')) ? canonical : process.cwd();
+      // Try ~/SOMA first (post-rename), fall back to ~/cortextos
+      // (pre-rename); the directory rename is operator-driven per ADR-015.
+      let found = '';
+      for (const dir of ['SOMA', 'cortextos']) {
+        const candidate = join(homedir(), dir);
+        if (existsSync(join(candidate, 'orgs'))) {
+          found = candidate;
+          break;
+        }
+      }
+      projectRoot = found || process.cwd();
     }
 
     // Find all agents
@@ -69,10 +78,10 @@ export const ecosystemCommand = new Command('ecosystem')
     // process.env.CTX_INSTANCE_ID at PM2-startup time, not at generation time.
     // The previous JSON.stringify approach baked the instance id into the
     // generated file, so instance switching required regenerating the file.
-    // Now: `CTX_INSTANCE_ID=other pm2 restart cortextos-daemon` just works.
+    // Now: `CTX_INSTANCE_ID=other pm2 restart soma-daemon` just works.
     //
     // BUG-016 fix: bumped max_restarts from 10 to 50. PM2's max_restarts
-    // controls how many times PM2 itself restarts cortextos-daemon if it
+    // controls how many times PM2 itself restarts soma-daemon if it
     // crashes — independent of in-daemon agent crash counting. 10 was too
     // low: a transient infrastructure wobble could exhaust retries before
     // the daemon stabilized. 50 leaves real headroom.
@@ -120,7 +129,7 @@ export const ecosystemCommand = new Command('ecosystem')
     const minionsDb = join(ctxRoot, 'minions.db');
     const jobsWorkerBlock = `,
     {
-      name: 'cortextos-jobs-worker',
+      name: 'soma-jobs-worker',
       script: ${JSON.stringify(cliScript)},
       args: [
         'jobs', 'work',
@@ -144,11 +153,11 @@ export const ecosystemCommand = new Command('ecosystem')
 //
 // Note: env vars use process.env.X || 'default' so PM2 picks up the value
 // from the calling shell at startup time. This means \`CTX_INSTANCE_ID=foo
-// pm2 restart cortextos-daemon\` switches instances without regenerating.
+// pm2 restart soma-daemon\` switches instances without regenerating.
 module.exports = {
   apps: [
     {
-      name: 'cortextos-daemon',
+      name: 'soma-daemon',
       script: ${JSON.stringify(daemonScript)},
       args: '--instance ' + (process.env.CTX_INSTANCE_ID || ${JSON.stringify(options.instance)}),
       cwd: ${JSON.stringify(projectRoot)},

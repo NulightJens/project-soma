@@ -33,7 +33,7 @@ export const startCommand = new Command('start')
         process.exit(1);
       }
 
-      const ctxRoot = join(homedir(), '.cortextos', options.instance);
+      const ctxRoot = join(homedir(), '.soma', options.instance);
 
       // Try reading org from enabled-agents.json
       let org = '';
@@ -145,7 +145,7 @@ export const startCommand = new Command('start')
     // Daemon already running
     if (agent) {
       // Auto-register in enabled-agents.json if not already present
-      const ctxRoot = join(homedir(), '.cortextos', options.instance);
+      const ctxRoot = join(homedir(), '.soma', options.instance);
       const enabledPath = join(ctxRoot, 'config', 'enabled-agents.json');
       let enabledAgents: Record<string, any> = {};
       try {

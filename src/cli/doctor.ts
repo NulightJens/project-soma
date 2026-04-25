@@ -148,7 +148,7 @@ export const doctorCommand = new Command('doctor')
     }
 
     // Check state directory
-    const ctxRoot = join(homedir(), '.cortextos', options.instance);
+    const ctxRoot = join(homedir(), '.soma', options.instance);
     checks.push({
       name: 'State directory',
       status: existsSync(ctxRoot) ? 'pass' : 'warn',
@@ -225,7 +225,7 @@ export const doctorCommand = new Command('doctor')
       });
 
       // Tunnel URL saved?
-      const tunnelConfigPath = join(homedir(), '.cortextos', options.instance, 'tunnel.json');
+      const tunnelConfigPath = join(homedir(), '.soma', options.instance, 'tunnel.json');
       let tunnelUrl: string | undefined;
       try {
         const tc = JSON.parse(readFileSync(tunnelConfigPath, 'utf-8'));

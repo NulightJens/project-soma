@@ -598,7 +598,7 @@ busCommand
     const reason = opts.reason || 'self-restart requested';
 
     // Write .user-restart marker (same as soft-restart)
-    const ctxRoot = require('path').join(require('os').homedir(), '.cortextos', env.instanceId);
+    const ctxRoot = require('path').join(require('os').homedir(), '.soma', env.instanceId);
     const stateDir = join(ctxRoot, 'state', env.agentName);
     mkdirSync(stateDir, { recursive: true });
     writeFileSync(join(stateDir, '.user-restart'), reason);
@@ -1159,7 +1159,7 @@ busCommand
 
     const frameworkRoot = env.frameworkRoot || process.cwd();
     const instanceId = env.instanceId;
-    const kbRoot = pjoin(hdir(), '.cortextos', instanceId, 'orgs', org, 'knowledge-base');
+    const kbRoot = pjoin(hdir(), '.soma', instanceId, 'orgs', org, 'knowledge-base');
     const chromaDir = pjoin(kbRoot, 'chromadb');
     const isWin = process.platform === 'win32';
     const venvBin = isWin ? 'Scripts' : 'bin';
@@ -1318,7 +1318,7 @@ busCommand
     const { existsSync, readdirSync, readFileSync } = require('fs');
     const { join } = require('path');
     const env = resolveEnv();
-    const ctxRoot = require('path').join(require('os').homedir(), '.cortextos', env.instanceId);
+    const ctxRoot = require('path').join(require('os').homedir(), '.soma', env.instanceId);
     const frameworkRoot = env.frameworkRoot || process.cwd();
 
     // Collect agents from enabled-agents.json + filesystem scan
@@ -1502,7 +1502,7 @@ busCommand
     const { join } = require('path');
     const env = resolveEnv();
     const paths = resolvePaths(env.agentName, env.instanceId, env.org);
-    const ctxRoot = require('path').join(require('os').homedir(), '.cortextos', env.instanceId);
+    const ctxRoot = require('path').join(require('os').homedir(), '.soma', env.instanceId);
 
     // Write urgent signal file that fast-checker checks on every poll
     const signalDir = join(ctxRoot, 'state', targetAgent);
@@ -1531,7 +1531,7 @@ busCommand
     const { mkdirSync, writeFileSync } = require('fs');
     const { join } = require('path');
     const env = resolveEnv();
-    const ctxRoot = require('path').join(require('os').homedir(), '.cortextos', env.instanceId);
+    const ctxRoot = require('path').join(require('os').homedir(), '.soma', env.instanceId);
 
     // Step 1: Write .user-restart marker BEFORE triggering exit
     const stateDir = join(ctxRoot, 'state', targetAgent);
@@ -1566,7 +1566,7 @@ busCommand
     const { mkdirSync, writeFileSync, readFileSync, existsSync } = require('fs');
     const { join } = require('path');
     const env = resolveEnv();
-    const ctxRoot = require('path').join(require('os').homedir(), '.cortextos', env.instanceId);
+    const ctxRoot = require('path').join(require('os').homedir(), '.soma', env.instanceId);
     const staggerMs = parseInt(opts.stagger, 10) * 1000;
 
     // Read enabled agents from config
@@ -1630,7 +1630,7 @@ busCommand
     const { mkdirSync, appendFileSync } = require('fs');
     const { join } = require('path');
     const env = resolveEnv();
-    const ctxRoot = require('path').join(require('os').homedir(), '.cortextos', env.instanceId);
+    const ctxRoot = require('path').join(require('os').homedir(), '.soma', env.instanceId);
 
     // Write to outbound-messages.jsonl so iOS app chat history picks it up
     const logDir = join(ctxRoot, 'logs', agent);
@@ -1673,7 +1673,7 @@ busCommand
 
     if (opts.allOrgs) {
       // Scan every org directory under CTX_ROOT — mirrors dashboard syncAll() behaviour
-      const ctxRoot = join(homedir(), '.cortextos', env.instanceId);
+      const ctxRoot = join(homedir(), '.soma', env.instanceId);
       const orgsDir = join(ctxRoot, 'orgs');
       const orgs: string[] = existsSync(orgsDir)
         ? readdirSync(orgsDir, { withFileTypes: true })

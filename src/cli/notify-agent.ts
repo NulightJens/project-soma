@@ -12,7 +12,7 @@ export const notifyAgentCommand = new Command('notify-agent')
   .option('--instance <id>', 'Instance ID', 'default')
   .action((name: string, message: string, options: { from: string; instance: string }) => {
     const paths = resolvePaths(options.from, options.instance);
-    const ctxRoot = join(homedir(), '.cortextos', options.instance);
+    const ctxRoot = join(homedir(), '.soma', options.instance);
 
     notifyAgent(paths, options.from, name, message, ctxRoot);
     console.log(`Signal sent to ${name}`);

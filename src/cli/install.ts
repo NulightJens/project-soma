@@ -59,7 +59,7 @@ export const installCommand = new Command('install')
   .description('Install SOMA — create state directories, check and install dependencies')
   .action(async (options: { instance: string }) => {
     const instanceId = options.instance;
-    const ctxRoot = join(homedir(), '.cortextos', instanceId);
+    const ctxRoot = join(homedir(), '.soma', instanceId);
 
     console.log('\nSOMA Installation\n');
 

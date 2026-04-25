@@ -21,10 +21,15 @@ import { TelegramAPI, formatValidateError } from '../telegram/api.js';
 export function discoverProjectRoot(): string {
   if (process.env.CTX_FRAMEWORK_ROOT) return process.env.CTX_FRAMEWORK_ROOT;
   if (process.env.CTX_PROJECT_ROOT) return process.env.CTX_PROJECT_ROOT;
-  // Canonical install location (install.mjs always installs to ~/cortextos)
-  const canonical = join(homedir(), 'SOMA');
-  if (existsSync(join(canonical, 'orgs')) || existsSync(join(canonical, 'agents'))) {
-    return canonical;
+  // Canonical install location. Try ~/SOMA first (post-rename), fall back to
+  // ~/cortextos (pre-rename or unmigrated installs). install.mjs has historically
+  // installed to ~/cortextos; the directory rename is operator-driven (ADR-015
+  // infra-migration slot), so both must keep working.
+  for (const dir of ['SOMA', 'cortextos']) {
+    const candidate = join(homedir(), dir);
+    if (existsSync(join(candidate, 'orgs')) || existsSync(join(candidate, 'agents'))) {
+      return candidate;
+    }
   }
   return process.cwd();
 }
@@ -47,7 +52,7 @@ function parseEnvFile(path: string): Record<string, string> {
 }
 
 function getEnabledAgentsPath(instanceId: string): string {
-  return join(homedir(), '.cortextos', instanceId, 'config', 'enabled-agents.json');
+  return join(homedir(), '.soma', instanceId, 'config', 'enabled-agents.json');
 }
 
 /**
@@ -105,7 +110,7 @@ export function readEnabledAgents(instanceId: string): Record<string, any> {
  */
 export function writeDisableMarker(instanceId: string, agent: string, reason: string): void {
   try {
-    const ctxRoot = join(homedir(), '.cortextos', instanceId);
+    const ctxRoot = join(homedir(), '.soma', instanceId);
     const stateDir = join(ctxRoot, 'state', agent);
     mkdirSync(stateDir, { recursive: true });
     writeFileSync(join(stateDir, '.user-disable'), reason);
@@ -114,7 +119,7 @@ export function writeDisableMarker(instanceId: string, agent: string, reason: st
 
 function writeEnabledAgents(instanceId: string, agents: Record<string, any>): void {
   const path = getEnabledAgentsPath(instanceId);
-  const dir = join(homedir(), '.cortextos', instanceId, 'config');
+  const dir = join(homedir(), '.soma', instanceId, 'config');
   mkdirSync(dir, { recursive: true });
   writeFileSync(path, JSON.stringify(agents, null, 2) + '\n', 'utf-8');
 }
@@ -229,7 +234,7 @@ export const enableAgentCommand = new Command('enable')
     writeEnabledAgents(options.instance, agents);
 
     // Create per-agent state directories
-    const ctxRoot = join(homedir(), '.cortextos', options.instance);
+    const ctxRoot = join(homedir(), '.soma', options.instance);
     const agentDirs = [
       join(ctxRoot, 'inbox', agent),
       join(ctxRoot, 'inflight', agent),

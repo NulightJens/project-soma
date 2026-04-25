@@ -4,6 +4,7 @@
   "description": "Project SOMA — persistent 24/7 Claude Code agent operating system with durable priority queue, worktree isolation, Telegram + dashboard UX",
   "main": "dist/daemon.js",
   "bin": {
+    "soma": "dist/cli.js",
     "cortextos": "dist/cli.js"
   },
   "scripts": {

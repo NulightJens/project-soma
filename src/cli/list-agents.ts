@@ -10,7 +10,7 @@ export const listAgentsCommand = new Command('list-agents')
   .option('--instance <id>', 'Instance ID')
   .action((options: { org?: string; format: string; instance?: string }) => {
     const instanceId = options.instance || process.env.CTX_INSTANCE_ID || 'default';
-    const ctxRoot = join(homedir(), '.cortextos', instanceId);
+    const ctxRoot = join(homedir(), '.soma', instanceId);
     const agents = listAgents(ctxRoot, options.org);
 
     if (options.format === 'json') {

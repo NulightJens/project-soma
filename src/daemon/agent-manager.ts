@@ -605,7 +605,7 @@ export class AgentManager {
    * state dir BEFORE stopping it. The SessionEnd crash-alert hook
    * (src/hooks/hook-crash-alert.ts) reads this marker and reports a clean
    * `🛑 daemon shutdown` notification instead of a false `🚨 CRASH` alarm.
-   * Without this, every `pm2 restart cortextos-daemon` (or `pm2 stop`)
+   * Without this, every `pm2 restart soma-daemon` (or `pm2 stop`)
    * generates a false crash alarm per agent — trust-destroying.
    *
    * Pattern matches src/cli/bus.ts:1283-1289 and PR #12 (BUG-036). Markers

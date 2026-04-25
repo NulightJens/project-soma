@@ -11,7 +11,7 @@ export const uninstallCommand = new Command('uninstall')
   .description('Remove SOMA state directories and PM2 processes')
   .action(async (options: { instance: string; force?: boolean; keepState?: boolean }) => {
     const instanceId = options.instance;
-    const ctxRoot = join(homedir(), '.cortextos', instanceId);
+    const ctxRoot = join(homedir(), '.soma', instanceId);
 
     if (!existsSync(ctxRoot)) {
       console.log(`No SOMA state found at ${ctxRoot}`);

@@ -11,7 +11,7 @@ export const initCommand = new Command('init')
   .description('Create a new SOMA organization')
   .action(async (orgName: string, options: { instance: string }) => {
     const instanceId = options.instance;
-    const ctxRoot = join(homedir(), '.cortextos', instanceId);
+    const ctxRoot = join(homedir(), '.soma', instanceId);
     const projectRoot = process.cwd();
 
     // Check if org already exists

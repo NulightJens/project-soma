@@ -16,7 +16,7 @@ async function main(): Promise<void> {
   const instanceId = process.env.CTX_INSTANCE_ID || 'default';
   if (!agentName) return;
 
-  const stateDir = join(homedir(), '.cortextos', instanceId, 'state', agentName);
+  const stateDir = join(homedir(), '.soma', instanceId, 'state', agentName);
   try {
     mkdirSync(stateDir, { recursive: true });
     writeFileSync(join(stateDir, 'last_idle.flag'), String(Math.floor(Date.now() / 1000)), 'utf-8');

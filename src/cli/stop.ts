@@ -12,7 +12,7 @@ import { IPCClient } from '../daemon/ipc-server.js';
  */
 export function writeStopMarker(instanceId: string, agent: string, reason: string): void {
   try {
-    const ctxRoot = join(homedir(), '.cortextos', instanceId);
+    const ctxRoot = join(homedir(), '.soma', instanceId);
     const stateDir = join(ctxRoot, 'state', agent);
     mkdirSync(stateDir, { recursive: true });
     writeFileSync(join(stateDir, '.user-stop'), reason);
@@ -23,7 +23,7 @@ export const stopCommand = new Command('stop')
   .argument('[agent]', 'Agent name to stop. Omit and pass --all to stop every running agent.')
   .option('--instance <id>', 'Instance ID', 'default')
   .option('--all', 'Stop every running agent (required when no agent name is given)')
-  .description('Stop a running agent. Use --all to stop every agent. Does NOT stop the daemon process itself — use `pm2 stop cortextos-daemon` for that.')
+  .description('Stop a running agent. Use --all to stop every agent. Does NOT stop the daemon process itself — use `pm2 stop soma-daemon` for that.')
   .action(async (agent: string | undefined, options: { instance: string; all?: boolean }) => {
     // Safety: refuse to stop the entire fleet unless the user explicitly opted in.
     if (!agent && !options.all) {
@@ -31,7 +31,7 @@ export const stopCommand = new Command('stop')
       console.error('');
       console.error('  To stop one agent:    cortextos stop <agent>');
       console.error('  To stop every agent:  cortextos stop --all');
-      console.error('  To stop the daemon:   pm2 stop cortextos-daemon');
+      console.error('  To stop the daemon:   pm2 stop soma-daemon');
       console.error('');
       console.error('(Previously `cortextos stop` with no argument silently stopped every running agent. That behavior was a foot-gun and now requires --all.)');
       process.exit(2);
@@ -80,5 +80,5 @@ export const stopCommand = new Command('stop')
       const response = await ipc.send({ type: 'stop-agent', agent: a, source: 'cortextos stop --all' });
       console.log(`  ${a}: ${response.success ? 'stopped' : response.error}`);
     }
-    console.log('\nAll agents stopped. The daemon is still running. To stop it: pm2 stop cortextos-daemon');
+    console.log('\nAll agents stopped. The daemon is still running. To stop it: pm2 stop soma-daemon');
   });

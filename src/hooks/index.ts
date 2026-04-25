@@ -47,7 +47,7 @@ export function loadEnv(): {
   ctxRoot: string;
 } {
   const agentName = process.env.CTX_AGENT_NAME || require('path').basename(process.cwd());
-  const ctxRoot = process.env.CTX_ROOT || join(homedir(), '.cortextos', 'default');
+  const ctxRoot = process.env.CTX_ROOT || join(homedir(), '.soma', 'default');
   const stateDir = join(ctxRoot, 'state', agentName);
 
   // Try to load .env file

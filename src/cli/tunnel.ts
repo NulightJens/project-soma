@@ -19,7 +19,7 @@ interface TunnelConfig {
 }
 
 function getTunnelConfigPath(instance: string): string {
-  return join(homedir(), '.cortextos', instance, 'tunnel.json');
+  return join(homedir(), '.soma', instance, 'tunnel.json');
 }
 
 function readTunnelConfig(instance: string): TunnelConfig {
@@ -32,7 +32,7 @@ function readTunnelConfig(instance: string): TunnelConfig {
 
 function writeTunnelConfig(instance: string, config: TunnelConfig): void {
   const configPath = getTunnelConfigPath(instance);
-  mkdirSync(join(homedir(), '.cortextos', instance), { recursive: true });
+  mkdirSync(join(homedir(), '.soma', instance), { recursive: true });
   writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
 }
 
@@ -177,8 +177,8 @@ function writePlist(instance: string, port: number): void {
   const cfPath = getCloudflaredPath();
   const nodeBinDir = detectNodePath();
   const cfBinDir = detectCloudflaredPath();
-  const logDir = join(homedir(), '.cortextos', instance, 'logs', 'tunnel');
-  const ctxRoot = join(homedir(), '.cortextos', instance);
+  const logDir = join(homedir(), '.soma', instance, 'logs', 'tunnel');
+  const ctxRoot = join(homedir(), '.soma', instance);
 
   mkdirSync(logDir, { recursive: true });
 

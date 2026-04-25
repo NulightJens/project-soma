@@ -23,7 +23,7 @@ export const statusCommand = new Command('status')
     } else {
       // Fall back to reading heartbeat files
       console.log('Daemon is not running. Showing last known heartbeats:\n');
-      const ctxRoot = join(homedir(), '.cortextos', instanceId);
+      const ctxRoot = join(homedir(), '.soma', instanceId);
       const stateDir = join(ctxRoot, 'state');
 
       if (!existsSync(stateDir)) {
