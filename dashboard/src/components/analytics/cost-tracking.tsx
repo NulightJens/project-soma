@@ -99,7 +99,7 @@ export function CostTracking({
                 Run the usage scraper to see your Claude Max plan usage here.
               </p>
               <code className="text-xs bg-muted px-2 py-1 rounded block w-fit mx-auto mt-2">
-                cortextos bus scrape-usage
+                soma bus scrape-usage
               </code>
             </div>
           )}

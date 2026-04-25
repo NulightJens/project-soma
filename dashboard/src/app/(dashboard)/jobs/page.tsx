@@ -330,7 +330,7 @@ export default function JobsPage() {
         <div className="rounded-md border border-[var(--soma-border)] bg-[var(--soma-surface)] p-3 text-sm text-[var(--soma-fg-muted)]">
           Could not load jobs: {error}
           <div className="mt-1 text-xs">
-            If this is a fresh install, the queue DB (<code className="text-[var(--soma-fg)]">~/.cortextos/&lt;instance&gt;/minions.db</code>) is created on first submit.
+            If this is a fresh install, the queue DB (<code className="text-[var(--soma-fg)]">~/.soma/&lt;instance&gt;/minions.db</code>) is created on first submit.
           </div>
         </div>
       )}
@@ -344,7 +344,7 @@ export default function JobsPage() {
           <div className="flex h-64 flex-col items-center justify-center gap-2 text-sm">
             <span className="text-[var(--soma-fg-muted)]">No jobs match this filter.</span>
             <span className="text-xs text-[var(--soma-fg-muted)]">
-              Submit one with: <code className="text-[var(--soma-fg)]">cortextos jobs submit echo --data {`'{"msg":"hi"}'`}</code>
+              Submit one with: <code className="text-[var(--soma-fg)]">soma jobs submit echo --data {`'{"msg":"hi"}'`}</code>
             </span>
           </div>
         ) : (

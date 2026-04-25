@@ -13,6 +13,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { SplashScreen } from '@/components/layout/splash-screen';
+import { SomaMark } from '@/components/ui/soma-mark';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -142,9 +143,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-6 px-4">
         {/* Logo */}
         <div className="text-center space-y-2">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground text-lg font-bold">
-            cO
-          </div>
+          <SomaMark size={48} title="SOMA" className="inline-block" />
           <h1 className="text-xl font-semibold tracking-tight">SOMA</h1>
           <p className="text-sm text-muted-foreground">
             Persistent AI Agent Orchestration

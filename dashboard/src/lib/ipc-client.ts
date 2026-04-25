@@ -51,7 +51,7 @@ export class IPCClient {
         if (err.code === 'ECONNREFUSED' || err.code === 'ENOENT') {
           resolve({
             success: false,
-            error: 'Daemon is not running. Start it with: cortextos start',
+            error: 'Daemon is not running. Start it with: soma start',
           });
         } else {
           reject(err);

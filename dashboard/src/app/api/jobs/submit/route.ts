@@ -80,7 +80,7 @@ function buildCliArgs(input: SubmitInput): string[] {
  * can copy/paste the right command into a terminal.
  */
 function equivalentCliCommand(input: SubmitInput, trusted: boolean): string {
-  const parts = ['cortextos', 'jobs', 'submit', JSON.stringify(input.name), '--data', JSON.stringify(JSON.stringify(input.data ?? {}))];
+  const parts = ['soma', 'jobs', 'submit', JSON.stringify(input.name), '--data', JSON.stringify(JSON.stringify(input.data ?? {}))];
   if (input.queue) parts.push('--queue', JSON.stringify(input.queue));
   if (input.priority !== undefined) parts.push('--priority', String(input.priority));
   if (input.delay !== undefined) parts.push('--delay', String(input.delay));

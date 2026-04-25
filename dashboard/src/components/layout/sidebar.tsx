@@ -21,6 +21,7 @@ import {
   IconStack2,
 } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
+import { SomaMark } from '@/components/ui/soma-mark';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
@@ -100,9 +101,7 @@ export function Sidebar({
     <aside className="flex h-screen w-56 shrink-0 flex-col border-r bg-card/50">
       {/* Logo */}
       <div className="flex h-14 items-center gap-2 px-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
-          cO
-        </div>
+        <SomaMark size={28} title="SOMA" />
         <span className="text-sm font-semibold tracking-tight">SOMA</span>
       </div>
 

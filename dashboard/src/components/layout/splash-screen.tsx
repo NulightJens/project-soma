@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { SomaMark } from '@/components/ui/soma-mark';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -92,9 +93,8 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             transition: 'all 0.6s ease-out 0.15s',
           }}
         >
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground text-2xl font-bold shadow-xl shadow-primary/25">
-            cO
-          </div>
+          <SomaMark size={64} title="SOMA" className="rounded-2xl shadow-xl shadow-foreground/25" />
+
           <div className="text-center">
             <h1 className="text-xl font-semibold tracking-tight">SOMA</h1>
             <p className="text-xs text-muted-foreground mt-1">Agent Orchestration</p>

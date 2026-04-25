@@ -365,7 +365,7 @@ export function KnowledgeBaseClient({ org, markdownContent, filePath }: Knowledg
                 Ingest content to create collections. Agents automatically ingest their memory files on each heartbeat.
               </p>
               <code className="text-[10px] font-mono bg-muted px-2 py-1 rounded">
-                cortextos bus kb-ingest ./file.md --org {org}
+                soma bus kb-ingest ./file.md --org {org}
               </code>
             </CardContent>
           </Card>
