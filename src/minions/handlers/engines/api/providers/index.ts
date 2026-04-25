@@ -16,5 +16,14 @@ export {
   resetProviderRegistryForTests,
 } from './registry.js';
 
-// Side-effect imports — auto-register built-in providers.
+// Side-effect imports — auto-register built-in providers + load custom
+// providers from env config.
 import './anthropic.js';
+import './openai.js';
+import './custom.js';
+
+// Re-export the custom-provider loader so operators / tests can rerun it
+// after mutating SOMA_API_CUSTOM_PROVIDERS without forcing a process restart.
+export { loadCustomProvidersFromEnv } from './custom.js';
+export type { CustomProviderEntry } from './custom.js';
+export { makeOpenAiProvider } from './openai.js';
