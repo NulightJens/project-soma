@@ -46,6 +46,7 @@ import { UnrecoverableError } from './types.js';
 import { MinionQueue } from './queue.js';
 import { calculateBackoff } from './backoff.js';
 import { evaluateQuietHours, type QuietHoursConfig } from './quiet-hours.js';
+import { bindApiEngineQueue } from './handlers/engines/api.js';
 
 /** Re-claim delay after a quiet-hours 'defer' verdict. 15 minutes matches gbrain. */
 const QUIET_HOURS_DEFER_MS = 15 * 60 * 1000;
@@ -104,6 +105,12 @@ export class MinionWorker {
       maxStalledCount: opts?.maxStalledCount ?? 1,
       pollInterval: opts?.pollInterval ?? 5_000,
     };
+
+    // SOMA: bind the QueueEngine to the api engine module so its
+    // `acquireLock(...)` rate-lease path resolves at handler-run time.
+    // Other engines don't need this because they don't touch persistence
+    // outside ctx.* helpers.
+    bindApiEngineQueue(engine);
   }
 
   /** Register a handler for a job type. */
@@ -345,6 +352,20 @@ export class MinionWorker {
       },
       isActive: async () => this.queue.isJobActive(job.id, lockToken),
       readInbox: async () => this.queue.readInbox(job.id, lockToken),
+      // SOMA: ctx.subagent — job-scoped persistence for the API engine.
+      // Other handlers ignore it; binding here keeps the worker the only
+      // place that knows the jobId (engine implementations stay job-agnostic).
+      subagent: {
+        appendMessage: (msg) => this.queue.appendSubagentMessage(job.id, msg),
+        loadMessages: () => this.queue.loadSubagentMessages(job.id),
+        appendToolExecPending: (args) =>
+          this.queue.appendSubagentToolExecPending({ jobId: job.id, ...args }),
+        markToolExecComplete: (args) =>
+          this.queue.markSubagentToolExecComplete({ jobId: job.id, ...args }),
+        markToolExecFailed: (args) =>
+          this.queue.markSubagentToolExecFailed({ jobId: job.id, ...args }),
+        loadToolExecs: () => this.queue.loadSubagentToolExecs(job.id),
+      },
     };
 
     try {

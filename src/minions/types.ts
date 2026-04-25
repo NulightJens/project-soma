@@ -157,6 +157,86 @@ export interface MinionJobContext {
   log(message: string | TranscriptEntry): Promise<void>;
   isActive(): Promise<boolean>;
   readInbox(): Promise<InboxMessage[]>;
+  /**
+   * Job-scoped persistence for the API engine's multi-turn-with-tools loop.
+   * Wired by the worker; the API engine consumes this without ever touching
+   * the underlying QueueEngine. SOMA: scoped namespace mirrors the existing
+   * scoped helpers (log, updateTokens, ...) — keeps SQL in queue.ts per
+   * ADR-012 while letting the engine remain engine-agnostic.
+   *
+   * Optional on the type because non-API handlers (echo, noop, sleep, shell,
+   * subscription) don't touch it and many tests construct ctx by hand. The
+   * production worker always provides a real implementation; the api engine
+   * asserts presence at runtime and throws UnrecoverableError when missing.
+   */
+  subagent?: SubagentApi;
+}
+
+// --- Subagent persistence (used by API engine, exposed via ctx.subagent) ---
+
+/**
+ * Provider-neutral content block. Mirrors the Anthropic Messages API shape
+ * because it's a strict superset of the conversation primitives we need.
+ * The OpenAI provider translates these to OpenAI's role-tagged messages at
+ * its boundary; the canonical internal storage stays in this shape.
+ */
+export type SubagentContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'tool_use'; id: string; name: string; input: unknown }
+  | { type: 'tool_result'; tool_use_id: string; content: string; is_error?: boolean };
+
+export interface SubagentMessage {
+  message_idx: number;
+  role: 'user' | 'assistant';
+  content_blocks: SubagentContentBlock[];
+  tokens_in: number | null;
+  tokens_out: number | null;
+  tokens_cache_read: number | null;
+  tokens_cache_create: number | null;
+  model: string | null;
+}
+
+export type SubagentToolStatus = 'pending' | 'complete' | 'failed';
+
+export interface SubagentToolExec {
+  message_idx: number;
+  tool_use_id: string;
+  tool_name: string;
+  input: unknown;
+  status: SubagentToolStatus;
+  output: unknown;
+  error: string | null;
+}
+
+/**
+ * Job-scoped API-engine persistence. Every method operates on the current
+ * job (jobId is bound by the worker). All writes are append-only or
+ * idempotent UPSERTs; replay-after-crash is the explicit design goal.
+ */
+export interface SubagentApi {
+  /** Append a Messages-API-shaped message. ON CONFLICT (job_id, message_idx) DO NOTHING. */
+  appendMessage(msg: SubagentMessage): Promise<void>;
+  /** Load all persisted messages for this job in message_idx order. */
+  loadMessages(): Promise<SubagentMessage[]>;
+  /** Mark a tool dispatch as in-flight. ON CONFLICT (job_id, tool_use_id) DO NOTHING. */
+  appendToolExecPending(args: {
+    message_idx: number;
+    tool_use_id: string;
+    tool_name: string;
+    input: unknown;
+  }): Promise<void>;
+  /** Settle an in-flight tool dispatch as complete with its output. */
+  markToolExecComplete(args: { tool_use_id: string; output: unknown }): Promise<void>;
+  /** Settle an in-flight tool dispatch (or insert a fresh failed row). */
+  markToolExecFailed(args: {
+    message_idx: number;
+    tool_use_id: string;
+    tool_name: string;
+    input: unknown;
+    error: string;
+  }): Promise<void>;
+  /** Load the tool ledger for this job (used by replay reconciliation). */
+  loadToolExecs(): Promise<SubagentToolExec[]>;
 }
 
 export type MinionHandler = (job: MinionJobContext) => Promise<unknown>;

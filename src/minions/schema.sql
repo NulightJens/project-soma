@@ -175,3 +175,60 @@ BEGIN
      SET updated_at = unixepoch('subsec') * 1000
    WHERE id = NEW.id;
 END;
+
+-- =========================================================================
+-- minion_subagent_messages — append-only message log for the API engine
+-- =========================================================================
+-- One row per Messages-API-style message in a multi-turn conversation.
+-- Crash-resumable replay: on resume, load all rows ORDER BY message_idx,
+-- replay state, continue from where we left off. Tool_use blocks live in
+-- content_blocks (JSON array); per-tool execution status is in
+-- minion_subagent_tool_executions.
+--
+-- SOMA: ported from gbrain `subagent_messages`. Postgres BIGSERIAL → INTEGER
+-- PK; TIMESTAMPTZ → INTEGER (Unix ms); JSONB → TEXT (JSON-encoded).
+CREATE TABLE IF NOT EXISTS minion_subagent_messages (
+  id                  INTEGER PRIMARY KEY,
+  job_id              INTEGER NOT NULL REFERENCES minion_jobs(id) ON DELETE CASCADE,
+  message_idx         INTEGER NOT NULL,
+  role                TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+  content_blocks      TEXT NOT NULL,                            -- JSON array of ContentBlock
+  tokens_in           INTEGER,
+  tokens_out          INTEGER,
+  tokens_cache_read   INTEGER,
+  tokens_cache_create INTEGER,
+  model               TEXT,
+  ended_at            INTEGER NOT NULL DEFAULT (unixepoch('subsec') * 1000),
+  UNIQUE (job_id, message_idx)
+);
+
+CREATE INDEX IF NOT EXISTS minion_subagent_messages_job_idx
+  ON minion_subagent_messages (job_id, message_idx);
+
+-- =========================================================================
+-- minion_subagent_tool_executions — two-phase tool ledger
+-- =========================================================================
+-- Before the tool runs:           INSERT status='pending'.
+-- After tool returns successfully: UPDATE to status='complete' + output.
+-- On failure:                      UPDATE to status='failed' + error.
+-- Replay re-runs 'pending' rows only when the tool is idempotent.
+--
+-- SOMA: ported from gbrain `subagent_tool_executions`. Same Postgres → SQLite
+-- mapping as messages.
+CREATE TABLE IF NOT EXISTS minion_subagent_tool_executions (
+  id           INTEGER PRIMARY KEY,
+  job_id       INTEGER NOT NULL REFERENCES minion_jobs(id) ON DELETE CASCADE,
+  message_idx  INTEGER NOT NULL,
+  tool_use_id  TEXT NOT NULL,
+  tool_name    TEXT NOT NULL,
+  input        TEXT NOT NULL,                                   -- JSON
+  status       TEXT NOT NULL CHECK (status IN ('pending', 'complete', 'failed')),
+  output       TEXT,                                            -- JSON (NULL until complete)
+  error        TEXT,
+  started_at   INTEGER NOT NULL DEFAULT (unixepoch('subsec') * 1000),
+  ended_at     INTEGER,
+  UNIQUE (job_id, tool_use_id)
+);
+
+CREATE INDEX IF NOT EXISTS minion_subagent_tool_executions_job_idx
+  ON minion_subagent_tool_executions (job_id, status);

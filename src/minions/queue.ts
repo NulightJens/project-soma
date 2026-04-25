@@ -47,6 +47,10 @@ import type {
   TokenUpdate,
   MinionQueueOpts,
   ChildDoneMessage,
+  SubagentContentBlock,
+  SubagentMessage,
+  SubagentToolExec,
+  SubagentToolStatus,
 } from './types.js';
 import { rowToAttachment, rowToMinionJob, rowToInboxMessage } from './types.js';
 import { validateAttachment } from './attachments.js';
@@ -1325,6 +1329,142 @@ export class MinionQueue {
       [jobId, filename],
     );
     return changes > 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Subagent persistence (used by API engine)
+  // ---------------------------------------------------------------------------
+  //
+  // SOMA: ported from gbrain handlers/subagent.ts persistence helpers
+  // (loadPriorMessages / persistMessage / persist*ToolExec*). Postgres
+  // `JSONB` → SQLite TEXT (JSON.stringify on write, JSON.parse on read).
+  // `now()` → engine.now() Unix ms. `$N::jsonb` casts dropped.
+
+  async appendSubagentMessage(jobId: number, msg: SubagentMessage): Promise<void> {
+    await this.engine.exec(
+      `INSERT INTO minion_subagent_messages
+         (job_id, message_idx, role, content_blocks,
+          tokens_in, tokens_out, tokens_cache_read, tokens_cache_create, model, ended_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (job_id, message_idx) DO NOTHING`,
+      [
+        jobId,
+        msg.message_idx,
+        msg.role,
+        JSON.stringify(msg.content_blocks),
+        msg.tokens_in,
+        msg.tokens_out,
+        msg.tokens_cache_read,
+        msg.tokens_cache_create,
+        msg.model,
+        this.engine.now(),
+      ],
+    );
+  }
+
+  async loadSubagentMessages(jobId: number): Promise<SubagentMessage[]> {
+    const rows = await this.engine.all<Record<string, unknown>>(
+      `SELECT message_idx, role, content_blocks,
+              tokens_in, tokens_out, tokens_cache_read, tokens_cache_create, model
+         FROM minion_subagent_messages
+        WHERE job_id = ?
+        ORDER BY message_idx ASC`,
+      [jobId],
+    );
+    return rows.map((r) => ({
+      message_idx: r.message_idx as number,
+      role: r.role as 'user' | 'assistant',
+      content_blocks: JSON.parse(r.content_blocks as string) as SubagentContentBlock[],
+      tokens_in: (r.tokens_in as number | null) ?? null,
+      tokens_out: (r.tokens_out as number | null) ?? null,
+      tokens_cache_read: (r.tokens_cache_read as number | null) ?? null,
+      tokens_cache_create: (r.tokens_cache_create as number | null) ?? null,
+      model: (r.model as string | null) ?? null,
+    }));
+  }
+
+  async appendSubagentToolExecPending(args: {
+    jobId: number;
+    message_idx: number;
+    tool_use_id: string;
+    tool_name: string;
+    input: unknown;
+  }): Promise<void> {
+    await this.engine.exec(
+      `INSERT INTO minion_subagent_tool_executions
+         (job_id, message_idx, tool_use_id, tool_name, input, status, started_at)
+       VALUES (?, ?, ?, ?, ?, 'pending', ?)
+       ON CONFLICT (job_id, tool_use_id) DO NOTHING`,
+      [
+        args.jobId,
+        args.message_idx,
+        args.tool_use_id,
+        args.tool_name,
+        JSON.stringify(args.input),
+        this.engine.now(),
+      ],
+    );
+  }
+
+  async markSubagentToolExecComplete(args: {
+    jobId: number;
+    tool_use_id: string;
+    output: unknown;
+  }): Promise<void> {
+    await this.engine.exec(
+      `UPDATE minion_subagent_tool_executions
+          SET status = 'complete', output = ?, ended_at = ?
+        WHERE job_id = ? AND tool_use_id = ?`,
+      [JSON.stringify(args.output), this.engine.now(), args.jobId, args.tool_use_id],
+    );
+  }
+
+  async markSubagentToolExecFailed(args: {
+    jobId: number;
+    message_idx: number;
+    tool_use_id: string;
+    tool_name: string;
+    input: unknown;
+    error: string;
+  }): Promise<void> {
+    // SOMA: gbrain uses Postgres `INSERT ... ON CONFLICT DO UPDATE`. SQLite
+    // supports the same shape — keep it. Covers both fresh failure (no prior
+    // pending row) and mid-flight failure (pending → failed transition).
+    await this.engine.exec(
+      `INSERT INTO minion_subagent_tool_executions
+         (job_id, message_idx, tool_use_id, tool_name, input, status, error, started_at, ended_at)
+       VALUES (?, ?, ?, ?, ?, 'failed', ?, ?, ?)
+       ON CONFLICT (job_id, tool_use_id) DO UPDATE
+         SET status = 'failed', error = excluded.error, ended_at = excluded.ended_at`,
+      [
+        args.jobId,
+        args.message_idx,
+        args.tool_use_id,
+        args.tool_name,
+        JSON.stringify(args.input),
+        args.error,
+        this.engine.now(),
+        this.engine.now(),
+      ],
+    );
+  }
+
+  async loadSubagentToolExecs(jobId: number): Promise<SubagentToolExec[]> {
+    const rows = await this.engine.all<Record<string, unknown>>(
+      `SELECT message_idx, tool_use_id, tool_name, input, status, output, error
+         FROM minion_subagent_tool_executions
+        WHERE job_id = ?`,
+      [jobId],
+    );
+    return rows.map((r) => ({
+      message_idx: r.message_idx as number,
+      tool_use_id: r.tool_use_id as string,
+      tool_name: r.tool_name as string,
+      input: JSON.parse(r.input as string),
+      status: r.status as SubagentToolStatus,
+      output: r.output == null ? null : JSON.parse(r.output as string),
+      error: (r.error as string | null) ?? null,
+    }));
   }
 
   // ---------------------------------------------------------------------------

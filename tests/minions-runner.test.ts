@@ -27,7 +27,9 @@ import {
   ingestNDJSONLine,
   makeSubscriptionEngine,
 } from '../src/minions/handlers/engines/subscription.js';
-import { apiEngine } from '../src/minions/handlers/engines/api.js';
+// SOMA: api.ts no longer exports a static `apiEngine` constant; tests
+// reach the registered engine via `getEngine('api')` (production path)
+// or build a test-only one via `makeApiEngine({...deps})`.
 import { UnrecoverableError } from '../src/minions/index.js';
 import type { MinionJobContext } from '../src/minions/index.js';
 
@@ -160,31 +162,52 @@ describe('runner — handler validation + dispatch', () => {
     ).rejects.toThrow(UnrecoverableError);
   });
 
-  it('api engine stub throws UnrecoverableError explaining the deferral', async () => {
-    await expect(
-      apiEngine.run(makeCtx({ data: { prompt: 'hi' } }), { prompt: 'hi' }),
-    ).rejects.toThrow(UnrecoverableError);
-    await expect(
-      apiEngine.run(makeCtx({ data: { prompt: 'hi' } }), { prompt: 'hi' }),
-    ).rejects.toThrow(/'api' engine is not yet ported/);
+  it('api engine refuses to run without SOMA_ALLOW_API_ENGINE=1', async () => {
+    const prev = process.env.SOMA_ALLOW_API_ENGINE;
+    delete process.env.SOMA_ALLOW_API_ENGINE;
+    try {
+      // Default-registered engine has the gate live (no test-path bypass).
+      await expect(
+        getEngine('api')!.run(makeCtx({ data: { prompt: 'hi' } }), { prompt: 'hi' }),
+      ).rejects.toThrow(UnrecoverableError);
+      await expect(
+        getEngine('api')!.run(makeCtx({ data: { prompt: 'hi' } }), { prompt: 'hi' }),
+      ).rejects.toThrow(/SOMA_ALLOW_API_ENGINE=1/);
+    } finally {
+      if (prev === undefined) delete process.env.SOMA_ALLOW_API_ENGINE;
+      else process.env.SOMA_ALLOW_API_ENGINE = prev;
+    }
   });
 
   it('routes to engine named by data.engine when provided', async () => {
-    await expect(
-      runnerHandler(makeCtx({ data: { prompt: 'hi', engine: 'api' } })),
-    ).rejects.toThrow(/not yet ported/);
+    const prev = process.env.SOMA_ALLOW_API_ENGINE;
+    delete process.env.SOMA_ALLOW_API_ENGINE;
+    try {
+      // With the gate off, dispatching to 'api' surfaces its gate error —
+      // proves the runner handler is correctly forwarding to the named engine.
+      await expect(
+        runnerHandler(makeCtx({ data: { prompt: 'hi', engine: 'api' } })),
+      ).rejects.toThrow(/SOMA_ALLOW_API_ENGINE/);
+    } finally {
+      if (prev === undefined) delete process.env.SOMA_ALLOW_API_ENGINE;
+      else process.env.SOMA_ALLOW_API_ENGINE = prev;
+    }
   });
 
   it('falls back to SOMA_DEFAULT_ENGINE when data.engine is absent', async () => {
-    const prev = process.env.SOMA_DEFAULT_ENGINE;
+    const prevDefault = process.env.SOMA_DEFAULT_ENGINE;
+    const prevAllow = process.env.SOMA_ALLOW_API_ENGINE;
     process.env.SOMA_DEFAULT_ENGINE = 'api';
+    delete process.env.SOMA_ALLOW_API_ENGINE;
     try {
       await expect(
         runnerHandler(makeCtx({ data: { prompt: 'hi' } })),
-      ).rejects.toThrow(/not yet ported/);
+      ).rejects.toThrow(/SOMA_ALLOW_API_ENGINE/);
     } finally {
-      if (prev === undefined) delete process.env.SOMA_DEFAULT_ENGINE;
-      else process.env.SOMA_DEFAULT_ENGINE = prev;
+      if (prevDefault === undefined) delete process.env.SOMA_DEFAULT_ENGINE;
+      else process.env.SOMA_DEFAULT_ENGINE = prevDefault;
+      if (prevAllow === undefined) delete process.env.SOMA_ALLOW_API_ENGINE;
+      else process.env.SOMA_ALLOW_API_ENGINE = prevAllow;
     }
   });
 });
