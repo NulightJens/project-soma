@@ -773,3 +773,42 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
   - `enabled-agents.json` accessible via either path.
 - **Deferred (Tier D, operator-driven):** local repo dir rename `~/cortextos` → `~/SOMA` and GitHub fork rename `NulightJens/cortextos` → `NulightJens/soma`. Source code now handles both project-root paths via fallback discovery (`enable-agent.ts` + `ecosystem.ts`), so Tier D becomes a single `mv` + symlink + GitHub-side action whenever the operator picks the moment. Not blocking anything.
 - **Phase 1 at ~97%, unchanged.** Remaining: API-engine body + dashboard submit-UI/intent-parser. The infra rename was a parallel deliverable, not a blocker on those.
+
+### 2026-04-25 (afternoon) — Multi-provider API engine + dashboard submit UI (Phase 1 closeout)
+- **User directive:** *"Both, just have them able to accept custom API's or models and then create the UI piece"* — green-lit a four-commit closeout in one block: (a) API engine + Anthropic, (b) OpenAI-compatible + custom endpoints, (c) tool registry + 3 minimal tools, (d) dashboard submit UI + intent parser.
+- **Commit `576f4e2` — API engine body + Anthropic provider port** (port-exempt under CLAUDE.md §3, `// SOMA:` annotations on every deviation).
+  - Schema additions: `minion_subagent_messages` (append-only message log) + `minion_subagent_tool_executions` (two-phase pending → complete/failed ledger). CREATE IF NOT EXISTS bootstrapped via openSqliteEngine; not an ALTER.
+  - Provider abstraction in `handlers/engines/api/types.ts` — only the HTTP call differs across providers. Lets commit (b) drop in OpenAI without touching the loop. Hermes adaptability open thread satisfied for the API axis.
+  - Provider registry split (`providers/registry-leaf.ts` storage + `providers/index.ts` orchestrator) mirrors the engine-registry pattern. Required to dodge ESM TDZ when self-registering modules import their own registry's storage map.
+  - QueueEngine binding via `bindApiEngineQueue(engine)` called from MinionWorker constructor. Default-registered engine resolves the binding on each run; tests inject deps.engine to bypass.
+  - Crash-resumable replay: replay reconciliation finishes pending tool dispatches before the next provider turn — same semantics as gbrain (idempotent re-run permitted; non-idempotent pending → UnrecoverableError).
+  - Job-scoped persistence via `ctx.subagent.*` (worker wires; SQL lives in queue.ts per ADR-012). Optional on the type so non-API handlers + hand-rolled test ctxs aren't forced to provide one.
+  - Cost-surface gate `SOMA_ALLOW_API_ENGINE=1` — separate from `SOMA_ALLOW_SUBAGENT_JOBS=1` because subscription engine spends Claude subscription quota; api engine spends pay-per-token API credits. Tests bypass via `deps.engine` (test-path detection).
+  - Anthropic provider: lazy `@anthropic-ai/sdk` import; cache markers on system + last tool-def; HTTP errors classified retryable (5xx + 408 + 429) vs unrecoverable (other 4xx) at the loop boundary.
+  - 13 new vitest cases (env gate, validation, single-turn happy path, tool dispatch + ledger, unregistered tool fallback, max_turns, replay, provider registry, Anthropic block normalisation).
+- **Commit `9680385` — OpenAI-compatible provider + custom-endpoint env config.**
+  - One HTTP path covers OpenAI itself plus every "OpenAI-shape" endpoint: OpenRouter, Together, Groq, Mistral, Anyscale, Perplexity, Ollama, vLLM, LM Studio, llama.cpp.
+  - Native `fetch` (Node 22) — no SDK pin. Custom endpoints inherit the same wire format without dragging in new deps.
+  - Translates canonical SubagentContentBlock ↔ OpenAI Chat shape: text↔string, tool_use↔assistant.tool_calls, tool_result↔role:tool message. Multi-result user messages split into multiple role:tool entries (order preserved).
+  - `SOMA_API_CUSTOM_PROVIDERS` JSON env config registers additional providers via `makeOpenAiProvider({...})`. Strict per-entry validation; bad entries warn rather than crash. Keys live in env vars the entry names; never in queue payloads.
+  - 22 new vitest cases (translators in both directions, finish-reason mapping, runTurn integration via fake fetch, custom-provider loader).
+- **Commit `dabd2ea` — Tool registry + 3 minimal Phase-1 tools.**
+  - Phase 1 ships only queue-internal tools — no shell, no file I/O, no network. Brain-derived tools (gbrain `buildBrainTools`) deferred to Phase 6.
+  - Same registry-leaf-orchestrator split for TDZ avoidance.
+  - Tools: `submit_minion(name, data?, queue?, priority?)` (untrusted submit, parented to caller — protected names bounce at queue gate), `send_message(target_job_id, payload)` (parent-or-admin auth via queue.sendMessage), `read_own_inbox()` (via ctx.readOwnInbox callback added to ApiToolContext).
+  - Loop resolves tools: explicit `data.tools` (tests) → `getDefaultTools({allowed: data.allowed_tools})` → empty.
+  - 17 new vitest cases (registry, each tool's behaviour against real MinionQueue + SQLite).
+- **Commit `312f725` — dashboard submit + intent-parse API routes (untrusted submitter).**
+  - POST `/api/jobs/submit` shells out to `cortextos jobs submit --json`. Validates name/data/queue/priority/delay/max_attempts/idempotency_key; protected-name pre-check returns 422 with the equivalent operator CLI command pre-rendered (no doomed subprocess spawn).
+  - POST `/api/intents/parse` runs the deterministic pattern matcher: bare-name+JSON catch-all, sleep N units, echo phrase, noop. First-match. Refuses protected names. Failures return suggestions.
+  - LLM-routed fallback (subscription engine via synchronous Minion poll) deferred — keeps the dashboard credential-free for v1.
+  - CLI resolver helper (`lib/data/cortextos-cli.ts`) replaces the brittle hardcoded `~/SOMA/dist/cli.js` from the rebrand sweep.
+  - 14 new vitest cases for the pattern parser.
+- **Commit `2a99638` — dashboard `/jobs/submit` UI** (Freeform + Advanced tabs).
+  - Freeform tab: text → /api/intents/parse → confirmation card with hint sentence ("Sleep handler — pause 1000ms") → user confirms before submission.
+  - Advanced tab: full structured form (handler / JSON data / queue / priority / max_attempts / idempotency_key) with client-side JSON validation.
+  - Untrusted-submitter invariant encoded both server- and client-side. Protected names render an "Operator CLI required" card with the equivalent `cortextos jobs submit ... --trusted` command for copy/paste — no "force submit" button.
+  - On success, flash the new job id + status, then redirect to `/jobs?focus=<id>` after 800ms.
+  - "New job" button added to the existing /jobs header.
+- **Verification.** 202/202 discipline-suite vitest pass (188 minions+cli + 14 dashboard pattern-parser). `npx tsc --noEmit` clean root + `dashboard/`. Dashboard `/jobs/submit` returns the auth-gate redirect; `/api/intents/parse` returns 401 (auth-gated) — both routes exist and behave correctly. Pre-existing failures in `tests/unit/cli/*` (rebrand-era debt) unchanged.
+- **Phase 1 at ~99%.** Only the LLM-routed intent-parser fallback (deterministic-parser failure → submit synchronous high-priority Minion using subscription engine + system prompt that returns JSON; server polls until terminal, returns parsed intent; +2-3s latency, dashboard credential-free) remains as polish.
