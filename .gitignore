@@ -50,6 +50,9 @@ docs/*
 # ...except SOMA handoff snapshots — part of the public project record.
 !docs/handoffs/
 !docs/handoffs/**
+# ...and the SOMA wiki — concept/setup/architecture docs for the public repo.
+!docs/wiki/
+!docs/wiki/**
 
 # Internal developer/planning notes (not for public repo)
 KNOWN-ISSUES.md

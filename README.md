@@ -1,137 +1,62 @@
-![npm version](https://img.shields.io/npm/v/SOMA) ![License](https://img.shields.io/badge/license-MIT-green) ![Node](https://img.shields.io/badge/node-20%2B-brightgreen) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)
+![License](https://img.shields.io/badge/license-MIT-green) ![Node](https://img.shields.io/badge/node-20%2B-brightgreen) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)
 
 # SOMA
 
-**Persistent 24/7 Claude Code agents you control from Telegram or your phone.**
+**A persistent, durable agent operating system.** Claude Code sessions running 24/7, coordinating through a SQLite-backed priority queue with crash-resumable LLM loops, surfaced through Telegram and a Next.js dashboard.
+
+Forked from [cortextOS](https://github.com/grandamenium/cortextos); absorbing pieces of [gbrain](https://github.com/garrytan/gbrain) (queue + tools) and [gstack](https://github.com/garrytan/gstack) (subprocess pattern + worktree isolation, Phase 2). All donors MIT.
 
 ---
 
-```
-Telegram chat
+## What SOMA actually is
 
-You:     Morning. What did you ship overnight?
-Boss:    Overnight recap: completed 4 tasks, ran 2 theta-wave
-         experiments, drafted 3 content scripts. One item needs
-         your approval — I want to email the beta waitlist.
-         Check the dashboard or reply "approve".
+Three layers, each independently durable:
 
-You:     approve
-Boss:    Sent. Email delivered to 47 recipients. Task closed.
+1. **Substrate** — a PM2-supervised Node.js daemon that spawns `claude` CLI processes via `node-pty`, manages a file bus for inter-agent messages, polls Telegram, and serves a Next.js dashboard. Inherited from cortextOS; what makes "an agent" persistent across crashes and OAuth refresh cycles.
+2. **Minions queue** — a `better-sqlite3` priority queue with DAG children, idempotency, stall rescue, attachment storage, and a protected-names gate. Every job is a row that survives any process death. Ported from gbrain.
+3. **LLM-loop engines** — pluggable Provider seam over a shared multi-turn loop with crash-resumable replay. Two engines ship: `subscription` (spawns `claude -p` and parses NDJSON) and `api` (Anthropic SDK / OpenAI-compatible / custom HTTP endpoints).
 
-You:     Add a cron to check my inbox every morning at 8am.
-Boss:    Done. "morning-inbox" cron set — runs daily at 08:00.
-         Added to config.json so it survives restarts.
-```
+What you get on top: an agent that can submit work to itself, message other agents, read replies, and hand off to humans through Telegram or the dashboard — without losing state when the OS reboots.
 
 ---
 
-## Features
-
-- **Persistent agents** — Claude Code runs 24/7 in PTY sessions, auto-restarting on crash or after 71-hour context rotation.
-- **Multi-agent orchestration** — Orchestrator, Analyst, and specialist agents coordinate via a shared file bus. Tasks, blockers, and approvals flow automatically.
-- **Telegram + iOS control** — Send commands, approve actions, and get reports from anywhere. Native iOS app coming soon.
-- **Web dashboard** — Full-featured Next.js UI for tasks, approvals, experiments, analytics, and agent fleet health.
-- **Autoresearch (theta wave)** — Agents run autonomous experiments overnight, evaluate results, and surface findings for your review.
-
----
-
-## Architecture
-
-```mermaid
-flowchart TD
-    U["User (Telegram / iOS)"] --> CLI["SOMA Daemon (Node.js)"]
-    CLI --> O["Orchestrator agent"]
-    CLI --> A["Analyst agent"]
-    CLI --> W["Specialist agents"]
-    O <-->|file bus| A
-    O <-->|file bus| W
-    CLI --> D["Web Dashboard (Next.js)"]
-    D --> U2["Browser / iOS App"]
-```
-
----
-
-## Quick Start
-
-**Requirements:** Node.js 20+, Claude API key, PM2, Telegram bot token from @BotFather.
+## Quickstart
 
 ```bash
-# 1. Install PM2 globally if you don't have it
-npm install -g pm2
+git clone https://github.com/NulightJens/cortextos.git ~/cortextos
+cd ~/cortextos
+npm install
+npm run build
+npm link                                 # `soma` and `cortextos` both work
 
-# 2. Install SOMA
-curl -fsSL https://raw.githubusercontent.com/grandamenium/cortextos/main/install.mjs | node
-
-# 3. Open the project in Claude Code and run guided onboarding
-claude ~/cortextos
-# Then inside Claude Code:
-# /onboarding
+soma jobs submit echo --data '{"msg":"hi"}' --json
+soma jobs work --handlers echo &
+soma jobs get 1
 ```
 
-Onboarding handles everything: dependency checks, org setup, bot creation, PM2 config, and dashboard launch. Your Orchestrator comes online in Telegram and finishes its own setup there.
-
-### Manual setup (advanced)
-
-```bash
-cortextos install                          # Set up state directories
-cortextos init myorg                       # Create an organization
-cortextos add-agent boss --template orchestrator --org myorg
-cortextos add-agent analyst --template analyst --org myorg
-
-# Add Telegram credentials for each agent
-cat > orgs/myorg/agents/boss/.env << EOF
-BOT_TOKEN=<your-bot-token>
-CHAT_ID=<your-chat-id>
-ALLOWED_USER=<your-telegram-user-id>
-EOF
-
-cortextos ecosystem                        # Generate PM2 config
-pm2 start ecosystem.config.js && pm2 save && pm2 startup
-```
+Full walkthrough including dashboard, daemon, and Telegram setup: **[docs/wiki/quickstart.md](./docs/wiki/quickstart.md)**.
 
 ---
 
-## Requirements
+## Where to read next
 
-| Dependency | Notes |
+| If you want to... | Start here |
 |---|---|
-| Node.js 20+ | [nodejs.org](https://nodejs.org) |
-| macOS or Linux | Windows: not yet supported |
-| Claude Code | `npm install -g @anthropic-ai/claude-code` + `claude login` |
-| PM2 | `npm install -g pm2` |
-| Telegram bot token | Create via @BotFather |
+| Understand what SOMA *is* | [docs/wiki/what-is-soma.md](./docs/wiki/what-is-soma.md) |
+| Bring it up cold | [docs/wiki/quickstart.md](./docs/wiki/quickstart.md) |
+| See the component map | [docs/wiki/architecture.md](./docs/wiki/architecture.md) |
+| Trace donor lineage | [docs/wiki/donor-lineage.md](./docs/wiki/donor-lineage.md) |
+| Onboard an LLM agent | [docs/wiki/agent-bootstrap.md](./docs/wiki/agent-bootstrap.md) |
+| Read the architecture record | [PROJECT_SOMA.md](./PROJECT_SOMA.md) (15 ADRs + chronicle) |
+| Resume a paused dev session | [HANDOFF.md](./HANDOFF.md) |
+| Work on the codebase as Claude | [CLAUDE.md](./CLAUDE.md) (operating harness) |
+| Contribute skills/agents/orgs | [CONTRIBUTING.md](./CONTRIBUTING.md) |
 
 ---
 
-## Templates
+## Status
 
-| Template | Description |
-|---|---|
-| `orchestrator` | Coordinates agents, manages goals, handles morning/evening reviews, approves actions |
-| `analyst` | System health, metrics, theta-wave autoresearch, analytics |
-| `agent` | General-purpose worker — use this as the base for specialist agents |
-
----
-
-## CLI Reference
-
-```bash
-cortextos install            # Set up state directories
-cortextos init <org>         # Create an organization
-cortextos add-agent <name>   # Add an agent (--template, --org)
-cortextos enable <name>      # Enable agent in daemon
-cortextos ecosystem          # Generate PM2 config
-cortextos status             # Agent health table
-cortextos doctor             # Check prerequisites
-cortextos list-agents        # List agents
-cortextos dashboard          # Start web dashboard (--port 3000)
-```
-
----
-
-## Security
-
-SOMA has undergone a dedicated security hardening sprint covering prompt injection resistance, guardrail enforcement, and approval gate integrity. Agents require explicit human approval before any external action (email, deploy, delete, financial). The guardrails system is self-improving: agents log near-misses and extend GUARDRAILS.md each session.
+Phase 1 (Minions queue + multi-provider API engine + dashboard submit UI) is essentially complete. Phase 2 (worktree isolation per gstack) is next. Full roadmap in [PROJECT_SOMA.md §9](./PROJECT_SOMA.md).
 
 ---
 
