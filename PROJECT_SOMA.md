@@ -8,7 +8,7 @@
 | **Started** | 2026-04-23 |
 | **Owner** | Jens Heitmann (nulight) |
 | **Upstream fork** | grandamenium/cortextos (MIT) |
-| **Destination** | NulightJens/cortextos (fork + evolve in place; display rebrand to SOMA per ADR-015, repo rename deferred) |
+| **Destination** | NulightJens/project-soma (fork + evolve in place; display rebrand to SOMA per ADR-015, repo rename deferred) |
 | **License** | MIT (preserved from upstream; all sources MIT) |
 | **Status** | Phase 0 — planning + documentation |
 
@@ -273,7 +273,7 @@ Implementation:
 - [x] Research gbrain, gstack, graphify
 - [x] Write PROJECT_SOMA.md (this file)
 - [ ] Run `gh auth login` (user action)
-- [ ] Fork grandamenium/cortextos → NulightJens/cortextos
+- [ ] Fork grandamenium/cortextos → NulightJens/project-soma
 - [ ] Update `origin` remote on local `~/cortextos`
 - [ ] Commit + push SOMA doc to `main` or `soma/phase-0` branch
 - [ ] Open tracking issues for phases 1–7
@@ -406,7 +406,7 @@ Keep gbrain's Postgres/SQLite + pgvector as the authoritative store. Graphify is
 **Date:** 2026-04-23
 **Context:** The user wants two SOMA deployments: (a) a private one modeled on the Solo Scale handoff, and (b) a public, sterile agnostic distribution. Direct instruction: "Do not ingest or build anything for solo scale right now, We just need to build the SOMA project first and then modify to solo scale."
 **Decision:**
-  - All Phase 1–5 work happens on the public `NulightJens/cortextos` fork with **zero Solo Scale content**.
+  - All Phase 1–5 work happens on the public `NulightJens/project-soma` fork with **zero Solo Scale content**.
   - No handoff ingestion, no 6-canonical-department wiring, no pdf-generator / skool-agent / motion-canvas / solo-scale-writer integration, no brand-solo-scale tokens.
   - The handoff files stay at `~/Downloads/solo-scale-handoff-2026-04-23` as reference material; PROJECT_SOMA.md does not ingest them.
   - Solo Scale instantiation becomes its own project, started **after** SOMA Phase 5 (orchestrator rewrite) lands. At that point a private repo (e.g., `solo-scale-twin`) consumes SOMA as a submodule and layers in the handoff.
@@ -537,7 +537,7 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - User named the project **SOMA**.
 - Decided to fork + evolve SOMA rather than start fresh.
 - `gh auth login` completed as `NulightJens`.
-- Forked grandamenium/cortextos → NulightJens/cortextos. Remotes: `origin` = fork, `upstream` = original.
+- Forked grandamenium/cortextos → NulightJens/project-soma. Remotes: `origin` = fork, `upstream` = original.
 - Rebased local branch onto upstream `main`, picked up 5 upstream fixes (telegram validation, cron gap detection, HTML parse mode, cron boot, IPC hard-restart).
 - Committed PROJECT_SOMA.md to `main` (commit `8fba559`).
 - Started branch `soma/phase-1-minions`.
@@ -557,7 +557,7 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **ADR-004 revised.** Graphify elevated from "optional skill" to first-class enrichment pipeline writing into gbrain storage. Tree-sitter AST (25 languages), Leiden clustering, multimodal ingest, god-node analytics.
 - **ADR-007 added.** `orchestrator` is the internal term; `twin` is the conceptual intent. Dev-facing surfaces use `orchestrator`; business-facing surfaces use `twin`.
 - **ADR-008 added** (supersedes ADR-003's framing). Subscription-first, API **opt-in only** — default worker handler spawns `claude -p`. API subagent is ported in full but gated behind explicit `--engine api` / `SOMA_DEFAULT_ENGINE=api` / per-job flag.
-- **ADR-009 added.** Solo Scale instantiation deferred. SOMA built fully agnostic on `NulightJens/cortextos`; no handoff ingestion, no 6-department wiring, no Solo Scale content. Private repo (future `solo-scale-twin`) consumes SOMA after Phase 5 lands.
+- **ADR-009 added.** Solo Scale instantiation deferred. SOMA built fully agnostic on `NulightJens/project-soma`; no handoff ingestion, no 6-department wiring, no Solo Scale content. Private repo (future `solo-scale-twin`) consumes SOMA after Phase 5 lands.
 - **ADR-010 added.** Full dashboard monochrome restyle executed (not token-only):
   - `globals.css` — OKLCH gold/mustard → hex monochrome bound to shadcn contract.
   - `soma-tokens.css` — parallel `--soma-*` namespace preserved.
@@ -707,7 +707,7 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
 - **User directive:** *"I just want it referred to as Project SOMA across the app and references."*
 - **ADR-015 added** (§10) — partially supersedes ADR-005. Splits the rebrand into a zero-behavioural-change display sweep (landed this commit) and a deferred runtime-infra migration (bin alias, state dir `~/.cortextos/`, PM2 app names, repo dir, GitHub URL) that needs an operator runbook.
 - **Sweep mechanics.** Sentinel-swap pipeline (two-pass sed): swap functional identifiers (`.cortextos` paths, `cortextos-daemon` / `cortextos-jobs-worker` PM2 IDs, `github.com/*/cortextos` URLs, `bin/cortextos` path, `/cortextos/` dir segments, backtick-wrapped `\`cortextos\`` binary literals, every `cortextos <subcommand>` CLI invocation for 71 known subcommands, `cortextos --flag` invocations) and every `cortextos <subcommand>` to sentinels → rename remaining lowercase `cortextos` → `SOMA` → restore sentinels. Separately, bulk `cortextOS` → `SOMA` across 118 files (280 occurrences) with no preservation needed (mixed-case form was pure branding).
-- **Scope landed:** 171 files changed, 510 insertions / 499 deletions. All tracked prose + template markdown + dashboard UI copy + source-code comments + community catalog + `package.json name` (`cortextos` → `soma`) + `package-lock.json` name/bin. Preserves all functional identifiers so `~/.cortextos/` state dir, `cortextos-daemon` PM2 app, `cortextos <subcommand>` CLI invocations keep working unchanged. Hand-fixes on top: provenance prose ("built by forking cortextOS (upstream)" on the TL;DR line), destination-path placeholder corrected to real `NulightJens/cortextos`, spurious `~/SOMA` path rewrites reverted to `~/cortextos` (29 call sites).
+- **Scope landed:** 171 files changed, 510 insertions / 499 deletions. All tracked prose + template markdown + dashboard UI copy + source-code comments + community catalog + `package.json name` (`cortextos` → `soma`) + `package-lock.json` name/bin. Preserves all functional identifiers so `~/.cortextos/` state dir, `cortextos-daemon` PM2 app, `cortextos <subcommand>` CLI invocations keep working unchanged. Hand-fixes on top: provenance prose ("built by forking cortextOS (upstream)" on the TL;DR line), destination-path placeholder corrected to real `NulightJens/project-soma`, spurious `~/SOMA` path rewrites reverted to `~/cortextos` (29 call sites).
 - **Verification:** 92/92 Minions+CLI vitest still green, `tsc --noEmit` clean in both the SOMA package AND `dashboard/`. Zero behavioural change — the commit is a pure text sweep.
 - **Deferred (ADR-015 infra-migration slot):** adding `soma` as a bin alias alongside `cortextos`, renaming the state dir with symlink fallback, renaming PM2 apps with a migration command (`pm2 delete` + restart), optionally renaming the local repo dir + GitHub fork. Tracked in HANDOFF §8 as a follow-up slot.
 
@@ -771,7 +771,7 @@ Linear journal. Append-only. Each entry: date, one-line summary, what happened, 
   - `soma-jobs-worker` online; ready to drain Minions queue.
   - `~/.cortextos` resolves as a symlink to `~/.soma`; both paths read/write the same content.
   - `enabled-agents.json` accessible via either path.
-- **Deferred (Tier D, operator-driven):** local repo dir rename `~/cortextos` → `~/SOMA` and GitHub fork rename `NulightJens/cortextos` → `NulightJens/soma`. Source code now handles both project-root paths via fallback discovery (`enable-agent.ts` + `ecosystem.ts`), so Tier D becomes a single `mv` + symlink + GitHub-side action whenever the operator picks the moment. Not blocking anything.
+- **Deferred (Tier D, operator-driven):** local repo dir rename `~/cortextos` → `~/SOMA` and GitHub fork rename `NulightJens/project-soma` → `NulightJens/soma`. Source code now handles both project-root paths via fallback discovery (`enable-agent.ts` + `ecosystem.ts`), so Tier D becomes a single `mv` + symlink + GitHub-side action whenever the operator picks the moment. Not blocking anything.
 - **Phase 1 at ~97%, unchanged.** Remaining: API-engine body + dashboard submit-UI/intent-parser. The infra rename was a parallel deliverable, not a blocker on those.
 
 ### 2026-04-25 (afternoon) — Multi-provider API engine + dashboard submit UI (Phase 1 closeout)

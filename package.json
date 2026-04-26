@@ -27,11 +27,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/grandamenium/cortextos.git"
+    "url": "https://github.com/NulightJens/project-soma.git"
   },
-  "homepage": "https://github.com/grandamenium/cortextos",
+  "homepage": "https://nulightjens.github.io/project-soma/",
   "bugs": {
-    "url": "https://github.com/grandamenium/cortextos/issues"
+    "url": "https://github.com/NulightJens/project-soma/issues"
   },
   "type": "commonjs",
   "engines": {

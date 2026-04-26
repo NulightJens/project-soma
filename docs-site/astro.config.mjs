@@ -7,7 +7,7 @@ import starlightLlmsTxt from 'starlight-llms-txt';
 // https://<owner>.github.io/<repo>/. For a custom domain, set `site` to
 // the canonical origin and remove `base`.
 const SITE = process.env.SOMA_DOCS_SITE ?? 'https://nulightjens.github.io';
-const BASE = process.env.SOMA_DOCS_BASE ?? '/cortextos';
+const BASE = process.env.SOMA_DOCS_BASE ?? '/project-soma';
 
 export default defineConfig({
   site: SITE,
@@ -26,7 +26,7 @@ export default defineConfig({
         {
           icon: 'github',
           label: 'GitHub',
-          href: 'https://github.com/NulightJens/cortextos',
+          href: 'https://github.com/NulightJens/project-soma',
         },
       ],
       customCss: ['./src/styles/soma-theme.css'],

@@ -53,7 +53,7 @@ These stop agent-drift.
 
 ## 4. Local-First Development
 
-- **Fork:** `NulightJens/cortextos` (origin) — all work lands here. `grandamenium/cortextos` is `upstream`; `git fetch upstream` for upstream bugfixes.
+- **Fork:** `NulightJens/project-soma` (origin) — all work lands here. `grandamenium/cortextos` is `upstream`; `git fetch upstream` for upstream bugfixes.
 - **Branches:** `soma/phase-N-topic` per phase of the roadmap. Never force-push shared branches.
 - **Deploy:** N/A for the platform itself; users install locally via the `install.mjs` script. Future: `npx @soma/cli init` as the public surface.
 - **SSH discipline:** no production server for SOMA today. When distribution lands, the rule is: SSH only for `systemctl status` / `journalctl`, never for edits.

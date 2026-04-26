@@ -23,7 +23,7 @@ What you get on top: an agent that can submit work to itself, message other agen
 ## Quickstart
 
 ```bash
-git clone https://github.com/NulightJens/cortextos.git ~/cortextos
+git clone https://github.com/NulightJens/project-soma.git ~/cortextos
 cd ~/cortextos
 npm install
 npm run build
@@ -40,7 +40,7 @@ Full walkthrough including dashboard, daemon, and Telegram setup: **[docs/wiki/q
 
 ## Where to read next
 
-The wiki is rendered as a hosted Starlight site at **https://nulightjens.github.io/cortextos/** (live once GitHub Pages source is enabled — see [docs-site/README.md](./docs-site/README.md)). It also publishes [`/llms.txt`](https://nulightjens.github.io/cortextos/llms.txt) + [`/llms-full.txt`](https://nulightjens.github.io/cortextos/llms-full.txt) for AI agents.
+The wiki is rendered as a hosted Starlight site at **https://nulightjens.github.io/project-soma/** (live once GitHub Pages source is enabled — see [docs-site/README.md](./docs-site/README.md)). It also publishes [`/llms.txt`](https://nulightjens.github.io/project-soma/llms.txt) + [`/llms-full.txt`](https://nulightjens.github.io/project-soma/llms-full.txt) for AI agents.
 
 The same content lives in `docs/wiki/*.md` for source browsers:
 

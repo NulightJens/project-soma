@@ -283,7 +283,7 @@ Full text in `PROJECT_SOMA.md` §10. Quick reference:
 
 2. **Phase 2 — Worktree isolation** (next phase). Port gstack's `WorktreeManager` (`/tmp/gstack/lib/worktree.ts`). Each Minion job runs inside its own git worktree so concurrent jobs can't clobber each other's working tree. Touches: worker.ts (worktree create/cleanup hooks around handler invoke), shell handler (resolve `cwd` to the worktree path), brain layer's filesystem ops (Phase 6 will inherit the isolation).
 
-3. **Repo dir + GitHub rename** (Tier D from ADR-015 — operator-driven). Local: `mv ~/cortextos ~/SOMA && ln -s ~/SOMA ~/cortextos`. GitHub: rename `NulightJens/cortextos` → `NulightJens/soma` in repo settings, then `git remote set-url origin git@github.com:NulightJens/soma.git`. Source code already supports both `~/SOMA` and `~/cortextos` as project root via fallback discovery, so the local rename is a no-op the moment you decide. Not blocking anything.
+3. **Repo dir + GitHub rename** (Tier D from ADR-015 — operator-driven). Local: `mv ~/cortextos ~/SOMA && ln -s ~/SOMA ~/cortextos`. GitHub: rename `NulightJens/project-soma` → `NulightJens/soma` in repo settings, then `git remote set-url origin git@github.com:NulightJens/soma.git`. Source code already supports both `~/SOMA` and `~/cortextos` as project root via fallback discovery, so the local rename is a no-op the moment you decide. Not blocking anything.
 
 ### Starter commands
 
@@ -340,9 +340,9 @@ git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-min
 | `~/Downloads/solo-scale-handoff-2026-04-23/assets/brand-jens-monochrome.css` | Source of SOMA's dashboard theme (the only file we did ingest — visual tokens, no brand rules). |
 
 ### Repos & URLs
-- **SOMA fork:** https://github.com/NulightJens/cortextos (public, MIT) — origin
+- **SOMA fork:** https://github.com/NulightJens/project-soma (public, MIT) — origin
 - **Upstream:** https://github.com/grandamenium/cortextos — `upstream` remote (`git fetch upstream`)
-- **Current branch:** https://github.com/NulightJens/cortextos/tree/soma/phase-1-minions
+- **Current branch:** https://github.com/NulightJens/project-soma/tree/soma/phase-1-minions
 - **gbrain:** https://github.com/garrytan/gbrain
 - **gstack:** https://github.com/garrytan/gstack
 - **graphify:** https://github.com/safishamsi/graphify

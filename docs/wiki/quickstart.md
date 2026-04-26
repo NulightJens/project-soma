@@ -23,7 +23,7 @@ You can run SOMA without PM2, Telegram, or API keys — the queue + dashboard wo
 ## 1. Clone + install
 
 ```bash
-git clone https://github.com/NulightJens/cortextos.git ~/cortextos
+git clone https://github.com/NulightJens/project-soma.git ~/cortextos
 cd ~/cortextos
 npm install
 npm run build
