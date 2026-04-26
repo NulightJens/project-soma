@@ -1,0 +1,104 @@
+/**
+ * SOMA Starlight theme — monochrome, Manrope.
+ *
+ * Mirrors the dashboard's design tokens (ADR-010) so the docs site reads
+ * like a sibling surface rather than a third-party tool. Starlight's
+ * default theme is overridden via its CSS-variable system.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Body font — Manrope is the SOMA dashboard's primary sans-serif. */
+  --sl-font: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sl-font-system-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* ── Light theme ───────────────────────────────────────────── */
+:root[data-theme='light'] {
+  /* Backgrounds shift toward warm-white instead of Starlight's blue-tinted gray. */
+  --sl-color-bg: #ffffff;
+  --sl-color-bg-nav: #fafafa;
+  --sl-color-bg-sidebar: #fafafa;
+  --sl-color-bg-inline-code: #f4f4f5;
+  --sl-color-bg-accent: #000000;
+
+  /* Foreground — pure black on white, monochrome accent. */
+  --sl-color-text: #0a0a0a;
+  --sl-color-text-accent: #000000;
+  --sl-color-text-invert: #ffffff;
+
+  /* Hairline borders — subtle gray. */
+  --sl-color-hairline-light: #e5e5e5;
+  --sl-color-hairline: #d4d4d4;
+  --sl-color-hairline-shade: #a3a3a3;
+
+  /* Accent (links, focused state) — black, with a near-black hover. */
+  --sl-color-accent-low: #1a1a1a;
+  --sl-color-accent: #000000;
+  --sl-color-accent-high: #000000;
+
+  /* Asides (note / tip / caution / danger) — keep them readable but
+     desaturated so they don't fight the monochrome body. */
+  --sl-color-asides-text-accent: #000;
+}
+
+/* ── Dark theme ────────────────────────────────────────────── */
+:root[data-theme='dark'] {
+  --sl-color-bg: #0a0a0a;
+  --sl-color-bg-nav: #111111;
+  --sl-color-bg-sidebar: #0d0d0d;
+  --sl-color-bg-inline-code: #1f1f1f;
+  --sl-color-bg-accent: #ffffff;
+
+  --sl-color-text: #f4f4f5;
+  --sl-color-text-accent: #ffffff;
+  --sl-color-text-invert: #0a0a0a;
+
+  --sl-color-hairline-light: #262626;
+  --sl-color-hairline: #404040;
+  --sl-color-hairline-shade: #525252;
+
+  --sl-color-accent-low: #e5e5e5;
+  --sl-color-accent: #ffffff;
+  --sl-color-accent-high: #ffffff;
+
+  --sl-color-asides-text-accent: #fff;
+}
+
+/* ── Hero / splash polish ──────────────────────────────────── */
+.hero-html .sl-hero-action[data-variant='primary'] {
+  background-color: var(--sl-color-text);
+  color: var(--sl-color-bg);
+  border-color: var(--sl-color-text);
+}
+
+.hero-html .sl-hero-action[data-variant='primary']:hover {
+  background-color: var(--sl-color-text);
+  opacity: 0.85;
+}
+
+/* ── Code block tweaks ─────────────────────────────────────── */
+:root .expressive-code .frame {
+  border-radius: 6px;
+}
+
+/* Tighten the body-copy default so dense engineering prose doesn't sprawl. */
+.sl-markdown-content {
+  --sl-text-base: 0.95rem;
+  line-height: 1.65;
+}
+
+.sl-markdown-content :is(h2, h3, h4) {
+  margin-top: 2rem;
+}
+
+/* Subtle Manrope tracking on titles to match the dashboard. */
+h1, h2, h3, h4 {
+  letter-spacing: -0.01em;
+}
+
+/* Sidebar typography — match the dashboard's compact info density. */
+starlight-sidebar-state-persist nav ul li a {
+  font-size: 0.875rem;
+}

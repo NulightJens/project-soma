@@ -1,3 +1,8 @@
+---
+title: Agent bootstrap
+description: For an LLM agent (or human dev) opening this repo cold. Read order, edit boundaries, registration patterns, write-up protocol.
+---
+
 # Agent bootstrap
 
 You're an LLM agent (or a human dev who works like one) opening this repo cold. This page is your shortest path to "I know enough to be useful here." It complements rather than replaces [CLAUDE.md](../../CLAUDE.md) (the operational harness) and [HANDOFF.md](../../HANDOFF.md) (the live state snapshot).

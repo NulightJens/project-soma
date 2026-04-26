@@ -1,3 +1,8 @@
+---
+title: What is SOMA
+description: One-page mental model — substrate, minions, engines, tools — plus the project's vocabulary glossary.
+---
+
 # What is SOMA
 
 SOMA is a **persistent agent operating system**. The shortest possible definition: it lets a Claude Code session keep working — through crashes, OAuth refresh cycles, context-window resets, machine reboots, and operator absence — by externalising state into a queue of durable rows that any worker can resume.

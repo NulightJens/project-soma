@@ -1,3 +1,8 @@
+---
+title: Donor lineage
+description: What was inherited from cortextOS, ported from gbrain and gstack, and what's deferred to later phases.
+---
+
 # Donor lineage
 
 SOMA is a fork-and-evolve project. Three open-source codebases provided the load-bearing patterns; one provided the harness template. All MIT-licensed. This page is the source of truth for who contributed what — useful when reviewing a port commit, when checking whether a behaviour is original-to-cortextOS or new-to-SOMA, or when deciding which donor to consult for a future feature.

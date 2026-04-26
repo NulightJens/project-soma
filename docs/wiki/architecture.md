@@ -1,3 +1,8 @@
+---
+title: Architecture
+description: Component map, data flow, key file paths. Each section links to the ADR that introduced the design.
+---
+
 # Architecture
 
 Component map, data flow, key file paths. Each section links to the ADR that introduced the design when relevant — the ADR log lives in [PROJECT_SOMA.md §10](../../PROJECT_SOMA.md).

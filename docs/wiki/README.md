@@ -2,6 +2,8 @@
 
 Concept + setup + reference docs for SOMA. Each page is short and focused; cross-link liberally.
 
+> **Hosted version:** https://nulightjens.github.io/cortextos/ — same content rendered with Astro Starlight, plus AI-agent-friendly `/llms.txt`, `/llms-full.txt`, and `/llms-small.txt`. Goes live once the repo's **Settings → Pages → Source** is set to "GitHub Actions" (one-time setup). See [docs-site/README.md](../../docs-site/README.md) for build details.
+
 > **Looking for engineering history?** [PROJECT_SOMA.md](../../PROJECT_SOMA.md) is the architecture-decision record (15 ADRs + chronicle). [HANDOFF.md](../../HANDOFF.md) is the live "where are we right now" snapshot.
 
 ---

@@ -1,3 +1,8 @@
+---
+title: Quickstart
+description: Cold-start path from clone to a running daemon and your first job, in about ten minutes.
+---
+
 # Quickstart
 
 Cold-start path from "I just cloned this" to "I have an agent running and can submit a job from the dashboard." ~10 minutes on a clean macOS machine; Linux is similar with package-manager substitutions.
