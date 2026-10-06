@@ -58,7 +58,7 @@ These stop agent-drift.
 - **Deploy:** N/A for the platform itself; users install locally via the `install.mjs` script. Future: `npx @soma/cli init` as the public surface.
 - **SSH discipline:** no production server for SOMA today. When distribution lands, the rule is: SSH only for `systemctl status` / `journalctl`, never for edits.
 - **Commits:** create new commits over amending; amending after a push can destroy co-worker state. Always pass commit messages via HEREDOC.
-- **Author identity:** this repo's commits currently show `Max Computer <max@Maxs-Mac-mini.local>` because the local git config hasn't been set. To fix: `git -C ~/cortextos config user.name "Jens Heitmann" && git -C ~/cortextos config user.email "jens@nulight.io"`.
+- **Author identity:** this repo's commits currently show `the Mini's default git identity` because the local git config hasn't been set. To fix: `git -C ~/cortextos config user.name "Jens Heitmann" && git -C ~/cortextos config user.email "jens@nulight.io"`.
 
 ## 5. Data & Durability Discipline
 

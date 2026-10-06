@@ -189,7 +189,7 @@ Full text in `PROJECT_SOMA.md` §10. Quick reference:
 
 | Item | State | Notes |
 |---|---|---|
-| Commit author identity | ongoing | Commits show `Max Computer <max@Maxs-Mac-mini.local>`. Fix with `git -C ~/cortextos config user.name "Jens Heitmann" && git -C ~/cortextos config user.email "jens@nulight.io"`. Not blocking. |
+| Commit author identity | ongoing | Commits show `the Mini's default git identity`. Fix with `git -C ~/cortextos config user.name "Jens Heitmann" && git -C ~/cortextos config user.email "jens@nulight.io"`. Not blocking. |
 | `pm2 startup` for reboot persistence | not done | User needs to run the sudo command PM2 prints. Cosmetic for development. |
 | Private repo for Solo Scale instantiation | deferred to after Phase 5 | Name TBD — `solo-scale-twin` / `nulight-twin` / other. |
 | `/btw` context from earlier session | resolved | User clarified via "taken into account" + "don't dumb down" wording — captured as ADRs 011 + 012. |
@@ -276,19 +276,19 @@ git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-min
 ### Running services
 - `pm2` supervisor with `cortextos-daemon` online
 - `system` agent (claude PTY, PID visible via `cortextos status`)
-- Telegram poller inside the daemon (`@SoloScale_Bot`, chat_id = 6293102218)
+- Telegram poller inside the daemon (`@SoloScale_Bot`, chat_id = <redacted>)
 - Next.js dev server on `:3000` (PID logged in `~/.cortextos/dashboard.log` at launch; use `pgrep -af "next dev"` to check)
 
 ### Dashboard login (dev-only; see `~/.cortextos/default/dashboard.env`)
 - URL: http://localhost:3000
 - Username: `admin`
-- Password: `26b84410dd780434d9fea753`
+- Password: `<redacted, see dashboard.env>`
 
 ### Telegram bot
 - Bot username: `@SoloScale_Bot`
 - Bot token: stored in `~/cortextos/orgs/solo-scale/agents/*/env` and `~/cortextos/orgs/solo-scale/secrets.env` — chmod 600, gitignored. Masked everywhere else.
-- User's Telegram ID (chat_id): `6293102218`
-- Allowed user set via `ALLOWED_USER=6293102218` in every agent `.env`
+- User's Telegram ID (chat_id): `<redacted>`
+- Allowed user set via `ALLOWED_USER=<redacted>` in every agent `.env`
 
 ---
 
@@ -308,7 +308,7 @@ git add <files> && git commit -m "soma: ..." && git push origin soma/phase-1-min
 
 7. **tsup `ESM + bundler moduleResolution`** means local imports use `.js` extensions even though source files are `.ts`. All new SOMA modules follow this: `import { x } from './types.js'`. Don't drop the `.js`.
 
-8. **Commits show `Max Computer <max@Maxs-Mac-mini.local>`.** Local git user.name/user.email not set in this repo. See §8 open threads for the fix command. Doesn't block work.
+8. **Commits show `the Mini's default git identity`.** Local git user.name/user.email not set in this repo. See §8 open threads for the fix command. Doesn't block work.
 
 9. **The existing dashboard's `cortextos` sidebar/header branding still references SOMA** — metadata title is `SOMA` but navigation copy wasn't swept. Iterative — rebrand as we rewrite routes.
 
